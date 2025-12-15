@@ -102,7 +102,7 @@ export const Navbar = () => {
         y: -20
       }} transition={{
         duration: 0.2
-      }} className="lg:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-nav rounded-2xl p-4">
+      }} className="lg:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-nav rounded-2xl p-4 shadow-lg">
             <div className="flex flex-col gap-4">
               {navLinks.map(link => <a key={link.name} href={link.href} className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors py-2" onClick={() => setIsOpen(false)}>
                   {link.name}
