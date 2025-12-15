@@ -77,8 +77,7 @@ const ProviderDashboard = () => {
       const { data, error } = await supabase
         .from("bookings")
         .select(`
-          *,
-          customer:profiles!bookings_user_id_fkey(full_name, email, phone)
+          *
         `)
         .eq("provider_id", provider!.id)
         .order("created_at", { ascending: false });

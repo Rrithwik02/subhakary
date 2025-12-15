@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 import logo from "@/assets/logo.png";
 
 interface ServiceCategory {
@@ -276,6 +277,7 @@ const BecomeProvider = () => {
             </motion.div>
           </div>
         </div>
+        <Footer />
       </>
     );
   }
@@ -534,6 +536,7 @@ const BecomeProvider = () => {
           </motion.div>
         </div>
       </div>
+      <Footer />
     </>
   );
 };
