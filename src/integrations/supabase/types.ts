@@ -135,6 +135,51 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          provider_id: string
+          rating: number
+          review_text: string | null
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          provider_id: string
+          rating: number
+          review_text?: string | null
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          provider_id?: string
+          rating?: number
+          review_text?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_categories: {
         Row: {
           created_at: string

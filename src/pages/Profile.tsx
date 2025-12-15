@@ -1,0 +1,377 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Camera, User, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const profileSchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().max(20).optional(),
+  city: z.string().max(100).optional(),
+});
+
+const Profile = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    city: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullName: profile.full_name || "",
+        email: profile.email || user?.email || "",
+        phone: profile.phone || "",
+        city: profile.city || "",
+      });
+    }
+  }, [profile, user]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: `${publicUrl}?t=${Date.now()}` })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been updated",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const validateForm = () => {
+    try {
+      profileSchema.parse({
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        city: formData.city || undefined,
+      });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
+  const handleSave = async () => {
+    if (!validateForm() || !user) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: formData.fullName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || null,
+          city: formData.city.trim() || null,
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+      setIsEditing(false);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been saved successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (authLoading || isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+
+      <section className="pt-32 pb-12 px-4">
+        <div className="container max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+              My Profile
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              Manage your personal information and preferences
+            </p>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-display flex items-center justify-between">
+                  Personal Information
+                  {!isEditing ? (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                      Edit Profile
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditing(false);
+                          if (profile) {
+                            setFormData({
+                              fullName: profile.full_name || "",
+                              email: profile.email || user?.email || "",
+                              phone: profile.phone || "",
+                              city: profile.city || "",
+                            });
+                          }
+                          setErrors({});
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="gradient-gold text-primary-foreground"
+                        onClick={handleSave}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Save className="h-4 w-4 mr-2" />
+                        )}
+                        Save
+                      </Button>
+                    </div>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Avatar */}
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary/10 text-2xl">
+                        {formData.fullName?.charAt(0)?.toUpperCase() || <User className="h-8 w-8" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <label
+                      htmlFor="avatar-upload"
+                      className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+                    >
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4 text-primary-foreground" />
+                      )}
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                      disabled={isUploading}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{formData.fullName || "Your Name"}</h3>
+                    <p className="text-sm text-muted-foreground">{formData.email}</p>
+                  </div>
+                </div>
+
+                {/* Form Fields */}
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="fullName"
+                        placeholder="Enter your full name"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        className="pl-10"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    {errors.fullName && (
+                      <p className="text-sm text-destructive">{errors.fullName}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="pl-10"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="text-sm text-destructive">{errors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="Enter your phone number"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="pl-10"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="city"
+                        placeholder="Enter your city"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="pl-10"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Profile;

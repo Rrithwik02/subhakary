@@ -12,6 +12,7 @@ import ProviderProfile from "./pages/ProviderProfile";
 import MyBookings from "./pages/MyBookings";
 import ProviderDashboard from "./pages/ProviderDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
