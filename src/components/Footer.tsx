@@ -1,4 +1,5 @@
 import { Flame, MapPin, Phone, Mail } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 const footerLinks = {
   services: [
@@ -20,18 +21,8 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <a href="/" className="flex items-center gap-2 mb-6">
-              <div className="w-12 h-12 rounded-full gradient-gold flex items-center justify-center">
-                <Flame className="w-6 h-6 text-brown-dark" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display text-2xl font-semibold tracking-wide text-cream">
-                  SUBHAKARY
-                </span>
-                <span className="text-xs text-cream/60 -mt-1 tracking-widest">
-                  शुभकार्य
-                </span>
-              </div>
+            <a href="/" className="inline-block mb-6">
+              <img src={logo} alt="Subhakary" className="h-14 w-auto" />
             </a>
             <p className="text-cream/70 mb-6 max-w-sm">
               India's most trusted platform for booking traditional and cultural
