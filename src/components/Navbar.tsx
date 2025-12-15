@@ -38,7 +38,7 @@ export const Navbar = () => {
   }} transition={{
     duration: 0.6
   }} className="fixed top-4 left-4 right-4 z-50 flex justify-center">
-      <div className="glass-nav rounded-full px-4 lg:px-6 py-3 flex items-center justify-between gap-4 max-w-7xl w-full bg-accent opacity-100">
+      <div className="glass-nav rounded-full px-4 lg:px-6 py-3 flex items-center justify-between gap-4 max-w-7xl w-full">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
           <img src={logo} alt="Subhakary" className="h-10 w-auto" />
