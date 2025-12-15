@@ -7,9 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo.png";
 
 const navLinks = [
+  { name: "Find Providers", href: "/providers" },
   { name: "About Us", href: "#about" },
   { name: "Services", href: "#services" },
-  { name: "Blog", href: "#blog" },
   { name: "Contact", href: "#contact" },
 ];
 
@@ -39,21 +39,31 @@ export const Navbar = () => {
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-6 xl:gap-8">
           {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors duration-200 whitespace-nowrap"
-            >
-              {link.name}
-            </a>
+            link.href.startsWith("/") ? (
+              <Link
+                key={link.name}
+                to={link.href}
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors duration-200 whitespace-nowrap"
+              >
+                {link.name}
+              </Link>
+            ) : (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors duration-200 whitespace-nowrap"
+              >
+                {link.name}
+              </a>
+            )
           ))}
-          <a
-            href="#track"
+          <Link
+            to="/my-bookings"
             className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors duration-200 whitespace-nowrap"
           >
             <Search className="w-4 h-4" />
             Track Booking
-          </a>
+          </Link>
         </div>
 
         {/* Desktop Buttons */}
