@@ -7,6 +7,11 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeProvider from "./pages/BecomeProvider";
+import Providers from "./pages/Providers";
+import ProviderProfile from "./pages/ProviderProfile";
+import MyBookings from "./pages/MyBookings";
+import ProviderDashboard from "./pages/ProviderDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,7 +27,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/become-provider" element={<BecomeProvider />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/providers" element={<Providers />} />
+            <Route path="/provider/:id" element={<ProviderProfile />} />
+            <Route path="/my-bookings" element={<MyBookings />} />
+            <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

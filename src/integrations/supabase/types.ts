@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          provider_id: string
+          rejection_reason: string | null
+          service_date: string
+          service_time: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          provider_id: string
+          rejection_reason?: string | null
+          service_date: string
+          service_time?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          provider_id?: string
+          rejection_reason?: string | null
+          service_date?: string
+          service_time?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -225,6 +272,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "provider" | "user"
+      booking_status:
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "completed"
+        | "cancelled"
       provider_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -354,6 +407,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "provider", "user"],
+      booking_status: [
+        "pending",
+        "accepted",
+        "rejected",
+        "completed",
+        "cancelled",
+      ],
       provider_status: ["pending", "approved", "rejected"],
     },
   },
