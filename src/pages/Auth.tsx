@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, Flame } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,11 +118,17 @@ const Auth = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
+        {/* Back to home */}
+        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
+
         {/* Logo */}
         <div className="text-center mb-8">
-          <a href="/" className="inline-flex flex-col items-center gap-2">
+          <Link to="/" className="inline-flex flex-col items-center gap-2">
             <img src={logo} alt="Subhakary" className="h-16 w-auto" />
-          </a>
+          </Link>
           <h1 className="font-display text-2xl font-semibold text-foreground mt-4">
             {isSignUp ? "Create your account" : "Welcome back"}
           </h1>

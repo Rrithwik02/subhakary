@@ -107,10 +107,10 @@ export const Navbar = () => {
               {navLinks.map(link => <a key={link.name} href={link.href} className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors py-2" onClick={() => setIsOpen(false)}>
                   {link.name}
                 </a>)}
-              <a href="#track" className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary py-2" onClick={() => setIsOpen(false)}>
+              <Link to="/my-bookings" className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary py-2" onClick={() => setIsOpen(false)}>
                 <Search className="w-4 h-4" />
                 Track Booking
-              </a>
+              </Link>
               <div className="flex gap-3 pt-2 border-t border-border">
                 {user ? <>
                     <Link to="/become-provider" className="flex-1" onClick={() => setIsOpen(false)}>
