@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -12,12 +12,14 @@ import {
   XCircle,
   AlertCircle,
   ArrowRight,
+  Star,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { ReviewForm } from "@/components/ReviewForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +56,12 @@ const MyBookings = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const [reviewBooking, setReviewBooking] = useState<{
+    id: string;
+    providerId: string;
+    providerName: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -69,7 +77,7 @@ const MyBookings = () => {
   } = useQuery({
     queryKey: ["my-bookings", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: bookingsData, error } = await supabase
         .from("bookings")
         .select(`
           *,
@@ -83,7 +91,20 @@ const MyBookings = () => {
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      
+      // Fetch reviews for these bookings
+      const bookingIds = bookingsData.map(b => b.id);
+      const { data: reviewsData } = await supabase
+        .from("reviews")
+        .select("booking_id")
+        .in("booking_id", bookingIds);
+      
+      const reviewedBookingIds = new Set(reviewsData?.map(r => r.booking_id) || []);
+      
+      return bookingsData.map(booking => ({
+        ...booking,
+        hasReview: reviewedBookingIds.has(booking.id),
+      }));
     },
     enabled: !!user,
   });
@@ -247,7 +268,7 @@ const MyBookings = () => {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
                               <Badge className={`${status.color} flex items-center gap-1`}>
                                 <StatusIcon className="h-3 w-3" />
                                 {status.label}
@@ -261,6 +282,26 @@ const MyBookings = () => {
                                   Cancel
                                 </Button>
                               )}
+                              {booking.status === "completed" && !booking.hasReview && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setReviewBooking({
+                                    id: booking.id,
+                                    providerId: booking.provider?.id || "",
+                                    providerName: booking.provider?.business_name || "Provider",
+                                  })}
+                                >
+                                  <Star className="h-3 w-3 mr-1" />
+                                  Leave Review
+                                </Button>
+                              )}
+                              {booking.hasReview && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Star className="h-3 w-3 fill-primary text-primary" />
+                                  Reviewed
+                                </span>
+                              )}
                             </div>
                           </div>
                         </CardContent>
@@ -273,6 +314,18 @@ const MyBookings = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Review Form Dialog */}
+      {reviewBooking && (
+        <ReviewForm
+          bookingId={reviewBooking.id}
+          providerId={reviewBooking.providerId}
+          providerName={reviewBooking.providerName}
+          open={!!reviewBooking}
+          onOpenChange={(open) => !open && setReviewBooking(null)}
+          onReviewSubmitted={() => refetch()}
+        />
+      )}
 
       <Footer />
     </div>

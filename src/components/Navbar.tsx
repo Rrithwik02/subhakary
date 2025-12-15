@@ -60,6 +60,12 @@ export const Navbar = () => {
         {/* Desktop Buttons */}
         <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
           {user ? <>
+              <Link to="/profile">
+                <Button variant="ghost" size="sm" className="font-medium">
+                  <User className="w-4 h-4 mr-2" />
+                  Profile
+                </Button>
+              </Link>
               <Link to="/become-provider">
                 <Button variant="ghost" size="sm" className="font-medium">
                   Become a Provider
@@ -111,14 +117,20 @@ export const Navbar = () => {
                 <Search className="w-4 h-4" />
                 Track Booking
               </Link>
-              <div className="flex gap-3 pt-2 border-t border-border">
+              <div className="flex flex-col gap-3 pt-2 border-t border-border">
                 {user ? <>
-                    <Link to="/become-provider" className="flex-1" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" size="sm" className="w-full">
+                    <Link to="/profile" className="w-full" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full justify-start">
+                        <User className="w-4 h-4 mr-2" />
+                        My Profile
+                      </Button>
+                    </Link>
+                    <Link to="/become-provider" className="w-full" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full justify-start">
                         Become Provider
                       </Button>
                     </Link>
-                    <Button variant="gold" size="sm" className="flex-1" onClick={() => {
+                    <Button variant="gold" size="sm" className="w-full" onClick={() => {
                 handleSignOut();
                 setIsOpen(false);
               }}>

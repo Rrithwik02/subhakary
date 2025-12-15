@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ReviewsList } from "@/components/ReviewsList";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -275,6 +276,9 @@ const ProviderProfile = () => {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Reviews */}
+                <ReviewsList providerId={provider.id} />
               </div>
 
               {/* Booking sidebar */}
