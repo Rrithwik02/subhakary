@@ -134,8 +134,14 @@
   }
 
   .glass-nav {
-    @apply bg-background/80 backdrop-blur-xl border border-border/50;
-    box-shadow: var(--shadow-glass);
+    @apply bg-background/60 backdrop-blur-2xl border border-white/20;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--background) / 0.7) 0%,
+      hsl(var(--background) / 0.5) 100%
+    );
   }
 
   .glass-card {
