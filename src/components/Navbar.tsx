@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, Flame } from "lucide-react";
+import { Search, Menu, X, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import logo from "@/assets/logo.png";
 
 const navLinks = [
   { name: "About Us", href: "#about" },
@@ -12,6 +15,13 @@ const navLinks = [
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <motion.nav
@@ -22,19 +32,9 @@ export const Navbar = () => {
     >
       <div className="glass-nav rounded-full px-4 lg:px-6 py-3 flex items-center justify-between gap-4 max-w-7xl w-full">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-10 h-10 rounded-full gradient-gold flex items-center justify-center">
-            <Flame className="w-5 h-5 text-brown-dark" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-display text-lg lg:text-xl font-semibold tracking-wide text-foreground">
-              SUBHAKARY
-            </span>
-            <span className="text-[10px] text-muted-foreground -mt-1 tracking-widest">
-              शुभकार्य
-            </span>
-          </div>
-        </a>
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+          <img src={logo} alt="Subhakary" className="h-10 w-auto" />
+        </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-6 xl:gap-8">
@@ -58,12 +58,32 @@ export const Navbar = () => {
 
         {/* Desktop Buttons */}
         <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
-          <Button variant="ghost" size="sm" className="font-medium">
-            Sign In
-          </Button>
-          <Button variant="gold" size="sm" className="font-medium rounded-full px-5">
-            Join Us
-          </Button>
+          {user ? (
+            <>
+              <Link to="/become-provider">
+                <Button variant="ghost" size="sm" className="font-medium">
+                  Become a Provider
+                </Button>
+              </Link>
+              <Button variant="ghost" size="sm" className="font-medium" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth">
+                <Button variant="ghost" size="sm" className="font-medium">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button variant="gold" size="sm" className="font-medium rounded-full px-5">
+                  Join Us
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -83,7 +103,7 @@ export const Navbar = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="lg:hidden mt-2 glass-nav rounded-2xl p-4"
+            className="lg:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-nav rounded-2xl p-4"
           >
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => (
@@ -91,6 +111,7 @@ export const Navbar = () => {
                   key={link.name}
                   href={link.href}
                   className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors py-2"
+                  onClick={() => setIsOpen(false)}
                 >
                   {link.name}
                 </a>
@@ -98,17 +119,37 @@ export const Navbar = () => {
               <a
                 href="#track"
                 className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary py-2"
+                onClick={() => setIsOpen(false)}
               >
                 <Search className="w-4 h-4" />
                 Track Booking
               </a>
               <div className="flex gap-3 pt-2 border-t border-border">
-                <Button variant="ghost" size="sm" className="flex-1">
-                  Sign In
-                </Button>
-                <Button variant="gold" size="sm" className="flex-1">
-                  Join Us
-                </Button>
+                {user ? (
+                  <>
+                    <Link to="/become-provider" className="flex-1" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full">
+                        Become Provider
+                      </Button>
+                    </Link>
+                    <Button variant="gold" size="sm" className="flex-1" onClick={() => { handleSignOut(); setIsOpen(false); }}>
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
+                      <Button variant="gold" size="sm" className="w-full">
+                        Join Us
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
