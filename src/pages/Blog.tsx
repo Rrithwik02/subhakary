@@ -170,16 +170,12 @@ const Blog = () => {
                   variants={itemVariants}
                   className="bg-background rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="aspect-[4/3] bg-gradient-to-br from-gold/20 to-brown/20 flex items-center justify-center">
-                    <span className="text-6xl">
-                      {post.category === "Wedding Traditions" && "💒"}
-                      {post.category === "Home Ceremonies" && "🏠"}
-                      {post.category === "Beauty & Style" && "💄"}
-                      {post.category === "Photography Tips" && "📸"}
-                      {post.category === "Catering Ideas" && "🍽️"}
-                      {post.category === "Decoration Trends" && "🎊"}
-                      {post.category === "Festival Celebrations" && "🪔"}
-                    </span>
+                  <div className="aspect-[4/3] overflow-hidden">
+                    <img 
+                      src={post.image} 
+                      alt={post.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-3">

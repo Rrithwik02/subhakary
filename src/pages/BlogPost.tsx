@@ -39,11 +39,26 @@ const BlogPost = () => {
               </Button>
             </Link>
 
-            <Badge variant="secondary" className="bg-gold/10 text-brown border-gold/30 mb-4">
-              {post.category}
-            </Badge>
+            {/* Featured Image */}
+            <div className="rounded-xl overflow-hidden mb-6">
+              <img 
+                src={post.image} 
+                alt={post.title}
+                className="w-full h-auto object-cover max-h-[500px]"
+              />
+            </div>
 
-            <h1 className="font-display text-3xl md:text-5xl text-brown mb-6 leading-tight">
+            <div className="flex items-center gap-3 mb-4">
+              <Badge variant="secondary" className="bg-gold/10 text-brown border-gold/30">
+                {post.category}
+              </Badge>
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                {post.readTime}
+              </span>
+            </div>
+
+            <h1 className="font-display text-3xl md:text-5xl text-gold mb-6 leading-tight">
               {post.title}
             </h1>
 

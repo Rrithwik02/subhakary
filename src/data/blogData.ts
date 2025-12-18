@@ -1,3 +1,11 @@
+import weddingTraditionsImg from "@/assets/blog/wedding-traditions.jpg";
+import homeCeremoniesImg from "@/assets/blog/home-ceremonies.jpg";
+import beautyStyleImg from "@/assets/blog/beauty-style.jpg";
+import photographyTipsImg from "@/assets/blog/photography-tips.jpg";
+import cateringIdeasImg from "@/assets/blog/catering-ideas.jpg";
+import decorationTrendsImg from "@/assets/blog/decoration-trends.jpg";
+import festivalCelebrationsImg from "@/assets/blog/festival-celebrations.jpg";
+
 export interface BlogPost {
   id: string;
   slug: string;
@@ -8,7 +16,7 @@ export interface BlogPost {
   date: string;
   category: string;
   readTime: string;
-  image?: string;
+  image: string;
 }
 
 export const blogCategories = [
@@ -31,6 +39,7 @@ export const blogPosts: BlogPost[] = [
     date: "December 15, 2024",
     category: "Wedding Traditions",
     readTime: "8 min read",
+    image: weddingTraditionsImg,
     content: `
 ## Introduction
 
@@ -134,6 +143,7 @@ Whether you're a bride, groom, or guest, understanding these traditions allows y
     date: "December 20, 2024",
     category: "Home Ceremonies",
     readTime: "6 min read",
+    image: homeCeremoniesImg,
     content: `
 ## Introduction
 
@@ -221,6 +231,7 @@ Indian home ceremonies are much more than rituals—they're heartfelt traditions
     date: "December 22, 2024",
     category: "Beauty & Style",
     readTime: "7 min read",
+    image: beautyStyleImg,
     content: `
 ## Introduction
 
@@ -334,6 +345,526 @@ Yes! Minimalist bridal and groom looks are becoming increasingly popular.
 ## Conclusion
 
 Your wedding day is one of the most important days of your life, and looking your best is a reflection of not just style, but also tradition and personality. By balancing timeless Indian wedding beauty rituals with modern style trends, brides and grooms can create unforgettable looks that reflect who they truly are.
+    `,
+  },
+  {
+    id: "4",
+    slug: "top-wedding-photography-tips",
+    title: "Top Wedding Photography Tips for Picture-Perfect Memories",
+    excerpt: "A wedding is one of the most cherished events in life—and photographs are the keepsakes that keep those memories alive forever. Learn essential tips for capturing magical moments.",
+    author: "Arjun Photography",
+    date: "December 25, 2024",
+    category: "Photography Tips",
+    readTime: "9 min read",
+    image: photographyTipsImg,
+    content: `
+## Introduction
+
+A wedding is one of the most cherished events in life—and photographs are the keepsakes that keep those memories alive forever. In Indian weddings, where ceremonies span several days with colorful traditions, capturing the right moments is both an art and a challenge.
+
+Whether you're a professional wedding photographer, a bride or groom hiring one, or even a guest looking to click Instagram-worthy shots, this guide covers the top wedding photography tips for timeless, picture-perfect memories.
+
+## Essential Wedding Photography Tips
+
+### 1. Know the Rituals & Schedule
+
+Indian weddings involve multiple ceremonies: Haldi, Mehendi, Sangeet, Baraat, and the Wedding Day rituals. Understanding the sequence helps photographers anticipate key moments.
+
+💡 **Example:** Be ready for the sindoor ceremony and mangal pheras, as they are once-in-a-lifetime moments.
+
+### 2. Scout the Venue in Advance
+
+Visit the venue a day before to check:
+
+- Lighting conditions.
+- Best natural backdrops (gardens, mandaps, entrances).
+- Indoor vs. outdoor photo opportunities.
+
+This preparation ensures no surprises on the big day.
+
+### 3. Use Natural Lighting Wisely
+
+Golden hour (early morning or sunset) gives the most flattering, soft light. Avoid harsh noon lighting unless shaded areas are available. For evening functions, use external flash or fairy lights to create a dreamy effect.
+
+### 4. Candid Over Posed
+
+Candid shots often capture raw emotions—tears at Vidaai, laughter during Sangeet, or a shy glance at the mandap. A mix of candid and posed photography tells the full wedding story.
+
+💡 **SEO Keyword:** "candid wedding photography" is one of the most searched wedding terms in India.
+
+### 5. Capture the Details
+
+Don't just focus on people—capture the little things:
+
+- Mehendi designs on hands.
+- Jewelry close-ups.
+- Mandap decorations.
+- Wedding invites or favors.
+
+These details complete the wedding album.
+
+### 6. Focus on Family & Friends
+
+While the couple is the highlight, group shots with parents, grandparents, cousins, and friends add warmth to the album.
+
+💡 **Pro Tip:** Organize family portraits quickly before guests get distracted by food or dancing.
+
+### 7. Stay Invisible but Present
+
+Blend in with the crowd. Avoid directing too much during rituals, but be quick to position yourself for emotional shots.
+
+### 8. Use Multiple Cameras & Lenses
+
+- **Wide-angle lens:** For mandap shots and group photos.
+- **50mm lens:** For candid close-ups.
+- **Telephoto lens:** To capture moments without intruding.
+
+Backup equipment is a must—weddings don't allow retakes.
+
+### 9. Create a Shot List
+
+Work with the couple to prepare a list of must-have shots, such as:
+
+- Bridal entry.
+- Groom's baraat.
+- Ring exchange.
+- First dance (if included).
+- Group shots with siblings/friends.
+
+### 10. Post-Processing & Editing
+
+Editing brings photos to life. Use tools like Lightroom or Photoshop for:
+
+- Color correction.
+- Skin retouching.
+- Background enhancements.
+- Creating wedding albums.
+
+💡 **Trending Style:** Soft pastel tones and cinematic edits are in demand for wedding albums in 2024.
+
+## Tips for Brides & Grooms to Get Great Photos
+
+- **Choose Outfits Wisely:** Bold colors photograph better under lights.
+- **Be Natural:** Don't over-pose—authentic smiles look best.
+- **Communicate with Photographer:** Share personal stories so they know what to highlight.
+- **Relax:** The more comfortable you are, the better the photos.
+
+## Modern Wedding Photography Trends
+
+- **Drone Photography** – Aerial shots of baraat, mandap, and large gatherings.
+- **Cinematic Wedding Films** – Storytelling through slow-motion videos, music, and voiceovers.
+- **Black & White Portraits** – Emotional moments look timeless in monochrome.
+- **Instagram Reels & Short Clips** – Couples now request reels for quick social media sharing.
+- **Photo Booths & Props** – Fun corners with hashtags for guests to enjoy.
+
+## Mistakes to Avoid in Wedding Photography
+
+- Missing key rituals due to poor planning.
+- Over-editing photos, which makes them look artificial.
+- Not having backup equipment (batteries, memory cards, lenses).
+- Ignoring candid emotions in pursuit of posed perfection.
+
+## FAQs on Wedding Photography
+
+**1. How much does wedding photography cost in India?**
+It can range anywhere between ₹50,000 to ₹5,00,000 depending on location, duration, and photographer's experience.
+
+**2. What's better: candid or traditional photography?**
+A mix of both works best—candid captures emotions, while traditional ensures important posed shots are covered.
+
+**3. How many photos are usually taken at an Indian wedding?**
+Anywhere between 2,000–5,000 images, depending on the length of ceremonies.
+
+## Conclusion
+
+Wedding photography is not just about pictures—it's about capturing love, emotions, and timeless memories. By planning ahead, focusing on details, and embracing modern trends, both photographers and couples can create magical wedding albums that will be cherished for generations.
+    `,
+  },
+  {
+    id: "5",
+    slug: "top-7-wedding-catering-ideas-2025",
+    title: "Top 7 Wedding Catering Ideas to Delight Your Guests in 2025",
+    excerpt: "Food is the heart of any Indian wedding. Guests may forget the flowers or the stage setup, but they will always remember the taste and hospitality of the catering.",
+    author: "Chef Ramesh Kumar",
+    date: "December 28, 2024",
+    category: "Catering Ideas",
+    readTime: "8 min read",
+    image: cateringIdeasImg,
+    content: `
+## Introduction
+
+Food is the heart of any Indian wedding. Guests may forget the flowers or the stage setup, but they will always remember the taste and hospitality of the catering. As weddings evolve, couples are seeking creative catering ideas that go beyond the traditional. Here are the latest catering trends for 2025 that can make your big day unforgettable.
+
+## Top 7 Wedding Catering Ideas for 2025
+
+### 1. Regional Food Counters
+
+Celebrate India's diversity with live counters representing South Indian, North Indian, Rajasthani, and Bengali cuisines. Guests love tasting different regional delicacies.
+
+**Popular Regional Dishes:**
+- **South Indian:** Dosa, idli, sambar, coconut chutney
+- **North Indian:** Chole bhature, rajma chawal, parathas
+- **Rajasthani:** Dal baati churma, gatte ki sabzi, ker sangri
+- **Bengali:** Fish curry, mishti doi, rasgulla
+
+### 2. Live Cooking Stations
+
+From chaat stalls to pasta and dosa counters, live stations bring freshness and entertainment. Watching chefs prepare food adds an engaging element to your event.
+
+**Trending Live Stations:**
+- Pani puri and chaat counter
+- Live pasta and risotto station
+- Fresh dosa and uttapam corner
+- Tandoor bread and kebab station
+- Ice cream and kulfi bar
+
+### 3. Global Fusion Menus
+
+Mix tradition with modernity — think butter chicken tacos, paneer sushi rolls, or masala pasta. Fusion food delights younger guests while keeping older ones intrigued.
+
+**Creative Fusion Ideas:**
+- Tandoori chicken pizza
+- Masala mac and cheese
+- Curry ramen bowls
+- Samosa sliders
+- Gulab jamun cheesecake
+
+### 4. Health-Conscious Menus
+
+With rising awareness, many guests prefer gluten-free, vegan, or low-oil food options. Adding a small health section ensures inclusivity.
+
+**Healthy Options:**
+- Quinoa salads with Indian spices
+- Grilled vegetables and paneer
+- Millet-based dishes
+- Sugar-free desserts
+- Fresh fruit and smoothie bar
+
+### 5. Beverage Innovation
+
+Mocktail bars, traditional drink stalls (like jal jeera, badam milk), and customized coffee counters are a big hit.
+
+**Trending Beverage Ideas:**
+- Signature mocktails named after the couple
+- Traditional drinks: Thandai, lassi, aam panna
+- Fresh coconut water station
+- Specialty tea and coffee bar
+- Infused water with fruits and herbs
+
+### 6. Instagrammable Desserts
+
+Interactive dessert walls, live jalebi with rabri, or nitrogen ice cream counters make for memorable photo moments.
+
+**Photo-Worthy Dessert Ideas:**
+- Live jalebi and rabri counter
+- Nitrogen ice cream preparation
+- Dessert shot glasses
+- Cotton candy station
+- Chocolate fountain with fruits
+
+### 7. Traditional Sweets Reimagined
+
+Serve classics like gulab jamun, rasmalai, and ariselu with modern plating to elevate presentation.
+
+**Modern Sweet Presentations:**
+- Deconstructed rasmalai in glass cups
+- Mini gulab jamun on silver spoons
+- Layered halwa in clear jars
+- Bite-sized barfi with edible flowers
+- Individual portions in elegant boxes
+
+## Planning Your Wedding Menu
+
+**Key Considerations:**
+- **Guest Count & Preferences:** Survey family preferences and dietary restrictions
+- **Budget Planning:** Allocate 30-40% of your wedding budget to catering
+- **Seasonal Ingredients:** Use fresh, seasonal produce for better taste and cost
+- **Venue Logistics:** Ensure your venue can accommodate live cooking stations
+- **Service Style:** Choose between buffet, plated service, or family-style serving
+
+## Tips for Working with Caterers
+
+- Schedule tastings at least 2-3 months before the wedding
+- Discuss backup plans for outdoor events
+- Ask about service staff-to-guest ratios
+- Clarify what's included: plates, utensils, linens
+- Get detailed contracts with menu specifications
+
+## Cost-Saving Catering Tips
+
+- Choose seasonal vegetables and fruits
+- Limit the number of live stations
+- Opt for family-style serving over individual plating
+- Include more vegetarian options (generally less expensive)
+- Consider weekday or off-season bookings for better rates
+
+## Conclusion
+
+Your catering should reflect your love story and culture. The right food creates lasting memories and brings people together in celebration. From regional specialties to innovative fusion dishes, the key is balancing tradition with creativity while keeping your guests' preferences in mind.
+
+**Ready to plan your dream wedding menu?**
+
+With Subhakary, you can connect with professional wedding caterers who bring both creativity and authenticity to the table. Book trusted catering services today and make your wedding feast unforgettable.
+    `,
+  },
+  {
+    id: "6",
+    slug: "10-stunning-wedding-decoration-trends-2025",
+    title: "10 Stunning Wedding Decoration Trends for 2025 Every Couple Must See",
+    excerpt: "Wedding décor sets the mood for the entire celebration. From dreamy mandaps to elegant table settings, the right decoration creates magical memories.",
+    author: "Priya Decorators",
+    date: "December 30, 2024",
+    category: "Decoration Trends",
+    readTime: "10 min read",
+    image: decorationTrendsImg,
+    content: `
+## Introduction
+
+Wedding décor sets the mood for the entire celebration. From dreamy mandaps to elegant table settings, the right decoration creates magical memories. If you are planning your wedding in 2025, here are the decoration trends you should not miss.
+
+## 10 Must-See Wedding Decoration Trends for 2025
+
+### 1. Sustainable Décor
+
+Eco-friendly weddings are in demand — think reusable props, bamboo seating, and minimal plastic. Couples are choosing sustainable materials that can be repurposed or biodegradable options that don't harm the environment.
+
+**Sustainable Options:**
+- Potted plants instead of cut flowers
+- Recyclable paper decorations
+- Wooden and bamboo furniture
+- LED lights for energy efficiency
+- Natural fabric draping
+
+### 2. Floral Overload
+
+Seasonal flowers, especially marigolds, roses, and orchids, continue to dominate. Hanging floral chandeliers are trending for creating dramatic ceiling installations.
+
+**Popular Floral Arrangements:**
+- Cascading floral walls
+- Hanging garden installations
+- Fresh flower carpets for aisles
+- Mixed seasonal blooms for color variety
+- Floating flower arrangements in water
+
+### 3. Rustic Themes
+
+Wooden elements, earthy tones, and fairy lights create a natural yet stylish look. This trend works especially well for outdoor and destination weddings.
+
+**Rustic Elements:**
+- Wooden mandap structures
+- Burlap and lace table runners
+- Mason jar centerpieces
+- Tree branch archways
+- Vintage furniture pieces
+
+### 4. Personalized Signages
+
+Custom neon signs with couple names or wedding hashtags are an Instagram favorite. These personalized touches make the celebration unique and memorable.
+
+**Signage Ideas:**
+- LED name boards at entrance
+- Custom hashtag displays
+- Love quote installations
+- Directional signs for different venues
+- Photo booth backdrops with names
+
+### 5. Minimalist Elegance
+
+Pastel drapes, white flowers, and subtle lighting offer a classy, modern aesthetic. This trend focuses on clean lines and sophisticated simplicity.
+
+**Minimalist Features:**
+- Neutral color palettes
+- Clean geometric shapes
+- Simple floral arrangements
+- Subtle metallic accents
+- Uncluttered table settings
+
+### 6. Traditional Grandeur
+
+For those who prefer royal vibes — large brass lamps, temple bells, and rich fabrics never go out of style. This classic approach celebrates India's cultural heritage.
+
+**Traditional Elements:**
+- Heavy silk draping in rich colors
+- Brass urns and vessels
+- Temple-style mandap designs
+- Traditional oil lamps (diyas)
+- Antique furniture and artifacts
+
+### 7. Stage Backdrops
+
+Unique mandap and stage backdrops with fabric layering, 3D panels, or LED screens make ceremonies stand out. These create stunning focal points for photography.
+
+**Backdrop Ideas:**
+- Multi-layered fabric installations
+- 3D floral walls
+- LED panel displays
+- Mirror and crystal arrangements
+- Themed scenic backdrops
+
+### 8. Ceiling Décor
+
+From flower garlands to fairy lights, ceiling installations create a wow factor. Overhead decorations transform the entire atmosphere of the venue.
+
+**Ceiling Decoration Options:**
+- Draped fabric canopies
+- Suspended floral arrangements
+- String light installations
+- Paper lantern displays
+- Crystal chandelier rentals
+
+### 9. Mix of Cultures
+
+Blend South Indian temple-inspired décor with North Indian floral mandaps for a cultural fusion look. This trend celebrates India's diverse traditions.
+
+**Cultural Fusion Elements:**
+- Mixed regional flower arrangements
+- Fusion mandap architectural styles
+- Combined color schemes
+- Diverse traditional artifacts
+- Multi-cultural food presentation
+
+### 10. Interactive Elements
+
+Photo booths, wishing trees, and message walls keep guests engaged and entertained while adding personal touches to the décor.
+
+**Interactive Features:**
+- Themed photo booth corners
+- Guest message walls
+- Wish tree installations
+- Live art stations
+- Memory lane photo displays
+
+## Budget-Friendly Decoration Tips
+
+- **DIY Elements:** Create your own centerpieces and small decorative items
+- **Repurpose Decorations:** Use ceremony décor for reception with minor adjustments
+- **Seasonal Flowers:** Choose flowers that are in season for better pricing
+- **Rental Options:** Rent expensive items like furniture and large installations
+- **Focus on Key Areas:** Invest more in highly visible areas like mandap and entrance
+
+## Working with Decorators
+
+- Share your vision through mood boards and inspiration photos
+- Set a clear budget and stick to priority items
+- Schedule site visits with your decorator before the event
+- Ask for detailed timelines and setup schedules
+- Get contracts that specify all materials and services included
+
+## Conclusion
+
+The right decoration is more than just beauty — it's about creating an experience that reflects your personality and love story. Whether you choose sustainable elements, traditional grandeur, or modern minimalism, the key is creating a cohesive look that makes your wedding day truly special.
+
+**Ready to design your dream wedding décor?**
+
+With Subhakary, you can explore expert decorators who bring your dream wedding setup to life. Browse trusted decoration services now and design the perfect backdrop for your big day.
+    `,
+  },
+  {
+    id: "7",
+    slug: "celebrate-indian-festivals-in-style",
+    title: "How to Celebrate Indian Festivals in Style: Traditions & Modern Trends",
+    excerpt: "India is known as the land of festivals, where every season brings new celebrations filled with color, music, food, and traditions. Explore how to blend age-old customs with stylish new trends.",
+    author: "Ravi Kumar",
+    date: "December 18, 2024",
+    category: "Festival Celebrations",
+    readTime: "7 min read",
+    image: festivalCelebrationsImg,
+    content: `
+## Introduction
+
+India is known as the land of festivals, where every season brings new celebrations filled with color, music, food, and traditions. Festivals are not just occasions for fun—they carry deep spiritual and cultural meanings. From Diwali, Holi, and Navratri to regional harvest festivals like Pongal and Baisakhi, these occasions unite families, neighbors, and communities.
+
+In this blog, we'll explore the major Indian festivals, their traditions, and how people are celebrating them in modern times—blending age-old customs with stylish new trends.
+
+## Major Indian Festivals and Their Traditions
+
+### 1. Diwali – Festival of Lights
+
+Diwali, one of India's most popular festivals, celebrates the victory of light over darkness and good over evil. Families decorate their homes with diyas (oil lamps), candles, and rangolis, perform Lakshmi Puja, and burst fireworks.
+
+💡 **Modern Trends:**
+- Eco-friendly fireworks or laser shows.
+- Designer rangolis with flower petals and LEDs.
+- Gifting plants instead of sweets.
+
+### 2. Holi – Festival of Colors
+
+Known for its joy and playfulness, Holi is celebrated with colored powders, water balloons, and music. It signifies the arrival of spring and the triumph of love and positivity.
+
+💡 **Trendy Celebrations:**
+- Organic colors to protect skin and nature.
+- Holi pool parties in urban areas.
+- Fusion food like "thandai cheesecakes" and colorful mocktails.
+
+### 3. Navratri & Durga Puja
+
+Navratri is a nine-day festival honoring Goddess Durga. Families perform daily pujas, fast, and participate in Garba and Dandiya dances. In Bengal, Durga Puja is celebrated with grand pandals, cultural shows, and feasts.
+
+💡 **Modern Twist:** Live-streamed pujas for NRIs, fusion Garba outfits, and eco-friendly clay idols.
+
+### 4. Ganesh Chaturthi
+
+Dedicated to Lord Ganesha, this festival is marked by bringing home beautifully crafted idols, performing aarti, and immersing the idol in water after several days.
+
+💡 **Modern Trends:** Families now choose biodegradable idols and symbolic immersions in buckets or tanks to reduce water pollution.
+
+### 5. Raksha Bandhan
+
+Celebrated as the bond between siblings, sisters tie rakhi on their brothers' wrists, and brothers promise to protect them. Gifts and sweets make the day extra special.
+
+💡 **Stylish Ideas:** Designer rakhis, handmade gifts, and digital rakhi delivery for siblings living abroad.
+
+### 6. Harvest Festivals (Pongal, Makar Sankranti, Baisakhi, Onam)
+
+India's agricultural roots are celebrated in harvest festivals across states:
+
+- **Pongal in Tamil Nadu** – cooking sweet rice as an offering to the Sun God.
+- **Makar Sankranti in the north** – flying kites and sharing til-gud (sesame-jaggery sweets).
+- **Baisakhi in Punjab** – bhangra, fairs, and feasting.
+- **Onam in Kerala** – pookalam (floral designs), snake boat races, and grand sadhya feasts.
+
+## Modern Trends in Festival Celebrations
+
+### Eco-Friendly Celebrations
+
+Clay idols, plastic-free decorations, and waste-free feasts are becoming popular across cities.
+
+### Destination Festivals
+
+Families and friends are combining vacations with festivals—celebrating Holi in Goa or Diwali in Jaipur.
+
+### Technology in Celebrations
+
+Virtual pujas, festival e-cards, WhatsApp invites, and digital gifting platforms are now common.
+
+### Fusion Food & Fashion
+
+Chefs experiment with fusion sweets (like chocolate ladoos), while designers blend ethnic wear with Western cuts for festive outfits.
+
+## How to Celebrate Festivals in Style
+
+- **Decor Ideas:** Use fairy lights, flowers, and sustainable décor.
+- **Food Tips:** Mix traditional sweets with modern dishes.
+- **Outfits:** Choose vibrant colors with comfortable fabrics.
+- **Music & Dance:** Organize cultural games, karaoke, or traditional dances.
+- **Photography:** Create themed corners for Instagram-worthy pictures.
+
+## FAQs on Festival Celebrations
+
+**1. Why are Indian festivals so important?**
+They connect people to traditions, bring communities together, and celebrate life's values like love, unity, and prosperity.
+
+**2. How can festivals be celebrated sustainably?**
+By using eco-friendly décor, avoiding plastic, donating food, and reducing waste.
+
+**3. Can festivals be celebrated outside India?**
+Yes, Indian communities worldwide celebrate Diwali, Holi, and Navratri, often blending local culture with Indian rituals.
+
+## Conclusion
+
+Indian festivals are a celebration of life itself—where traditions, family, food, and fun come together. Whether it's lighting diyas on Diwali, dancing Garba during Navratri, or flying kites on Makar Sankranti, every festival has its unique charm.
+
+By blending timeless traditions with modern style, you can make these celebrations more memorable, meaningful, and sustainable.
     `,
   },
 ];
