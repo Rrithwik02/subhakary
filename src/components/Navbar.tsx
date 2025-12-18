@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, LogOut, User, Heart, MessageSquare } from "lucide-react";
+import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationsCenter } from "@/components/NotificationsCenter";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 const navLinks = [{
   name: "Find Providers",
@@ -24,11 +26,23 @@ const navLinks = [{
 }];
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  // Check if user is admin
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("has_role", {
+        _user_id: user!.id,
+        _role: "admin",
+      });
+      if (error) return false;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -86,6 +100,14 @@ export const Navbar = () => {
                   Become a Provider
                 </Button>
               </Link>
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm" className="font-medium text-primary">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Button variant="ghost" size="sm" className="font-medium" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Sign Out
@@ -160,6 +182,14 @@ export const Navbar = () => {
                         Become Provider
                       </Button>
                     </Link>
+                    {isAdmin && (
+                      <Link to="/admin" className="w-full" onClick={() => setIsOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-primary">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Admin Dashboard
+                        </Button>
+                      </Link>
+                    )}
                     <Button variant="gold" size="sm" className="w-full" onClick={() => {
                 handleSignOut();
                 setIsOpen(false);

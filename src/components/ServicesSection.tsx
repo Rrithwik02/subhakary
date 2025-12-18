@@ -1,70 +1,80 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { 
-  BookOpen, 
+  Sparkles, 
   Camera, 
-  Palette, 
+  Brush, 
+  Hand, 
+  Drum, 
   Flower2, 
-  Music, 
-  PartyPopper, 
   UtensilsCrossed, 
   Building2, 
-  Users 
+  CalendarCheck 
 } from "lucide-react";
 
 const services = [
   {
-    icon: BookOpen,
+    icon: Sparkles,
     name: "Poojari / Priest",
     description: "Experienced pandits for all ceremonies",
     color: "from-amber-500 to-orange-600",
+    filter: "poojari",
   },
   {
     icon: Camera,
     name: "Photography",
     description: "Capture every precious moment",
     color: "from-rose-500 to-pink-600",
+    filter: "photography",
   },
   {
-    icon: Palette,
+    icon: Brush,
     name: "Makeup Artist",
     description: "Bridal & groom makeup services",
     color: "from-purple-500 to-violet-600",
+    filter: "makeup",
   },
   {
-    icon: Flower2,
+    icon: Hand,
     name: "Mehandi",
     description: "Traditional & modern designs",
     color: "from-emerald-500 to-green-600",
+    filter: "mehandi",
   },
   {
-    icon: Music,
+    icon: Drum,
     name: "Mangala Vadyam",
     description: "Auspicious traditional music",
     color: "from-yellow-500 to-amber-600",
+    filter: "mangala-vadyam",
   },
   {
-    icon: PartyPopper,
+    icon: Flower2,
     name: "Decoration",
     description: "Stunning venue transformations",
     color: "from-sky-500 to-blue-600",
+    filter: "decoration",
   },
   {
     icon: UtensilsCrossed,
     name: "Catering",
     description: "Delicious traditional cuisines",
     color: "from-red-500 to-rose-600",
+    filter: "catering",
   },
   {
     icon: Building2,
     name: "Function Halls",
     description: "Perfect venues for your events",
     color: "from-teal-500 to-cyan-600",
+    filter: "function-halls",
   },
   {
-    icon: Users,
+    icon: CalendarCheck,
     name: "Event Managers",
     description: "End-to-end event planning",
     color: "from-indigo-500 to-purple-600",
+    filter: "event-managers",
   },
 ];
 
@@ -90,6 +100,12 @@ const itemVariants = {
 };
 
 export const ServicesSection = () => {
+  const navigate = useNavigate();
+
+  const handleServiceClick = (filter: string) => {
+    navigate(`/providers?service=${filter}`);
+  };
+
   return (
     <section id="services" className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -138,8 +154,8 @@ export const ServicesSection = () => {
             <motion.div
               key={service.name}
               variants={itemVariants}
-              className="group relative bg-card rounded-2xl p-6 border border-border hover:border-primary/30 transition-all duration-300 hover-lift cursor-pointer overflow-hidden"
-            >
+              onClick={() => handleServiceClick(service.filter)}
+              className="group relative bg-card rounded-2xl p-6 border border-border hover:border-primary/30 transition-all duration-300 hover-lift cursor-pointer overflow-hidden">
               {/* Background gradient on hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
