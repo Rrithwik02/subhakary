@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Search, MapPin, Star, Filter, X } from "lucide-react";
+import { Search, MapPin, Star, Filter, X, BadgeCheck, Images } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -16,6 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { supabase } from "@/integrations/supabase/client";
 
 // Popular cities and areas for the dropdown
@@ -33,6 +39,7 @@ const Providers = () => {
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedArea, setSelectedArea] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
+  const [showVerifiedOnly, setShowVerifiedOnly] = useState<boolean>(false);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
@@ -114,6 +121,11 @@ const Providers = () => {
       );
     }
 
+    // Verified filter
+    if (showVerifiedOnly) {
+      result = result.filter((p) => p.is_verified === true);
+    }
+
     // Sorting
     switch (sortBy) {
       case "rating":
@@ -131,7 +143,7 @@ const Providers = () => {
     }
 
     return result;
-  }, [providers, searchQuery, selectedCategory, selectedCity, selectedArea, sortBy]);
+  }, [providers, searchQuery, selectedCategory, selectedCity, selectedArea, sortBy, showVerifiedOnly]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -139,6 +151,7 @@ const Providers = () => {
     setSelectedCity("all");
     setSelectedArea("all");
     setSortBy("rating");
+    setShowVerifiedOnly(false);
   };
 
   const handleCityChange = (value: string) => {
@@ -147,7 +160,7 @@ const Providers = () => {
   };
 
   const hasActiveFilters =
-    searchQuery || selectedCategory !== "all" || selectedCity !== "all" || selectedArea !== "all";
+    searchQuery || selectedCategory !== "all" || selectedCity !== "all" || selectedArea !== "all" || showVerifiedOnly;
 
   return (
     <div className="min-h-screen bg-background">
@@ -250,6 +263,24 @@ const Providers = () => {
               </SelectContent>
             </Select>
 
+            {/* Verified Only Filter */}
+            <div 
+              className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors ${
+                showVerifiedOnly 
+                  ? 'bg-green-500/10 border-green-500/30 text-green-600' 
+                  : 'border-border hover:bg-muted'
+              }`}
+              onClick={() => setShowVerifiedOnly(!showVerifiedOnly)}
+            >
+              <Checkbox 
+                checked={showVerifiedOnly} 
+                onCheckedChange={(checked) => setShowVerifiedOnly(checked as boolean)}
+                className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+              />
+              <BadgeCheck className="h-4 w-4" />
+              <span className="text-sm font-medium whitespace-nowrap">Verified Only</span>
+            </div>
+
             {hasActiveFilters && (
               <Button variant="ghost" size="icon" onClick={clearFilters}>
                 <X className="h-4 w-4" />
@@ -301,7 +332,7 @@ const Providers = () => {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Link to={`/provider/${provider.id}`}>
-                    <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden">
+                    <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden group">
                       <CardContent className="p-6">
                         {/* Header with Avatar, Name and Verification Badge */}
                         <div className="flex items-start gap-4 mb-4">
@@ -343,6 +374,41 @@ const Providers = () => {
                         <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
                           {provider.description || "Professional service provider offering quality services."}
                         </p>
+
+                        {/* Portfolio Preview - Shows on hover if portfolio images exist */}
+                        {provider.portfolio_images && provider.portfolio_images.length > 0 && (
+                          <div className="mb-4 overflow-hidden rounded-lg">
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <div className="flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline">
+                                  <Images className="h-4 w-4" />
+                                  <span>{provider.portfolio_images.length} Portfolio Images</span>
+                                </div>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-80 p-2" side="top">
+                                <div className="grid grid-cols-3 gap-1">
+                                  {provider.portfolio_images.slice(0, 6).map((img: string, idx: number) => (
+                                    <div key={idx} className="aspect-square rounded overflow-hidden bg-muted">
+                                      <img 
+                                        src={img} 
+                                        alt={`Portfolio ${idx + 1}`}
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                          e.currentTarget.src = '/placeholder.svg';
+                                        }}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                                {provider.portfolio_images.length > 6 && (
+                                  <p className="text-xs text-muted-foreground text-center mt-2">
+                                    +{provider.portfolio_images.length - 6} more images
+                                  </p>
+                                )}
+                              </HoverCardContent>
+                            </HoverCard>
+                          </div>
+                        )}
 
                         {/* Location and Experience */}
                         <div className="flex items-center justify-between text-sm text-muted-foreground mb-4 pb-4 border-b border-border/50">
