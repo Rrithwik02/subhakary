@@ -30,17 +30,24 @@ export const Navbar = () => {
   const navigate = useNavigate();
 
   // Check if user is admin
-  const { data: isAdmin } = useQuery({
+  const { data: isAdmin, isLoading: checkingAdmin } = useQuery({
     queryKey: ["is-admin", user?.id],
     queryFn: async () => {
+      if (!user?.id) return false;
       const { data, error } = await supabase.rpc("has_role", {
-        _user_id: user!.id,
+        _user_id: user.id,
         _role: "admin",
       });
-      if (error) return false;
-      return data;
+      console.log("Admin check result:", { userId: user.id, data, error });
+      if (error) {
+        console.error("Admin check error:", error);
+        return false;
+      }
+      return data === true;
     },
-    enabled: !!user,
+    enabled: !!user?.id,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const handleSignOut = async () => {
