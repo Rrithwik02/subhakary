@@ -54,6 +54,8 @@ const heroSlides = [
 export const HeroSection = () => {
   const [showAISearch, setShowAISearch] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedService, setSelectedService] = useState("");
+  const [locationInput, setLocationInput] = useState("");
   
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true },
@@ -165,51 +167,54 @@ export const HeroSection = () => {
             ) : (
               <div className="glass-card rounded-2xl sm:rounded-full p-4 sm:p-2 max-w-3xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
                 {/* Service Dropdown */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border border-border/50 sm:border-0 sm:border-r sm:border-border/30 rounded-xl sm:rounded-none bg-background/5">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border-2 border-primary/40 sm:border-0 sm:border-r sm:border-border/30 rounded-xl sm:rounded-none bg-primary/5 sm:bg-transparent">
+                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-primary/10 items-center justify-center flex-shrink-0">
                     <Search className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="flex-1 text-left">
-                    <select className="w-full bg-transparent text-foreground font-medium text-sm appearance-none cursor-pointer focus:outline-none">
-                      <option value="">Choose a Service</option>
-                      {services.map((service) => (
-                        <option key={service} value={service}>
-                          {service}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <select 
+                    value={selectedService}
+                    onChange={(e) => setSelectedService(e.target.value)}
+                    className="flex-1 bg-transparent border-none outline-none text-foreground/80 cursor-pointer text-sm sm:text-base"
+                  >
+                    <option value="">Choose a Service</option>
+                    {services.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Date Picker */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border border-border/50 sm:border-0 sm:border-r sm:border-border/30 rounded-xl sm:rounded-none bg-background/5">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="flex-1 flex items-center justify-between gap-3 px-4 py-3 sm:py-2 border-2 border-primary/40 sm:border-0 sm:border-r sm:border-border/30 rounded-xl sm:rounded-none bg-primary/5 sm:bg-transparent">
+                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-primary/10 items-center justify-center flex-shrink-0">
                     <Calendar className="w-5 h-5 text-primary" />
                   </div>
-                  <input
-                    type="date"
+                  <input 
+                    type="date" 
+                    className="flex-1 bg-transparent border-none outline-none text-foreground/80 text-sm sm:text-base"
                     placeholder="Date of the Event"
-                    className="flex-1 bg-transparent text-foreground font-medium text-sm appearance-none cursor-pointer focus:outline-none"
                   />
+                  <Calendar className="w-5 h-5 text-primary/60 sm:hidden flex-shrink-0" />
                 </div>
 
                 {/* Location */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border border-border/50 sm:border-0 rounded-xl sm:rounded-none bg-background/5">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="flex-1 flex items-center justify-between gap-3 px-4 py-3 sm:py-2 border-2 border-primary/40 sm:border-0 rounded-xl sm:rounded-none bg-primary/5 sm:bg-transparent">
+                  <div className="hidden sm:flex w-10 h-10 rounded-full bg-primary/10 items-center justify-center flex-shrink-0">
                     <MapPin className="w-5 h-5 text-primary" />
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Location of the Event"
-                    className="flex-1 bg-transparent text-foreground font-medium text-sm placeholder:text-muted-foreground focus:outline-none"
+                  <input 
+                    type="text" 
+                    placeholder="Location of the Event" 
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                    className="flex-1 bg-transparent border-none outline-none text-foreground/80 placeholder:text-foreground/50 text-sm sm:text-base"
                   />
+                  <MapPin className="w-5 h-5 text-primary/60 sm:hidden flex-shrink-0" />
                 </div>
 
                 {/* Search Button */}
                 <Button
                   variant="gold"
-                  className="h-12 px-6 rounded-full flex-shrink-0 self-center gap-2"
+                  className="w-full sm:w-auto h-12 px-6 rounded-xl sm:rounded-full flex-shrink-0 self-center gap-2"
                 >
                   <Search className="w-5 h-5" />
                   <span>Search</span>
