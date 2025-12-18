@@ -256,7 +256,7 @@ export const HeroSection = () => {
                   <div className="w-px h-8 bg-cream/30" />
 
                   {/* Date Picker */}
-                  <div className="flex-1 flex items-center justify-between gap-2 px-6 py-3 hover:bg-background/10 transition-colors">
+                  <div className="flex-1 flex items-center gap-2 px-6 py-3 hover:bg-background/10 transition-colors">
                     <input 
                       type="date" 
                       value={selectedDate}
@@ -264,7 +264,6 @@ export const HeroSection = () => {
                       className="flex-1 bg-transparent border-none outline-none text-cream/90 text-sm font-medium [color-scheme:dark]"
                       placeholder="Date of the Event"
                     />
-                    <Calendar className="w-4 h-4 text-cream/70 flex-shrink-0" />
                   </div>
 
                   {/* Divider */}
