@@ -47,12 +47,12 @@ export const Navbar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-          {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors duration-200 whitespace-nowrap">
+          {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="text-sm font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
                 {link.name}
-              </Link> : <a key={link.name} href={link.href} className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors duration-200 whitespace-nowrap">
+              </Link> : <a key={link.name} href={link.href} className="text-sm font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
                 {link.name}
               </a>)}
-          <Link to="/my-bookings" className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors duration-200 whitespace-nowrap">
+          <Link to="/my-bookings" className="flex items-center gap-2 text-sm font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
             <Search className="w-4 h-4" />
             Track Booking
           </Link>
@@ -122,10 +122,10 @@ export const Navbar = () => {
         duration: 0.2
       }} className="lg:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-nav rounded-2xl p-4 shadow-lg">
             <div className="flex flex-col gap-4">
-              {navLinks.map(link => <a key={link.name} href={link.href} className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors py-2" onClick={() => setIsOpen(false)}>
+              {navLinks.map(link => <a key={link.name} href={link.href} className="text-sm font-medium hover:text-brown transition-colors py-2" onClick={() => setIsOpen(false)}>
                   {link.name}
                 </a>)}
-              <Link to="/my-bookings" className="flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary py-2" onClick={() => setIsOpen(false)}>
+              <Link to="/my-bookings" className="flex items-center gap-2 text-sm font-medium hover:text-brown py-2" onClick={() => setIsOpen(false)}>
                 <Search className="w-4 h-4" />
                 Track Booking
               </Link>

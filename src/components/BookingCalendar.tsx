@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format, isSameDay } from "date-fns";
-import { Clock, User, MapPin } from "lucide-react";
+import { Clock, User, MapPin, Ban, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface BookingCalendarProps {
   providerId: string;
@@ -22,6 +24,7 @@ const statusColors: Record<string, string> = {
 
 const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const queryClient = useQueryClient();
 
   const { data: bookings = [] } = useQuery({
     queryKey: ["provider-calendar-bookings", providerId],
@@ -45,8 +48,72 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
     enabled: !!providerId,
   });
 
+  const { data: blockedDates = [] } = useQuery({
+    queryKey: ["provider-blocked-dates", providerId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_provider_availability")
+        .select("*")
+        .eq("provider_id", providerId)
+        .eq("is_blocked", true)
+        .not("specific_date", "is", null);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!providerId,
+  });
+
+  const blockDateMutation = useMutation({
+    mutationFn: async (date: Date) => {
+      const dateStr = format(date, "yyyy-MM-dd");
+      const existing = blockedDates.find(
+        (b) => b.specific_date === dateStr
+      );
+
+      if (existing) {
+        // Unblock the date
+        const { error } = await supabase
+          .from("service_provider_availability")
+          .delete()
+          .eq("id", existing.id);
+        if (error) throw error;
+        return { action: "unblocked", date: dateStr };
+      } else {
+        // Block the date
+        const { error } = await supabase
+          .from("service_provider_availability")
+          .insert({
+            provider_id: providerId,
+            specific_date: dateStr,
+            is_blocked: true,
+            start_time: "00:00",
+            end_time: "23:59",
+          });
+        if (error) throw error;
+        return { action: "blocked", date: dateStr };
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["provider-blocked-dates", providerId] });
+      toast.success(
+        result.action === "blocked"
+          ? `Date ${result.date} has been blocked`
+          : `Date ${result.date} has been unblocked`
+      );
+    },
+    onError: () => {
+      toast.error("Failed to update date availability");
+    },
+  });
+
   // Get dates that have bookings
   const bookingDates = bookings.map((booking) => new Date(booking.service_date));
+  
+  // Get blocked date objects
+  const blockedDateObjects = blockedDates
+    .filter((b) => b.specific_date)
+    .map((b) => new Date(b.specific_date!));
 
   // Get bookings for selected date
   const selectedDateBookings = selectedDate
@@ -55,15 +122,15 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
       )
     : [];
 
-  // Custom day content to show booking indicators
-  const modifiers = {
-    booked: bookingDates,
-  };
+  // Check if selected date is blocked
+  const isSelectedDateBlocked = selectedDate
+    ? blockedDateObjects.some((d) => isSameDay(d, selectedDate))
+    : false;
 
-  const modifiersStyles = {
-    booked: {
-      fontWeight: "bold",
-    },
+  const handleBlockDate = () => {
+    if (selectedDate) {
+      blockDateMutation.mutate(selectedDate);
+    }
   };
 
   return (
@@ -77,17 +144,22 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
             mode="single"
             selected={selectedDate}
             onSelect={setSelectedDate}
-            modifiers={modifiers}
-            modifiersStyles={modifiersStyles}
             className="rounded-md border pointer-events-auto"
             components={{
               DayContent: ({ date }) => {
                 const hasBooking = bookingDates.some((d) => isSameDay(d, date));
+                const isBlocked = blockedDateObjects.some((d) => isSameDay(d, date));
                 return (
-                  <div className="relative w-full h-full flex items-center justify-center">
+                  <div className={cn(
+                    "relative w-full h-full flex items-center justify-center",
+                    isBlocked && "text-destructive line-through"
+                  )}>
                     {date.getDate()}
-                    {hasBooking && (
+                    {hasBooking && !isBlocked && (
                       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full" />
+                    )}
+                    {isBlocked && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-destructive rounded-full" />
                     )}
                   </div>
                 );
@@ -98,14 +170,40 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">
             {selectedDate
-              ? `Bookings for ${format(selectedDate, "MMM dd, yyyy")}`
+              ? `${format(selectedDate, "MMM dd, yyyy")}`
               : "Select a date"}
           </CardTitle>
+          {selectedDate && (
+            <Button
+              variant={isSelectedDateBlocked ? "outline" : "destructive"}
+              size="sm"
+              onClick={handleBlockDate}
+              disabled={blockDateMutation.isPending}
+            >
+              {isSelectedDateBlocked ? (
+                <>
+                  <Check className="h-4 w-4 mr-1" />
+                  Unblock
+                </>
+              ) : (
+                <>
+                  <Ban className="h-4 w-4 mr-1" />
+                  Block Date
+                </>
+              )}
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
+          {isSelectedDateBlocked && (
+            <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+              This date is blocked. You will not receive new bookings for this date.
+            </div>
+          )}
+          
           {selectedDateBookings.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
               No bookings for this date
