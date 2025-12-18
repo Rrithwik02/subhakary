@@ -16,6 +16,9 @@ const navLinks = [{
   name: "Services",
   href: "#services"
 }, {
+  name: "Blog",
+  href: "/blog"
+}, {
   name: "Contact",
   href: "#contact"
 }];
@@ -122,7 +125,9 @@ export const Navbar = () => {
         duration: 0.2
       }} className="lg:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-nav rounded-2xl p-4 shadow-lg">
             <div className="flex flex-col gap-4">
-              {navLinks.map(link => <a key={link.name} href={link.href} className="text-sm font-medium hover:text-brown transition-colors py-2" onClick={() => setIsOpen(false)}>
+              {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="text-sm font-medium hover:text-brown transition-colors py-2" onClick={() => setIsOpen(false)}>
+                  {link.name}
+                </Link> : <a key={link.name} href={link.href} className="text-sm font-medium hover:text-brown transition-colors py-2" onClick={() => setIsOpen(false)}>
                   {link.name}
                 </a>)}
               <Link to="/my-bookings" className="flex items-center gap-2 text-sm font-medium hover:text-brown py-2" onClick={() => setIsOpen(false)}>
