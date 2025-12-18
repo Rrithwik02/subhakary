@@ -176,62 +176,123 @@ export const HeroSection = () => {
                 <AISearch />
               </div>
             ) : (
-              <div className="glass-card rounded-2xl md:rounded-full p-4 md:p-3 max-w-4xl mx-auto flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2">
-                {/* Service Dropdown */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 border-2 border-primary/40 md:border md:border-border/30 rounded-xl md:rounded-full bg-primary/5 md:bg-background/50 md:hover:bg-background/70 transition-all duration-200 focus-within:scale-[1.02] focus-within:border-primary/60 md:focus-within:border-primary/50 focus-within:shadow-sm">
-                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    <Search className="w-4 h-4 text-primary" />
+              <>
+                {/* Mobile Layout */}
+                <div className="lg:hidden glass-card rounded-2xl p-4 max-w-4xl mx-auto flex flex-col gap-3">
+                  {/* Service Dropdown */}
+                  <div className="flex items-center gap-3 px-4 py-3 border-2 border-primary/40 rounded-xl bg-primary/5 transition-all duration-200 focus-within:scale-[1.02] focus-within:border-primary/60 focus-within:shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Search className="w-4 h-4 text-primary" />
+                    </div>
+                    <select 
+                      value={selectedService}
+                      onChange={(e) => setSelectedService(e.target.value)}
+                      className="flex-1 bg-transparent border-none outline-none text-foreground cursor-pointer text-sm font-medium"
+                    >
+                      <option value="">Choose a Service</option>
+                      {services.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
                   </div>
-                  <select 
-                    value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-foreground cursor-pointer text-sm font-medium"
+
+                  {/* Date Picker */}
+                  <div className="flex items-center gap-3 px-4 py-3 border-2 border-primary/40 rounded-xl bg-primary/5 transition-all duration-200 focus-within:scale-[1.02] focus-within:border-primary/60 focus-within:shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-4 h-4 text-primary" />
+                    </div>
+                    <input 
+                      type="date" 
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="flex-1 bg-transparent border-none outline-none text-foreground text-sm font-medium"
+                      placeholder="Date of the Event"
+                    />
+                  </div>
+
+                  {/* Location */}
+                  <div className="flex items-center gap-3 px-4 py-3 border-2 border-primary/40 rounded-xl bg-primary/5 transition-all duration-200 focus-within:scale-[1.02] focus-within:border-primary/60 focus-within:shadow-sm">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <MapPin className="w-4 h-4 text-primary" />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Location" 
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-foreground/50 text-sm font-medium"
+                    />
+                  </div>
+
+                  {/* Search Button */}
+                  <Button
+                    variant="gold"
+                    className="w-full h-12 px-6 rounded-xl gap-2"
+                    onClick={handleSearch}
                   >
-                    <option value="">Choose a Service</option>
-                    {services.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
+                    <Search className="w-5 h-5" />
+                    <span>Search</span>
+                  </Button>
                 </div>
 
-                {/* Date Picker */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 border-2 border-primary/40 md:border md:border-border/30 rounded-xl md:rounded-full bg-primary/5 md:bg-background/50 md:hover:bg-background/70 transition-all duration-200 focus-within:scale-[1.02] focus-within:border-primary/60 md:focus-within:border-primary/50 focus-within:shadow-sm">
-                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-4 h-4 text-primary" />
+                {/* Desktop Layout - Horizontal pill bar */}
+                <div className="hidden lg:flex items-center max-w-4xl mx-auto rounded-full border border-cream/30 bg-background/10 backdrop-blur-md overflow-hidden">
+                  {/* Service Dropdown */}
+                  <div className="flex-1 flex items-center justify-between gap-2 px-6 py-3 hover:bg-background/10 transition-colors cursor-pointer">
+                    <select 
+                      value={selectedService}
+                      onChange={(e) => setSelectedService(e.target.value)}
+                      className="flex-1 bg-transparent border-none outline-none text-cream/90 cursor-pointer text-sm font-medium appearance-none"
+                    >
+                      <option value="" className="text-foreground">Choose a Service</option>
+                      {services.map(type => (
+                        <option key={type} value={type} className="text-foreground">{type}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-cream/70 flex-shrink-0" />
                   </div>
-                  <input 
-                    type="date" 
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-foreground text-sm font-medium"
-                    placeholder="Date of the Event"
-                  />
-                </div>
 
-                {/* Location */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 border-2 border-primary/40 md:border md:border-border/30 rounded-xl md:rounded-full bg-primary/5 md:bg-background/50 md:hover:bg-background/70 transition-all duration-200 focus-within:scale-[1.02] focus-within:border-primary/60 md:focus-within:border-primary/50 focus-within:shadow-sm">
-                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-4 h-4 text-primary" />
+                  {/* Divider */}
+                  <div className="w-px h-8 bg-cream/30" />
+
+                  {/* Date Picker */}
+                  <div className="flex-1 flex items-center justify-between gap-2 px-6 py-3 hover:bg-background/10 transition-colors">
+                    <input 
+                      type="date" 
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="flex-1 bg-transparent border-none outline-none text-cream/90 text-sm font-medium [color-scheme:dark]"
+                      placeholder="Date of the Event"
+                    />
+                    <Calendar className="w-4 h-4 text-cream/70 flex-shrink-0" />
                   </div>
-                  <input 
-                    type="text" 
-                    placeholder="Location" 
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-foreground/50 text-sm font-medium"
-                  />
-                </div>
 
-                {/* Search Button */}
-                <Button
-                  variant="gold"
-                  className="w-full md:w-auto h-12 md:h-11 px-6 md:px-8 rounded-xl md:rounded-full flex-shrink-0 self-center gap-2"
-                  onClick={handleSearch}
-                >
-                  <Search className="w-5 h-5" />
-                  <span>Search</span>
-                </Button>
-              </div>
+                  {/* Divider */}
+                  <div className="w-px h-8 bg-cream/30" />
+
+                  {/* Location */}
+                  <div className="flex-1 flex items-center justify-between gap-2 px-6 py-3 hover:bg-background/10 transition-colors">
+                    <input 
+                      type="text" 
+                      placeholder="Location of the Event" 
+                      value={locationInput}
+                      onChange={(e) => setLocationInput(e.target.value)}
+                      className="flex-1 bg-transparent border-none outline-none text-cream/90 placeholder:text-cream/60 text-sm font-medium"
+                    />
+                    <MapPin className="w-4 h-4 text-cream/70 flex-shrink-0" />
+                  </div>
+
+                  {/* Search Button */}
+                  <Button
+                    variant="gold"
+                    size="icon"
+                    className="w-12 h-12 rounded-full flex-shrink-0 mr-1"
+                    onClick={handleSearch}
+                  >
+                    <Search className="w-5 h-5" />
+                  </Button>
+                </div>
+              </>
             )}
           </motion.div>
         </div>
