@@ -165,7 +165,7 @@ export const HeroSection = () => {
             ) : (
               <div className="glass-card rounded-2xl sm:rounded-full p-4 sm:p-2 max-w-3xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
                 {/* Service Dropdown */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border-b sm:border-b-0 sm:border-r border-border/30">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border border-border/50 sm:border-0 sm:border-r sm:border-border/30 rounded-xl sm:rounded-none bg-background/5">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Search className="w-5 h-5 text-primary" />
                   </div>
@@ -183,7 +183,7 @@ export const HeroSection = () => {
                 </div>
 
                 {/* Date Picker */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border-b sm:border-b-0 sm:border-r border-border/30">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border border-border/50 sm:border-0 sm:border-r sm:border-border/30 rounded-xl sm:rounded-none bg-background/5">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Calendar className="w-5 h-5 text-primary" />
                   </div>
@@ -195,7 +195,7 @@ export const HeroSection = () => {
                 </div>
 
                 {/* Location */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2">
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border border-border/50 sm:border-0 rounded-xl sm:rounded-none bg-background/5">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <MapPin className="w-5 h-5 text-primary" />
                   </div>
@@ -209,10 +209,10 @@ export const HeroSection = () => {
                 {/* Search Button */}
                 <Button
                   variant="gold"
-                  size="icon"
-                  className="w-12 h-12 rounded-full flex-shrink-0 self-center"
+                  className="h-12 px-6 rounded-full flex-shrink-0 self-center gap-2"
                 >
                   <Search className="w-5 h-5" />
+                  <span>Search</span>
                 </Button>
               </div>
             )}
