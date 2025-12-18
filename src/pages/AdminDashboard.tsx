@@ -17,6 +17,8 @@ import {
   Mail,
   Phone,
   UserCircle,
+  BadgeCheck,
+  BadgeX,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -201,6 +203,36 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleToggleVerification = async (providerId: string, currentStatus: boolean) => {
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("service_providers")
+        .update({
+          is_verified: !currentStatus,
+        })
+        .eq("id", providerId);
+
+      if (error) throw error;
+
+      toast({
+        title: currentStatus ? "Verification removed" : "Provider verified",
+        description: currentStatus 
+          ? "The provider's verified status has been removed." 
+          : "The provider is now marked as verified.",
+      });
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const viewDocuments = (documents: any[]) => {
     setSelectedDocs(documents);
     setDocumentsDialogOpen(true);
@@ -253,9 +285,11 @@ const AdminDashboard = () => {
   const ProviderCard = ({
     provider,
     showActions = false,
+    showVerificationToggle = false,
   }: {
     provider: any;
     showActions?: boolean;
+    showVerificationToggle?: boolean;
   }) => (
     <Card className="hover-lift">
       <CardContent className="p-6">
@@ -266,9 +300,23 @@ const AdminDashboard = () => {
                 {provider.category?.icon || "🙏"}
               </div>
               <div>
-                <h3 className="font-display text-lg font-semibold">
-                  {provider.business_name}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display text-lg font-semibold">
+                    {provider.business_name}
+                  </h3>
+                  {/* Verification Badge */}
+                  {provider.is_verified ? (
+                    <span className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 text-green-600 text-xs font-medium rounded-md border border-green-500/30">
+                      <BadgeCheck className="h-3 w-3" />
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-600 text-xs font-medium rounded-md border border-yellow-500/30">
+                      <BadgeX className="h-3 w-3" />
+                      Not Verified
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   {provider.category?.name && (
                     <Badge variant="secondary" className="text-xs">
@@ -321,31 +369,57 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          {showActions && provider.status === "pending" && (
-            <div className="flex gap-2 lg:flex-col">
+          <div className="flex gap-2 lg:flex-col">
+            {/* Verification Toggle for approved providers */}
+            {showVerificationToggle && provider.status === "approved" && (
               <Button
                 size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSelectedProvider(provider.id);
-                  setRejectDialogOpen(true);
-                }}
+                variant={provider.is_verified ? "outline" : "default"}
+                className={provider.is_verified ? "" : "bg-green-600 hover:bg-green-700 text-white"}
+                onClick={() => handleToggleVerification(provider.id, provider.is_verified)}
                 disabled={isProcessing}
               >
-                <XCircle className="h-4 w-4 mr-1" />
-                Reject
+                {provider.is_verified ? (
+                  <>
+                    <BadgeX className="h-4 w-4 mr-1" />
+                    Remove Verified
+                  </>
+                ) : (
+                  <>
+                    <BadgeCheck className="h-4 w-4 mr-1" />
+                    Mark Verified
+                  </>
+                )}
               </Button>
-              <Button
-                size="sm"
-                className="gradient-gold text-primary-foreground"
-                onClick={() => handleApprove(provider.id)}
-                disabled={isProcessing}
-              >
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-                Approve
-              </Button>
-            </div>
-          )}
+            )}
+
+            {/* Pending Actions */}
+            {showActions && provider.status === "pending" && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedProvider(provider.id);
+                    setRejectDialogOpen(true);
+                  }}
+                  disabled={isProcessing}
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Reject
+                </Button>
+                <Button
+                  size="sm"
+                  className="gradient-gold text-primary-foreground"
+                  onClick={() => handleApprove(provider.id)}
+                  disabled={isProcessing}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                  Approve
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -564,6 +638,13 @@ const AdminDashboard = () => {
               </TabsContent>
 
               <TabsContent value="approved" className="mt-6">
+                <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border">
+                  <p className="text-sm text-muted-foreground">
+                    <BadgeCheck className="h-4 w-4 inline mr-1 text-green-600" />
+                    <strong>Tip:</strong> You can toggle verification status for approved providers. 
+                    Verified providers will display a green badge on their profile.
+                  </p>
+                </div>
                 {approvedProviders.length === 0 ? (
                   <Card>
                     <CardContent className="p-12 text-center">
@@ -585,7 +666,7 @@ const AdminDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
                       >
-                        <ProviderCard provider={provider} />
+                        <ProviderCard provider={provider} showVerificationToggle />
                       </motion.div>
                     ))}
                   </div>

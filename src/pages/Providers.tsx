@@ -301,60 +301,78 @@ const Providers = () => {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Link to={`/provider/${provider.id}`}>
-                    <Card className="hover-lift cursor-pointer h-full">
+                    <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden">
                       <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl">
-                              {provider.category?.icon || "🙏"}
-                            </div>
-                            <div>
-                              <h3 className="font-display text-lg font-semibold line-clamp-1">
+                        {/* Header with Avatar, Name and Verification Badge */}
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0 border-2 border-primary/20">
+                            {provider.logo_url ? (
+                              <img 
+                                src={provider.logo_url} 
+                                alt={provider.business_name}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-3xl">👤</span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="font-display text-lg font-semibold line-clamp-1 text-foreground">
                                 {provider.business_name}
                               </h3>
-                              {provider.category?.name && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {provider.category.name}
-                                </Badge>
+                              {provider.is_verified ? (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-500 text-xs font-medium rounded-md whitespace-nowrap border border-green-500/30">
+                                  ✓ Verified
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-600 text-xs font-medium rounded-md whitespace-nowrap border border-yellow-500/30">
+                                  Pending
+                                </span>
                               )}
                             </div>
+                            {provider.category?.name && (
+                              <Badge className="mt-1 bg-primary/20 text-primary hover:bg-primary/30 border-0">
+                                {provider.category.name}
+                              </Badge>
+                            )}
                           </div>
-                          {provider.is_verified && (
-                            <span className="verified-badge">
-                              ✓ Verified
-                            </span>
-                          )}
                         </div>
 
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                          {provider.description || "Professional service provider"}
+                        {/* Description */}
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                          {provider.description || "Professional service provider offering quality services."}
                         </p>
 
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                        {/* Location and Experience */}
+                        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4 pb-4 border-b border-border/50">
                           {provider.city && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {provider.city}
+                            <span className="flex items-center gap-1.5">
+                              <MapPin className="h-4 w-4 text-primary" />
+                              {provider.city}, India
                             </span>
                           )}
                           {provider.experience_years ? (
-                            <span>{provider.experience_years}+ yrs exp</span>
+                            <span className="font-medium">{provider.experience_years}+ yrs experience</span>
                           ) : null}
                         </div>
 
-                        <div className="flex items-center justify-between pt-4 border-t border-border">
-                          <div className="flex items-center gap-1">
+                        {/* Rating and Price */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
                             <Star className="h-4 w-4 fill-primary text-primary" />
-                            <span className="font-semibold">
+                            <span className="font-semibold text-primary">
                               {provider.rating?.toFixed(1) || "New"}
                             </span>
                             <span className="text-muted-foreground text-sm">
                               ({provider.total_reviews || 0} reviews)
                             </span>
                           </div>
-                          {provider.pricing_info && (
-                            <span className="text-sm font-medium text-secondary">
-                              {provider.pricing_info}
+                          {(provider.base_price || provider.pricing_info) && (
+                            <span className="text-sm font-semibold text-primary">
+                              {provider.base_price 
+                                ? `₹ ${provider.base_price.toLocaleString()}` 
+                                : provider.pricing_info}
                             </span>
                           )}
                         </div>
