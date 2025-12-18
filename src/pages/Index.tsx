@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ServicesSection } from "@/components/ServicesSection";
 import { TrustSection } from "@/components/TrustSection";
 import { Footer } from "@/components/Footer";
+import { AIChatbot } from "@/components/AIChatbot";
 
 const Index = () => {
   return (
@@ -12,6 +13,7 @@ const Index = () => {
       <ServicesSection />
       <TrustSection />
       <Footer />
+      <AIChatbot />
     </main>
   );
 };
