@@ -479,6 +479,47 @@ export type Database = {
         }
         Relationships: []
       }
+      email_otp_codes: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          purpose: string
+          used: boolean | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          purpose: string
+          used?: boolean | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          purpose?: string
+          used?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_otp_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       escrow_payments: {
         Row: {
           amount: number
@@ -885,6 +926,7 @@ export type Database = {
           phone: string | null
           profile_image: string | null
           push_token: string | null
+          two_factor_enabled: boolean | null
           updated_at: string
           user_id: string
           user_type: string | null
@@ -900,6 +942,7 @@ export type Database = {
           phone?: string | null
           profile_image?: string | null
           push_token?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
           user_id: string
           user_type?: string | null
@@ -915,6 +958,7 @@ export type Database = {
           phone?: string | null
           profile_image?: string | null
           push_token?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
           user_id?: string
           user_type?: string | null
