@@ -297,12 +297,55 @@ const Providers = () => {
               <span className="text-sm font-medium whitespace-nowrap">Verified Only</span>
             </div>
 
-            {hasActiveFilters && (
-              <Button variant="ghost" size="icon" onClick={clearFilters}>
-                <X className="h-4 w-4" />
-              </Button>
-            )}
           </div>
+
+          {/* Active Filter Badges */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-2 mt-4">
+              <span className="text-sm text-muted-foreground">Active filters:</span>
+              
+              {searchQuery && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setSearchQuery("")}>
+                  Search: {searchQuery}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+              
+              {selectedCategory !== "all" && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setSelectedCategory("all")}>
+                  {categories.find(c => c.id === selectedCategory)?.name || "Category"}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+              
+              {selectedCity !== "all" && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => { setSelectedCity("all"); setSelectedArea("all"); }}>
+                  City: {selectedCity}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+              
+              {selectedArea !== "all" && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setSelectedArea("all")}>
+                  Area: {selectedArea}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+              
+              {showVerifiedOnly && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 bg-green-500/10 text-green-600" onClick={() => setShowVerifiedOnly(false)}>
+                  <BadgeCheck className="h-3 w-3" />
+                  Verified Only
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+              
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                <X className="h-4 w-4 mr-1" />
+                Clear All
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
