@@ -176,16 +176,16 @@ export const HeroSection = () => {
                 <AISearch />
               </div>
             ) : (
-              <div className="glass-card rounded-2xl sm:rounded-full p-4 sm:p-2 max-w-3xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-0">
+              <div className="glass-card rounded-2xl sm:rounded-full p-4 sm:p-3 max-w-4xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
                 {/* Service Dropdown */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border-2 border-primary/40 sm:border-0 rounded-xl sm:rounded-none bg-primary/5 sm:bg-transparent">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Search className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-3 border-2 border-primary/40 sm:border sm:border-border/30 rounded-xl sm:rounded-full bg-primary/5 sm:bg-background/50 sm:hover:bg-background/70 transition-colors">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <Search className="w-4 h-4 sm:w-4 sm:h-4 text-primary" />
                   </div>
                   <select 
                     value={selectedService}
                     onChange={(e) => setSelectedService(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-foreground/80 cursor-pointer text-sm sm:text-base"
+                    className="flex-1 bg-transparent border-none outline-none text-foreground cursor-pointer text-sm sm:text-sm font-medium"
                   >
                     <option value="">Choose a Service</option>
                     {services.map(type => (
@@ -194,44 +194,38 @@ export const HeroSection = () => {
                   </select>
                 </div>
 
-                {/* Divider - Desktop only */}
-                <div className="hidden sm:block w-px h-8 bg-border/50 mx-1" />
-
                 {/* Date Picker */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border-2 border-primary/40 sm:border-0 rounded-xl sm:rounded-none bg-primary/5 sm:bg-transparent">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-3 border-2 border-primary/40 sm:border sm:border-border/30 rounded-xl sm:rounded-full bg-primary/5 sm:bg-background/50 sm:hover:bg-background/70 transition-colors">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-4 h-4 sm:w-4 sm:h-4 text-primary" />
                   </div>
                   <input 
                     type="date" 
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-foreground/80 text-sm sm:text-base"
+                    className="flex-1 bg-transparent border-none outline-none text-foreground text-sm sm:text-sm font-medium"
                     placeholder="Date of the Event"
                   />
                 </div>
 
-                {/* Divider - Desktop only */}
-                <div className="hidden sm:block w-px h-8 bg-border/50 mx-1" />
-
                 {/* Location */}
-                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border-2 border-primary/40 sm:border-0 rounded-xl sm:rounded-none bg-primary/5 sm:bg-transparent">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-3 border-2 border-primary/40 sm:border sm:border-border/30 rounded-xl sm:rounded-full bg-primary/5 sm:bg-background/50 sm:hover:bg-background/70 transition-colors">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-4 h-4 sm:w-4 sm:h-4 text-primary" />
                   </div>
                   <input 
                     type="text" 
-                    placeholder="Location of the Event" 
+                    placeholder="Location" 
                     value={locationInput}
                     onChange={(e) => setLocationInput(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-foreground/80 placeholder:text-foreground/50 text-sm sm:text-base"
+                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-foreground/50 text-sm sm:text-sm font-medium"
                   />
                 </div>
 
                 {/* Search Button */}
                 <Button
                   variant="gold"
-                  className="w-full sm:w-auto h-12 px-6 rounded-xl sm:rounded-full flex-shrink-0 self-center gap-2 sm:ml-2"
+                  className="w-full sm:w-auto h-12 sm:h-11 px-6 sm:px-8 rounded-xl sm:rounded-full flex-shrink-0 self-center gap-2"
                   onClick={handleSearch}
                 >
                   <Search className="w-5 h-5" />
