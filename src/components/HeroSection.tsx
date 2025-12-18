@@ -5,7 +5,9 @@ import { AISearch } from "@/components/AISearch";
 import { useState, useEffect, useCallback } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroWedding from "@/assets/hero-wedding.jpg";
+import heroPuja from "@/assets/hero-puja.jpg";
+import heroCelebration from "@/assets/hero-celebration.jpg";
 
 const services = [
   "Poojari / Priest",
@@ -20,28 +22,28 @@ const services = [
 
 const heroSlides = [
   {
-    image: heroBg,
+    image: heroWedding,
     title: "Sacred Ceremonies &",
     highlight: "Traditional",
     subtitle: "Indian Services",
     description: "Book trusted pandits, photographers, caterers & decorators for authentic Indian weddings, pooja rituals, mehendi ceremonies & traditional events across India"
   },
   {
-    image: heroBg,
+    image: heroPuja,
     title: "Celebrate Your",
     highlight: "Special",
     subtitle: "Moments",
     description: "From intimate pujas to grand weddings, find verified professionals who understand your traditions and deliver exceptional service"
   },
   {
-    image: heroBg,
+    image: heroCelebration,
     title: "Trusted",
     highlight: "Professionals",
     subtitle: "Near You",
     description: "Connect with experienced pandits, photographers, makeup artists and more - all verified and reviewed by families like yours"
   },
   {
-    image: heroBg,
+    image: heroWedding,
     title: "Your One-Stop",
     highlight: "Destination",
     subtitle: "For Events",
