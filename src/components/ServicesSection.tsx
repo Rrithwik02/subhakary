@@ -148,35 +148,35 @@ export const ServicesSection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6"
         >
           {services.map((service) => (
             <motion.div
               key={service.name}
               variants={itemVariants}
               onClick={() => handleServiceClick(service.filter)}
-              className="group relative bg-card rounded-2xl p-6 border border-border hover:border-primary/30 transition-all duration-300 hover-lift cursor-pointer overflow-hidden">
+              className="group relative bg-card rounded-2xl p-5 sm:p-6 border border-border hover:border-primary/30 transition-all duration-300 hover-lift cursor-pointer overflow-hidden active:scale-[0.98] active:opacity-95 touch-manipulation">
               {/* Background gradient on hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
               <div className="relative z-10">
                 {/* Icon */}
                 <div
-                  className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300`}
                 >
-                  <service.icon className="w-7 h-7 text-cream" />
+                  <service.icon className="w-6 h-6 sm:w-7 sm:h-7 text-cream" />
                 </div>
 
                 {/* Content */}
-                <h3 className="font-display text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                <h3 className="font-display text-base sm:text-xl font-semibold text-foreground mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-1">
                   {service.name}
                 </h3>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-xs sm:text-sm line-clamp-2 hidden sm:block">
                   {service.description}
                 </p>
 
-                {/* Arrow */}
-                <div className="mt-4 flex items-center gap-2 text-primary font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {/* Arrow - hidden on mobile */}
+                <div className="mt-3 sm:mt-4 hidden sm:flex items-center gap-2 text-primary font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span>Explore</span>
                   <svg
                     className="w-4 h-4 group-hover:translate-x-1 transition-transform"
