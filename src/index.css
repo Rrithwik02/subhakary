@@ -134,14 +134,24 @@
   }
 
   .glass-nav {
-    @apply bg-background/60 backdrop-blur-2xl border border-white/20;
+    @apply backdrop-blur-2xl border border-gold/30;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
     background: linear-gradient(
       135deg,
-      hsl(var(--background) / 0.7) 0%,
-      hsl(var(--background) / 0.5) 100%
+      hsl(var(--gold) / 0.85) 0%,
+      hsl(var(--gold) / 0.75) 100%
     );
+  }
+
+  .glass-nav a,
+  .glass-nav button {
+    @apply text-brown-dark;
+  }
+
+  .glass-nav a:hover,
+  .glass-nav button:hover {
+    @apply text-brown;
   }
 
   .glass-card {
