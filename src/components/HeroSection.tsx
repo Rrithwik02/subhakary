@@ -2,7 +2,9 @@ import { motion } from "framer-motion";
 import { ChevronDown, Calendar, MapPin, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AISearch } from "@/components/AISearch";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const services = [
@@ -16,47 +18,109 @@ const services = [
   "Event Manager",
 ];
 
+const heroSlides = [
+  {
+    image: heroBg,
+    title: "Sacred Ceremonies &",
+    highlight: "Traditional",
+    subtitle: "Indian Services",
+    description: "Book trusted pandits, photographers, caterers & decorators for authentic Indian weddings, pooja rituals, mehendi ceremonies & traditional events across India"
+  },
+  {
+    image: heroBg,
+    title: "Celebrate Your",
+    highlight: "Special",
+    subtitle: "Moments",
+    description: "From intimate pujas to grand weddings, find verified professionals who understand your traditions and deliver exceptional service"
+  },
+  {
+    image: heroBg,
+    title: "Trusted",
+    highlight: "Professionals",
+    subtitle: "Near You",
+    description: "Connect with experienced pandits, photographers, makeup artists and more - all verified and reviewed by families like yours"
+  },
+  {
+    image: heroBg,
+    title: "Your One-Stop",
+    highlight: "Destination",
+    subtitle: "For Events",
+    description: "Whether it's a wedding, griha pravesh, or naming ceremony - we have the perfect service providers to make your event memorable"
+  },
+];
+
 export const HeroSection = () => {
   const [showAISearch, setShowAISearch] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true },
+    [Autoplay({ delay: 5000, stopOnInteraction: false })]
+  );
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  const scrollTo = useCallback(
+    (index: number) => emblaApi && emblaApi.scrollTo(index),
+    [emblaApi]
+  );
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={heroBg}
-          alt="Traditional Indian ceremony"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 hero-overlay" />
+      {/* Carousel Background */}
+      <div className="absolute inset-0 z-0" ref={emblaRef}>
+        <div className="flex h-full">
+          {heroSlides.map((slide, index) => (
+            <div key={index} className="flex-[0_0_100%] min-w-0 relative h-full">
+              <img
+                src={slide.image}
+                alt={`Traditional Indian ceremony ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 hero-overlay" />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Headline */}
+          {/* Headline - Animated based on current slide */}
           <motion.h1
+            key={selectedIndex}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.8 }}
             className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-cream leading-tight mb-6"
           >
-            Sacred Ceremonies &{" "}
-            <span className="text-gradient-gold">Traditional</span>
+            {heroSlides[selectedIndex].title}{" "}
+            <span className="text-gradient-gold">{heroSlides[selectedIndex].highlight}</span>
             <br />
-            Indian Services
+            {heroSlides[selectedIndex].subtitle}
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p
+            key={`desc-${selectedIndex}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
             className="font-body text-base sm:text-lg text-cream/80 max-w-2xl mx-auto mb-6 leading-relaxed"
           >
-            Book trusted pandits, photographers, caterers & decorators for authentic
-            Indian weddings, pooja rituals, mehendi ceremonies & traditional events
-            across India
+            {heroSlides[selectedIndex].description}
           </motion.p>
 
           {/* Search Toggle */}
@@ -153,17 +217,25 @@ export const HeroSection = () => {
           </motion.div>
         </div>
 
-        {/* Carousel Dots */}
+        {/* Interactive Carousel Dots */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.8 }}
           className="flex items-center justify-center gap-2 mt-16"
         >
-          <div className="w-8 h-2 rounded-full bg-cream" />
-          <div className="w-2 h-2 rounded-full bg-cream/40" />
-          <div className="w-2 h-2 rounded-full bg-cream/40" />
-          <div className="w-2 h-2 rounded-full bg-cream/40" />
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => scrollTo(index)}
+              className={`transition-all duration-300 rounded-full ${
+                selectedIndex === index
+                  ? "w-8 h-2 bg-cream"
+                  : "w-2 h-2 bg-cream/40 hover:bg-cream/60"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </motion.div>
       </div>
     </section>
