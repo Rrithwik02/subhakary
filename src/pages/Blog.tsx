@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, ArrowRight, Search } from "lucide-react";
+import { Calendar, Clock, ArrowRight, Search, ArrowLeft } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { NewsletterForm } from "@/components/NewsletterForm";
 import { blogPosts, blogCategories } from "@/data/blogData";
 
 const containerVariants = {
@@ -54,12 +55,19 @@ const Blog = () => {
 
       {/* Hero Header */}
       <section className="pt-32 pb-16 bg-gradient-to-b from-cream to-background">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-4">
+          <Link to="/">
+            <Button variant="ghost" className="mb-6 text-brown hover:text-gold">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+          
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="font-display text-4xl md:text-6xl text-brown mb-4"
+            className="font-display text-4xl md:text-6xl text-brown mb-4 text-center"
           >
             Tradition & Culture Blog
           </motion.h1>
@@ -67,7 +75,7 @@ const Blog = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-muted-foreground max-w-2xl mx-auto text-lg"
+            className="text-muted-foreground max-w-2xl mx-auto text-lg text-center"
           >
             Discover the rich heritage of Indian traditions, wedding customs, and ceremonial
             practices. Get expert guidance on performing rituals, planning celebrations, and
@@ -235,16 +243,7 @@ const Blog = () => {
               Subscribe to our newsletter to receive the latest articles on Indian traditions,
               ceremony guides, and cultural insights directly in your inbox.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-full border border-brown/20 bg-cream focus:outline-none focus:border-gold"
-              />
-              <Button className="bg-gold hover:bg-gold/90 text-brown px-8 rounded-full">
-                Subscribe
-              </Button>
-            </div>
+            <NewsletterForm source="blog_page" className="max-w-md mx-auto" />
           </motion.div>
         </div>
       </section>
