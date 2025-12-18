@@ -56,11 +56,15 @@ export const Navbar = () => {
         .eq("user_id", user.id)
         .eq("status", "approved")
         .maybeSingle();
-      if (error) return false;
+      if (error) {
+        console.error("Provider check error:", error);
+        return false;
+      }
       return !!data;
     },
     enabled: !!user?.id,
     staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const handleSignOut = async () => {
