@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeProvider from "./pages/BecomeProvider";
@@ -39,7 +40,7 @@ const App = () => (
             <Route path="/provider/:id" element={<ProviderProfile />} />
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/chat" element={<Chat />} />

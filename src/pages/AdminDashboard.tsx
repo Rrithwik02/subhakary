@@ -14,6 +14,9 @@ import {
   Shield,
   AlertCircle,
   Eye,
+  Mail,
+  Phone,
+  UserCircle,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -82,6 +85,33 @@ const AdminDashboard = () => {
           documents:provider_documents(*)
         `)
         .order("submitted_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin === true,
+  });
+
+  // Fetch all users/profiles
+  const { data: allUsers = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ["all-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin === true,
+  });
+
+  // Fetch user roles
+  const { data: userRoles = [] } = useQuery({
+    queryKey: ["all-user-roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("*");
       if (error) throw error;
       return data;
     },
@@ -206,6 +236,19 @@ const AdminDashboard = () => {
   const pendingProviders = providers.filter((p) => p.status === "pending");
   const approvedProviders = providers.filter((p) => p.status === "approved");
   const rejectedProviders = providers.filter((p) => p.status === "rejected");
+
+  const getUserRole = (userId: string) => {
+    const roles = userRoles.filter((r) => r.user_id === userId);
+    if (roles.some((r) => r.role === "admin")) return "admin";
+    if (roles.some((r) => r.role === "provider")) return "provider";
+    return "user";
+  };
+
+  const roleColors = {
+    admin: "bg-purple-500/10 text-purple-600 border-purple-200",
+    provider: "bg-blue-500/10 text-blue-600 border-blue-200",
+    user: "bg-gray-500/10 text-gray-600 border-gray-200",
+  };
 
   const ProviderCard = ({
     provider,
@@ -368,8 +411,11 @@ const AdminDashboard = () => {
               </Card>
             </div>
 
-            <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+            <Tabs defaultValue="users" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="users">
+                  Users ({allUsers.length})
+                </TabsTrigger>
                 <TabsTrigger value="pending">
                   Pending ({pendingProviders.length})
                 </TabsTrigger>
@@ -380,6 +426,102 @@ const AdminDashboard = () => {
                   Rejected ({rejectedProviders.length})
                 </TabsTrigger>
               </TabsList>
+
+              {/* Users Tab */}
+              <TabsContent value="users" className="mt-6">
+                {loadingUsers ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <Card key={i} className="animate-pulse">
+                        <CardContent className="p-6">
+                          <div className="h-6 bg-muted rounded w-1/3 mb-2" />
+                          <div className="h-4 bg-muted rounded w-1/2" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : allUsers.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-display text-xl font-semibold mb-2">
+                        No users yet
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Users will appear here when they sign up
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {allUsers.map((profile, i) => {
+                      const role = getUserRole(profile.user_id);
+                      return (
+                        <motion.div
+                          key={profile.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.03 }}
+                        >
+                          <Card className="hover-lift">
+                            <CardContent className="p-6">
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                    {profile.avatar_url ? (
+                                      <img
+                                        src={profile.avatar_url}
+                                        alt={profile.full_name || "User"}
+                                        className="h-12 w-12 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <UserCircle className="h-8 w-8 text-primary" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h3 className="font-display text-lg font-semibold">
+                                      {profile.full_name || "Unnamed User"}
+                                    </h3>
+                                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                                      <Badge className={roleColors[role as keyof typeof roleColors]}>
+                                        {role}
+                                      </Badge>
+                                      {profile.city && (
+                                        <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                          <MapPin className="h-3 w-3" />
+                                          {profile.city}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                                  {profile.email && (
+                                    <span className="flex items-center gap-2">
+                                      <Mail className="h-4 w-4" />
+                                      {profile.email}
+                                    </span>
+                                  )}
+                                  {profile.phone && (
+                                    <span className="flex items-center gap-2">
+                                      <Phone className="h-4 w-4" />
+                                      {profile.phone}
+                                    </span>
+                                  )}
+                                  <span className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4" />
+                                    Joined {format(new Date(profile.created_at), "PP")}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
 
               <TabsContent value="pending" className="mt-6">
                 {isLoading ? (
