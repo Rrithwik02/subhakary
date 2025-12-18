@@ -1,0 +1,138 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@2.0.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface SendOTPRequest {
+  email: string;
+  purpose: "login" | "enable_2fa" | "disable_2fa";
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { email, purpose }: SendOTPRequest = await req.json();
+
+    if (!email || !purpose) {
+      return new Response(
+        JSON.stringify({ error: "Email and purpose are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get profile by email
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, email")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      console.error("Profile not found:", profileError);
+      return new Response(
+        JSON.stringify({ error: "User not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Generate 6-digit OTP
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Invalidate any existing unused OTP codes for this user and purpose
+    await supabase
+      .from("email_otp_codes")
+      .update({ used: true })
+      .eq("user_id", profile.id)
+      .eq("purpose", purpose)
+      .eq("used", false);
+
+    // Store OTP in database
+    const { error: insertError } = await supabase
+      .from("email_otp_codes")
+      .insert({
+        user_id: profile.id,
+        email: email,
+        code: code,
+        purpose: purpose,
+        expires_at: expiresAt.toISOString(),
+      });
+
+    if (insertError) {
+      console.error("Failed to store OTP:", insertError);
+      return new Response(
+        JSON.stringify({ error: "Failed to generate OTP" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Try to send email via Resend if API key is configured
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    
+    if (resendApiKey) {
+      try {
+        const resend = new Resend(resendApiKey);
+
+        const purposeText = purpose === "login" 
+          ? "login to your account" 
+          : purpose === "enable_2fa" 
+          ? "enable two-factor authentication"
+          : "disable two-factor authentication";
+
+        await resend.emails.send({
+          from: "Subhakary <noreply@subhakary.com>",
+          to: [email],
+          subject: `Your verification code: ${code}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #D4A853;">Subhakary Verification Code</h1>
+              <p>You requested to ${purposeText}. Use the code below to verify:</p>
+              <div style="background: #f4f4f4; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #333;">${code}</span>
+              </div>
+              <p style="color: #666;">This code expires in 10 minutes.</p>
+              <p style="color: #666;">If you didn't request this, please ignore this email.</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+              <p style="color: #999; font-size: 12px;">© Subhakary - Your trusted cultural services platform</p>
+            </div>
+          `,
+        });
+
+        console.log(`OTP email sent successfully to ${email}`);
+      } catch (emailError) {
+        console.error("Failed to send email via Resend:", emailError);
+        // Continue - OTP is still valid, just not sent via email
+      }
+    } else {
+      // Log OTP to console for testing when Resend is not configured
+      console.log(`[TEST MODE] OTP for ${email}: ${code} (Purpose: ${purpose})`);
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: resendApiKey ? "OTP sent to your email" : "OTP generated (check server logs for testing)"
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error: any) {
+    console.error("Error in send-otp function:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+};
+
+serve(handler);

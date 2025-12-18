@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { TwoFactorSettings } from "@/components/TwoFactorSettings";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +46,7 @@ const Profile = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, refetch } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -365,6 +366,13 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Security Settings */}
+            <TwoFactorSettings
+              email={profile?.email || user?.email || ""}
+              twoFactorEnabled={profile?.two_factor_enabled || false}
+              onUpdate={() => refetch()}
+            />
           </motion.div>
         </div>
       </section>

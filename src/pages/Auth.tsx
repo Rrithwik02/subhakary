@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
 
@@ -31,16 +33,22 @@ const Auth = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // 2FA state
+  const [show2FAStep, setShow2FAStep] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
-  const { user, signUp, signIn, signInWithGoogle } = useAuth();
+  const { user, signUp, signIn, signInWithGoogle, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (user && !show2FAStep) {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, navigate, show2FAStep]);
 
   const validateForm = () => {
     try {
@@ -62,6 +70,83 @@ const Auth = () => {
         setErrors(newErrors);
       }
       return false;
+    }
+  };
+
+  const checkIf2FAEnabled = async (email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("two_factor_enabled")
+        .eq("email", email)
+        .maybeSingle();
+      
+      if (error || !data) return false;
+      return data.two_factor_enabled === true;
+    } catch {
+      return false;
+    }
+  };
+
+  const sendLoginOtp = async (email: string) => {
+    setIsSendingOtp(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-otp", {
+        body: { email, purpose: "login" },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Verification code sent",
+        description: "Please check your email for the 6-digit code",
+      });
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Failed to send verification code",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const verifyLoginOtp = async () => {
+    if (otpCode.length !== 6) {
+      toast({
+        title: "Invalid code",
+        description: "Please enter the complete 6-digit code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    try {
+      const { error } = await supabase.functions.invoke("verify-otp", {
+        body: { email: formData.email, code: otpCode, purpose: "login" },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Welcome back!",
+        description: "You've been signed in successfully",
+      });
+      
+      setShow2FAStep(false);
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Verification failed",
+        description: error.message || "Invalid or expired code",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -96,6 +181,10 @@ const Auth = () => {
           });
         }
       } else {
+        // Check if 2FA is enabled for this user
+        const has2FA = await checkIf2FAEnabled(formData.email);
+        
+        // Sign in first
         const { error } = await signIn(formData.email, formData.password);
         if (error) {
           toast({
@@ -103,12 +192,109 @@ const Auth = () => {
             description: "Invalid email or password. Please try again.",
             variant: "destructive",
           });
+          return;
+        }
+
+        // If 2FA is enabled, show OTP step
+        if (has2FA) {
+          const otpSent = await sendLoginOtp(formData.email);
+          if (otpSent) {
+            setShow2FAStep(true);
+          } else {
+            // If OTP failed to send, sign out the user
+            await signOut();
+          }
         }
       }
     } finally {
       setLoading(false);
     }
   };
+
+  const handleCancel2FA = async () => {
+    await signOut();
+    setShow2FAStep(false);
+    setOtpCode("");
+  };
+
+  // 2FA Verification Step UI
+  if (show2FAStep) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-flex flex-col items-center gap-2">
+              <img src={logo} alt="Subhakary" className="h-16 w-auto" />
+            </Link>
+            <h1 className="font-display text-2xl font-semibold text-foreground mt-4">
+              Verify Your Identity
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              We've sent a verification code to{" "}
+              <span className="font-medium">{formData.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")}</span>
+            </p>
+          </div>
+
+          <div className="glass-card rounded-2xl p-8 space-y-6">
+            <div className="flex flex-col items-center gap-6">
+              <InputOTP
+                maxLength={6}
+                value={otpCode}
+                onChange={setOtpCode}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+
+              <Button
+                onClick={verifyLoginOtp}
+                disabled={otpCode.length !== 6 || isVerifyingOtp}
+                variant="gold"
+                className="w-full rounded-full"
+              >
+                {isVerifyingOtp ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify & Continue"
+                )}
+              </Button>
+
+              <Button
+                variant="ghost"
+                onClick={() => sendLoginOtp(formData.email)}
+                disabled={isSendingOtp}
+                className="text-sm"
+              >
+                {isSendingOtp ? "Sending..." : "Didn't receive the code? Resend"}
+              </Button>
+
+              <Button
+                variant="link"
+                onClick={handleCancel2FA}
+                className="text-muted-foreground"
+              >
+                Cancel and go back
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
