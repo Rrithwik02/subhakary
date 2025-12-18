@@ -18,10 +18,20 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
+// Popular cities and areas for the dropdown
+const POPULAR_LOCATIONS = {
+  "Hyderabad": ["Madhapur", "Gachibowli", "Hitech City", "Kondapur", "Kukatpally", "Ameerpet", "Dilsukhnagar", "LB Nagar", "ECIL", "Uppal", "Miyapur", "Secunderabad"],
+  "Bangalore": ["Koramangala", "Whitefield", "Electronic City", "Indiranagar", "HSR Layout", "BTM Layout", "Marathahalli"],
+  "Chennai": ["T Nagar", "Anna Nagar", "Velachery", "Adyar", "Nungambakkam"],
+  "Vijayawada": ["Benz Circle", "Labbipet", "Governorpet", "Patamata"],
+  "Visakhapatnam": ["Madhurawada", "Gajuwaka", "MVP Colony", "Dwaraka Nagar"],
+};
+
 const Providers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
+  const [selectedArea, setSelectedArea] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
 
   // Fetch categories
@@ -54,11 +64,18 @@ const Providers = () => {
     },
   });
 
-  // Get unique cities from providers
+  // Get unique cities from providers + popular cities
   const cities = useMemo(() => {
-    const citySet = new Set(providers.map((p) => p.city).filter(Boolean));
-    return Array.from(citySet).sort();
+    const providerCities = providers.map((p) => p.city).filter(Boolean);
+    const allCities = new Set([...Object.keys(POPULAR_LOCATIONS), ...providerCities]);
+    return Array.from(allCities).sort();
   }, [providers]);
+
+  // Get areas for selected city
+  const areas = useMemo(() => {
+    if (selectedCity === "all") return [];
+    return POPULAR_LOCATIONS[selectedCity as keyof typeof POPULAR_LOCATIONS] || [];
+  }, [selectedCity]);
 
   // Filter and sort providers
   const filteredProviders = useMemo(() => {
@@ -82,7 +99,19 @@ const Providers = () => {
 
     // City filter
     if (selectedCity !== "all") {
-      result = result.filter((p) => p.city === selectedCity);
+      result = result.filter((p) => 
+        p.city?.toLowerCase().includes(selectedCity.toLowerCase()) ||
+        p.service_cities?.some((c: string) => c.toLowerCase().includes(selectedCity.toLowerCase()))
+      );
+    }
+
+    // Area filter (search in city or address)
+    if (selectedArea !== "all") {
+      result = result.filter((p) =>
+        p.city?.toLowerCase().includes(selectedArea.toLowerCase()) ||
+        p.address?.toLowerCase().includes(selectedArea.toLowerCase()) ||
+        p.service_cities?.some((c: string) => c.toLowerCase().includes(selectedArea.toLowerCase()))
+      );
     }
 
     // Sorting
@@ -102,17 +131,23 @@ const Providers = () => {
     }
 
     return result;
-  }, [providers, searchQuery, selectedCategory, selectedCity, sortBy]);
+  }, [providers, searchQuery, selectedCategory, selectedCity, selectedArea, sortBy]);
 
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
     setSelectedCity("all");
+    setSelectedArea("all");
     setSortBy("rating");
   };
 
+  const handleCityChange = (value: string) => {
+    setSelectedCity(value);
+    setSelectedArea("all"); // Reset area when city changes
+  };
+
   const hasActiveFilters =
-    searchQuery || selectedCategory !== "all" || selectedCity !== "all";
+    searchQuery || selectedCategory !== "all" || selectedCity !== "all" || selectedArea !== "all";
 
   return (
     <div className="min-h-screen bg-background">
@@ -170,11 +205,12 @@ const Providers = () => {
             </Select>
 
             {/* City Filter */}
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
-              <SelectTrigger className="w-full lg:w-40">
+            <Select value={selectedCity} onValueChange={handleCityChange}>
+              <SelectTrigger className="w-full lg:w-44">
+                <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="All Cities" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border z-50">
                 <SelectItem value="all">All Cities</SelectItem>
                 {cities.map((city) => (
                   <SelectItem key={city} value={city!}>
@@ -183,6 +219,23 @@ const Providers = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Area Filter - only show when city is selected */}
+            {selectedCity !== "all" && areas.length > 0 && (
+              <Select value={selectedArea} onValueChange={setSelectedArea}>
+                <SelectTrigger className="w-full lg:w-44">
+                  <SelectValue placeholder="All Areas" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border z-50">
+                  <SelectItem value="all">All Areas in {selectedCity}</SelectItem>
+                  {areas.map((area) => (
+                    <SelectItem key={area} value={area}>
+                      {area}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             {/* Sort */}
             <Select value={sortBy} onValueChange={setSortBy}>

@@ -12,6 +12,7 @@ import {
   XCircle,
   AlertCircle,
   Inbox,
+  MessageCircle,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -31,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ProviderChatSection } from "@/components/ProviderChatSection";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600" },
@@ -391,12 +393,16 @@ const ProviderDashboard = () => {
             </div>
 
             <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="pending">
                   Pending ({pendingBookings.length})
                 </TabsTrigger>
                 <TabsTrigger value="active">
                   Active ({activeBookings.length})
+                </TabsTrigger>
+                <TabsTrigger value="messages" className="flex items-center gap-1">
+                  <MessageCircle className="h-3 w-3" />
+                  Messages
                 </TabsTrigger>
                 <TabsTrigger value="history">
                   History ({pastBookings.length})
@@ -470,6 +476,13 @@ const ProviderDashboard = () => {
                     ))}
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="messages" className="mt-6">
+                <ProviderChatSection 
+                  providerId={provider.id} 
+                  providerProfileId={provider.profile_id || ""} 
+                />
               </TabsContent>
 
               <TabsContent value="history" className="mt-6">
