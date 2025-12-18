@@ -92,29 +92,29 @@ export const TrustSection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
         >
           {stats.map((stat) => (
             <motion.div
               key={stat.label}
               variants={itemVariants}
-              className="relative bg-card rounded-2xl p-8 border border-border text-center hover-lift"
+              className="relative bg-card rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-border text-center hover-lift active:scale-[0.98] transition-transform"
             >
               {/* Icon */}
-              <div className="w-16 h-16 mx-auto rounded-2xl gradient-gold flex items-center justify-center mb-6 shadow-gold">
-                <stat.icon className="w-8 h-8 text-brown-dark" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl sm:rounded-2xl gradient-gold flex items-center justify-center mb-3 sm:mb-6 shadow-gold">
+                <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-brown-dark" />
               </div>
 
               {/* Value */}
-              <div className="font-display text-4xl font-bold text-foreground mb-2">
+              <div className="font-display text-2xl sm:text-4xl font-bold text-foreground mb-1 sm:mb-2">
                 {stat.value}
               </div>
 
               {/* Label */}
-              <div className="font-medium text-foreground mb-2">{stat.label}</div>
+              <div className="font-medium text-sm sm:text-base text-foreground mb-1 sm:mb-2">{stat.label}</div>
 
               {/* Description */}
-              <p className="text-sm text-muted-foreground">{stat.description}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{stat.description}</p>
             </motion.div>
           ))}
         </motion.div>
