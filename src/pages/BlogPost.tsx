@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NewsletterForm } from "@/components/NewsletterForm";
 import { blogPosts } from "@/data/blogData";
 import ReactMarkdown from "react-markdown";
 
@@ -170,16 +171,7 @@ const BlogPost = () => {
             <p className="text-muted-foreground mb-6">
               Subscribe to receive more articles on Indian traditions and cultural insights.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-full border border-brown/20 bg-cream focus:outline-none focus:border-gold"
-              />
-              <Button className="bg-gold hover:bg-gold/90 text-brown px-8 rounded-full">
-                Subscribe
-              </Button>
-            </div>
+            <NewsletterForm source="blog_post" className="max-w-md mx-auto" />
           </motion.div>
         </div>
       </section>
