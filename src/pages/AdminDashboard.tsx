@@ -662,31 +662,38 @@ const AdminDashboard = () => {
             <DialogTitle>Uploaded Documents</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {selectedDocs.map((doc) => (
-              <div
-                key={doc.id}
-                className="flex items-center justify-between p-3 rounded-lg border border-border"
-              >
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium text-sm">{doc.file_name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {doc.document_type.replace("_", " ")}
-                    </p>
-                  </div>
-                </div>
-                <a
-                  href={doc.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline text-sm flex items-center gap-1"
+            {selectedDocs.map((doc) => {
+              // Construct the full storage URL
+              const storageUrl = doc.file_url.startsWith('http') 
+                ? doc.file_url 
+                : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/provider-documents/${doc.file_url}`;
+              
+              return (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between p-3 rounded-lg border border-border"
                 >
-                  <Eye className="h-4 w-4" />
-                  View
-                </a>
-              </div>
-            ))}
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-sm">{doc.file_name}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {doc.document_type.replace("_", " ")}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={storageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline text-sm flex items-center gap-1"
+                  >
+                    <Eye className="h-4 w-4" />
+                    View
+                  </a>
+                </div>
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>
