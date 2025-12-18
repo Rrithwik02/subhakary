@@ -163,7 +163,7 @@ export const HeroSection = () => {
                 <AISearch />
               </div>
             ) : (
-              <div className="glass-card rounded-full p-2 max-w-3xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="glass-card rounded-2xl sm:rounded-full p-4 sm:p-2 max-w-3xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2">
                 {/* Service Dropdown */}
                 <div className="flex-1 flex items-center gap-3 px-4 py-3 sm:py-2 border-b sm:border-b-0 sm:border-r border-border/30">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
