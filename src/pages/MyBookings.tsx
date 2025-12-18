@@ -13,6 +13,7 @@ import {
   AlertCircle,
   ArrowRight,
   Star,
+  MessageCircle,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -273,6 +274,18 @@ const MyBookings = () => {
                                 <StatusIcon className="h-3 w-3" />
                                 {status.label}
                               </Badge>
+                              {booking.status === "accepted" && (
+                                <Link to={`/chat?booking=${booking.id}`}>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-primary border-primary hover:bg-primary/10"
+                                  >
+                                    <MessageCircle className="h-3 w-3 mr-1" />
+                                    Chat
+                                  </Button>
+                                </Link>
+                              )}
                               {booking.status === "pending" && (
                                 <Button
                                   variant="outline"

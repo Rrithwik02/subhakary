@@ -1,29 +1,114 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Loader2 } from "lucide-react";
+import { Search, Sparkles, Loader2, Star, MapPin, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+
+interface Provider {
+  id: string;
+  business_name: string;
+  service_type: string | null;
+  city: string | null;
+  rating: number | null;
+  total_reviews: number | null;
+  base_price: number | null;
+}
 
 interface AISearchProps {
   onSearch?: (query: string) => void;
 }
 
 export const AISearch = ({ onSearch }: AISearchProps) => {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [suggestion, setSuggestion] = useState("");
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSuggestion, setShowSuggestion] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const extractSearchParams = (searchQuery: string): { service: string | null; location: string | null } => {
+    const query = searchQuery.toLowerCase();
+    
+    // Common service types
+    const services = [
+      'priest', 'poojari', 'pandit', 'photography', 'photographer', 'videography', 'videographer',
+      'makeup', 'mehandi', 'mehndi', 'henna', 'decoration', 'decorator', 'catering', 'caterer',
+      'function hall', 'event manager', 'mangala vadyam', 'vayudyam'
+    ];
+    
+    // Common cities/areas in India
+    const locations = [
+      'hyderabad', 'secunderabad', 'madhapur', 'gachibowli', 'hitech city', 'kondapur', 'kukatpally',
+      'ameerpet', 'dilsukhnagar', 'lb nagar', 'ecil', 'uppal', 'miyapur', 'bangalore', 'bengaluru',
+      'chennai', 'mumbai', 'delhi', 'kolkata', 'pune', 'ahmedabad', 'vijayawada', 'visakhapatnam',
+      'vizag', 'tirupati', 'warangal', 'guntur', 'nellore', 'kakinada', 'rajahmundry'
+    ];
+    
+    let foundService: string | null = null;
+    let foundLocation: string | null = null;
+    
+    for (const service of services) {
+      if (query.includes(service)) {
+        foundService = service;
+        break;
+      }
+    }
+    
+    for (const location of locations) {
+      if (query.includes(location)) {
+        foundLocation = location;
+        break;
+      }
+    }
+    
+    return { service: foundService, location: foundLocation };
+  };
+
+  const fetchProviders = async (service: string | null, location: string | null) => {
+    let queryBuilder = supabase
+      .from('service_providers')
+      .select('id, business_name, service_type, city, rating, total_reviews, base_price')
+      .eq('status', 'approved')
+      .order('rating', { ascending: false })
+      .limit(5);
+
+    if (location) {
+      // Search in city or service_cities array
+      queryBuilder = queryBuilder.or(`city.ilike.%${location}%,service_cities.cs.{${location}}`);
+    }
+
+    if (service) {
+      queryBuilder = queryBuilder.or(`service_type.ilike.%${service}%,business_name.ilike.%${service}%`);
+    }
+
+    const { data, error } = await queryBuilder;
+
+    if (error) {
+      console.error('Error fetching providers:', error);
+      return [];
+    }
+
+    return data || [];
+  };
 
   const getAISuggestion = async () => {
     if (!query.trim()) return;
 
     setIsLoading(true);
-    setShowSuggestion(true);
+    setShowResults(true);
     setSuggestion("");
+    setProviders([]);
+
+    const { service, location } = extractSearchParams(query);
 
     try {
+      // Fetch providers in parallel with AI suggestion
+      const providersPromise = fetchProviders(service, location);
+
       const response = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -66,6 +151,10 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
           }
         }
       }
+
+      // Wait for providers
+      const fetchedProviders = await providersPromise;
+      setProviders(fetchedProviders);
     } catch (error) {
       console.error("AI search error:", error);
       setSuggestion("I couldn't process your request. Try browsing our service categories directly.");
@@ -119,40 +208,121 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
       </div>
 
       <AnimatePresence>
-        {showSuggestion && (
+        {showResults && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl"
+            className="mt-4 space-y-4"
           >
-            <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-primary mb-1">AI Suggestion</p>
-                {isLoading && !suggestion ? (
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">{suggestion}</p>
+            {/* AI Suggestion */}
+            <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary mb-1">AI Suggestion</p>
+                  {isLoading && !suggestion ? (
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{suggestion}</p>
+                  )}
+                </div>
+                {!isLoading && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowResults(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ×
+                  </Button>
                 )}
               </div>
-              {!isLoading && (
+            </div>
+
+            {/* Provider Results */}
+            {providers.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="bg-background border rounded-xl p-4"
+              >
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-primary" />
+                  Top Providers Found
+                </h3>
+                <div className="space-y-2">
+                  {providers.map((provider) => (
+                    <motion.div
+                      key={provider.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
+                      onClick={() => navigate(`/providers/${provider.id}`)}
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">
+                          {provider.business_name}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                          {provider.service_type && (
+                            <span className="capitalize">{provider.service_type}</span>
+                          )}
+                          {provider.city && (
+                            <span className="flex items-center gap-0.5">
+                              <MapPin className="h-3 w-3" />
+                              {provider.city}
+                            </span>
+                          )}
+                          {provider.rating !== null && provider.rating > 0 && (
+                            <span className="flex items-center gap-0.5">
+                              <Star className="h-3 w-3 fill-primary text-primary" />
+                              {provider.rating.toFixed(1)}
+                              {provider.total_reviews && ` (${provider.total_reviews})`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </motion.div>
+                  ))}
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowSuggestion(false)}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="w-full mt-2 text-primary"
+                  onClick={() => navigate('/providers')}
                 >
-                  ×
+                  View All Providers
+                  <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
-              )}
-            </div>
+              </motion.div>
+            )}
+
+            {/* No providers found */}
+            {!isLoading && providers.length === 0 && suggestion && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-4"
+              >
+                <p className="text-sm text-muted-foreground mb-2">No providers found matching your search.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/providers')}
+                >
+                  Browse All Providers
+                </Button>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
