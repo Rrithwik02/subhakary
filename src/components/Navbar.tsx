@@ -30,7 +30,7 @@ export const Navbar = () => {
   const navigate = useNavigate();
 
   // Check if user is admin
-  const { data: isAdmin, isLoading: checkingAdmin } = useQuery({
+  const { data: isAdmin } = useQuery({
     queryKey: ["is-admin", user?.id],
     queryFn: async () => {
       if (!user?.id) return false;
@@ -38,16 +38,11 @@ export const Navbar = () => {
         _user_id: user.id,
         _role: "admin",
       });
-      console.log("Admin check result:", { userId: user.id, data, error });
-      if (error) {
-        console.error("Admin check error:", error);
-        return false;
-      }
+      if (error) return false;
       return data === true;
     },
     enabled: !!user?.id,
     staleTime: 0,
-    refetchOnWindowFocus: true,
   });
 
   const handleSignOut = async () => {
