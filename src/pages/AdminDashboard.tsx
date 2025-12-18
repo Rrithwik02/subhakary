@@ -19,6 +19,7 @@ import {
   UserCircle,
   BadgeCheck,
   BadgeX,
+  Crown,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -235,6 +236,36 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleTogglePremium = async (providerId: string, currentStatus: boolean) => {
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("service_providers")
+        .update({
+          is_premium: !currentStatus,
+        })
+        .eq("id", providerId);
+
+      if (error) throw error;
+
+      toast({
+        title: currentStatus ? "Premium status removed" : "Premium status granted",
+        description: currentStatus 
+          ? "The provider is no longer a premium member." 
+          : "The provider is now a premium member.",
+      });
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const viewDocuments = (documents: any[]) => {
     setSelectedDocs(documents);
     setDocumentsDialogOpen(true);
@@ -365,10 +396,17 @@ const AdminDashboard = () => {
                 {provider.category?.icon || "🙏"}
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-display text-lg font-semibold">
                     {provider.business_name}
                   </h3>
+                  {/* Premium Badge */}
+                  {provider.is_premium && (
+                    <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold rounded-md shadow-sm">
+                      <Crown className="h-3 w-3" />
+                      Premium
+                    </span>
+                  )}
                   {/* Verification Badge */}
                   {provider.is_verified ? (
                     <span className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 text-green-600 text-xs font-medium rounded-md border border-green-500/30">
@@ -435,6 +473,22 @@ const AdminDashboard = () => {
           </div>
 
           <div className="flex gap-2 lg:flex-col">
+            {/* Premium Toggle for approved providers */}
+            {showVerificationToggle && provider.status === "approved" && (
+              <Button
+                size="sm"
+                variant={provider.is_premium ? "outline" : "default"}
+                className={provider.is_premium 
+                  ? "border-amber-500/50 text-amber-600 hover:bg-amber-50" 
+                  : "bg-gradient-to-r from-amber-500 to-yellow-400 text-white hover:from-amber-600 hover:to-yellow-500"}
+                onClick={() => handleTogglePremium(provider.id, provider.is_premium)}
+                disabled={isProcessing}
+              >
+                <Crown className="h-4 w-4 mr-1" />
+                {provider.is_premium ? "Remove Premium" : "Make Premium"}
+              </Button>
+            )}
+
             {/* Verification Toggle for approved providers */}
             {showVerificationToggle && provider.status === "approved" && (
               <Button

@@ -349,16 +349,23 @@ const Providers = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <h3 className="font-display text-lg font-semibold line-clamp-1 text-foreground">
-                                {provider.business_name}
-                              </h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-display text-lg font-semibold line-clamp-1 text-foreground">
+                                  {provider.business_name}
+                                </h3>
+                                {provider.is_premium && (
+                                  <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold rounded-md whitespace-nowrap shadow-sm">
+                                    ⭐ Premium
+                                  </span>
+                                )}
+                              </div>
                               {provider.is_verified ? (
                                 <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-500 text-xs font-medium rounded-md whitespace-nowrap border border-green-500/30">
                                   ✓ Verified
                                 </span>
                               ) : (
                                 <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-600 text-xs font-medium rounded-md whitespace-nowrap border border-yellow-500/30">
-                                  Pending
+                                  Not Yet Verified
                                 </span>
                               )}
                             </div>
