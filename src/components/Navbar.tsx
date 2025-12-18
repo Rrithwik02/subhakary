@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield } from "lucide-react";
+import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationsCenter } from "@/components/NotificationsCenter";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,6 +40,24 @@ export const Navbar = () => {
       });
       if (error) return false;
       return data === true;
+    },
+    enabled: !!user?.id,
+    staleTime: 0,
+  });
+
+  // Check if user is an approved provider
+  const { data: isApprovedProvider } = useQuery({
+    queryKey: ["is-approved-provider", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data, error } = await supabase
+        .from("service_providers")
+        .select("id, status")
+        .eq("user_id", user.id)
+        .eq("status", "approved")
+        .maybeSingle();
+      if (error) return false;
+      return !!data;
     },
     enabled: !!user?.id,
     staleTime: 0,
@@ -102,6 +120,14 @@ export const Navbar = () => {
                   Become a Provider
                 </Button>
               </Link>
+              {isApprovedProvider && (
+                <Link to="/provider-dashboard">
+                  <Button variant="ghost" size="sm" className="font-medium text-green-600">
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    My Dashboard
+                  </Button>
+                </Link>
+              )}
               {isAdmin && (
                 <Link to="/admin">
                   <Button variant="ghost" size="sm" className="font-medium text-primary">
@@ -184,6 +210,14 @@ export const Navbar = () => {
                         Become Provider
                       </Button>
                     </Link>
+                    {isApprovedProvider && (
+                      <Link to="/provider-dashboard" className="w-full" onClick={() => setIsOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-green-600">
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
+                          My Dashboard
+                        </Button>
+                      </Link>
+                    )}
                     {isAdmin && (
                       <Link to="/admin" className="w-full" onClick={() => setIsOpen(false)}>
                         <Button variant="ghost" size="sm" className="w-full justify-start text-primary">
