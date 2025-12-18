@@ -3,6 +3,7 @@ import { ChevronDown, Calendar, MapPin, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AISearch } from "@/components/AISearch";
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import heroWedding from "@/assets/hero-wedding.jpg";
@@ -52,10 +53,20 @@ const heroSlides = [
 ];
 
 export const HeroSection = () => {
+  const navigate = useNavigate();
   const [showAISearch, setShowAISearch] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedService, setSelectedService] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
   const [locationInput, setLocationInput] = useState("");
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (selectedService) params.set("service", selectedService);
+    if (locationInput) params.set("city", locationInput);
+    if (selectedDate) params.set("date", selectedDate);
+    navigate(`/providers${params.toString() ? `?${params.toString()}` : ""}`);
+  };
   
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true },
@@ -190,6 +201,8 @@ export const HeroSection = () => {
                   </div>
                   <input 
                     type="date" 
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
                     className="flex-1 bg-transparent border-none outline-none text-foreground/80 text-sm sm:text-base"
                     placeholder="Date of the Event"
                   />
@@ -215,6 +228,7 @@ export const HeroSection = () => {
                 <Button
                   variant="gold"
                   className="w-full sm:w-auto h-12 px-6 rounded-xl sm:rounded-full flex-shrink-0 self-center gap-2"
+                  onClick={handleSearch}
                 >
                   <Search className="w-5 h-5" />
                   <span>Search</span>
