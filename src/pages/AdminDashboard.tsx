@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ const AdminDashboard = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<Set<string>>(new Set());
 
   // Check if user is admin
   const { data: isAdmin, isLoading: checkingAdmin } = useQuery({
@@ -238,6 +240,60 @@ const AdminDashboard = () => {
     setDocumentsDialogOpen(true);
   };
 
+  // Bulk verification handlers
+  const toggleProviderSelection = (providerId: string) => {
+    setSelectedProviders((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(providerId)) {
+        newSet.delete(providerId);
+      } else {
+        newSet.add(providerId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllApproved = () => {
+    const allApprovedIds = providers
+      .filter((p) => p.status === "approved")
+      .map((p) => p.id);
+    setSelectedProviders(new Set(allApprovedIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedProviders(new Set());
+  };
+
+  const handleBulkVerify = async (verify: boolean) => {
+    if (selectedProviders.size === 0) return;
+    
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("service_providers")
+        .update({ is_verified: verify })
+        .in("id", Array.from(selectedProviders));
+
+      if (error) throw error;
+
+      toast({
+        title: verify ? "Providers verified" : "Verification removed",
+        description: `${selectedProviders.size} provider(s) have been ${verify ? "verified" : "unverified"}.`,
+      });
+      
+      setSelectedProviders(new Set());
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   if (authLoading || checkingAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -286,16 +342,25 @@ const AdminDashboard = () => {
     provider,
     showActions = false,
     showVerificationToggle = false,
+    showCheckbox = false,
   }: {
     provider: any;
     showActions?: boolean;
     showVerificationToggle?: boolean;
+    showCheckbox?: boolean;
   }) => (
-    <Card className="hover-lift">
+    <Card className={`hover-lift ${showCheckbox && selectedProviders.has(provider.id) ? 'ring-2 ring-primary' : ''}`}>
       <CardContent className="p-6">
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-start gap-4 mb-3">
+              {showCheckbox && (
+                <Checkbox
+                  checked={selectedProviders.has(provider.id)}
+                  onCheckedChange={() => toggleProviderSelection(provider.id)}
+                  className="mt-1"
+                />
+              )}
               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
                 {provider.category?.icon || "🙏"}
               </div>
@@ -639,11 +704,45 @@ const AdminDashboard = () => {
 
               <TabsContent value="approved" className="mt-6">
                 <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border">
-                  <p className="text-sm text-muted-foreground">
-                    <BadgeCheck className="h-4 w-4 inline mr-1 text-green-600" />
-                    <strong>Tip:</strong> You can toggle verification status for approved providers. 
-                    Verified providers will display a green badge on their profile.
-                  </p>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      <BadgeCheck className="h-4 w-4 inline mr-1 text-green-600" />
+                      <strong>Tip:</strong> Select multiple providers for bulk verification actions.
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {selectedProviders.size > 0 && (
+                        <span className="text-sm text-primary font-medium">
+                          {selectedProviders.size} selected
+                        </span>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={approvedProviders.length === selectedProviders.size ? clearSelection : selectAllApproved}
+                        disabled={approvedProviders.length === 0}
+                      >
+                        {approvedProviders.length === selectedProviders.size ? "Deselect All" : "Select All"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => handleBulkVerify(true)}
+                        disabled={selectedProviders.size === 0 || isProcessing}
+                      >
+                        <BadgeCheck className="h-4 w-4 mr-1" />
+                        Verify Selected
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleBulkVerify(false)}
+                        disabled={selectedProviders.size === 0 || isProcessing}
+                      >
+                        <BadgeX className="h-4 w-4 mr-1" />
+                        Unverify Selected
+                      </Button>
+                    </div>
+                  </div>
                 </div>
                 {approvedProviders.length === 0 ? (
                   <Card>
@@ -666,7 +765,7 @@ const AdminDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
                       >
-                        <ProviderCard provider={provider} showVerificationToggle />
+                        <ProviderCard provider={provider} showVerificationToggle showCheckbox />
                       </motion.div>
                     ))}
                   </div>
