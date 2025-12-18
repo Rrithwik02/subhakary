@@ -16,6 +16,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ReviewsList } from "@/components/ReviewsList";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -203,8 +204,8 @@ const ProviderProfile = () => {
                           Verified
                         </span>
                       )}
+                      <FavoriteButton providerId={provider.id} variant="button" />
                     </div>
-
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                       {provider.city && (
                         <span className="flex items-center gap-1">

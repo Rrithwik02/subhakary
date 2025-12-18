@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, LogOut, User } from "lucide-react";
+import { Search, Menu, X, LogOut, User, Heart, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationsCenter } from "@/components/NotificationsCenter";
 import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo.png";
 const navLinks = [{
@@ -58,8 +59,19 @@ export const Navbar = () => {
         </div>
 
         {/* Desktop Buttons */}
-        <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+        <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
           {user ? <>
+              <NotificationsCenter />
+              <Link to="/chat">
+                <Button variant="ghost" size="icon">
+                  <MessageSquare className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/favorites">
+                <Button variant="ghost" size="icon">
+                  <Heart className="h-5 w-5" />
+                </Button>
+              </Link>
               <Link to="/profile">
                 <Button variant="ghost" size="sm" className="font-medium">
                   <User className="w-4 h-4 mr-2" />
@@ -119,6 +131,19 @@ export const Navbar = () => {
               </Link>
               <div className="flex flex-col gap-3 pt-2 border-t border-border">
                 {user ? <>
+                    <div className="flex items-center gap-2 pb-2">
+                      <NotificationsCenter />
+                      <Link to="/chat" onClick={() => setIsOpen(false)}>
+                        <Button variant="ghost" size="icon">
+                          <MessageSquare className="h-5 w-5" />
+                        </Button>
+                      </Link>
+                      <Link to="/favorites" onClick={() => setIsOpen(false)}>
+                        <Button variant="ghost" size="icon">
+                          <Heart className="h-5 w-5" />
+                        </Button>
+                      </Link>
+                    </div>
                     <Link to="/profile" className="w-full" onClick={() => setIsOpen(false)}>
                       <Button variant="ghost" size="sm" className="w-full justify-start">
                         <User className="w-4 h-4 mr-2" />
