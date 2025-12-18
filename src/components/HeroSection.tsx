@@ -285,10 +285,10 @@ export const HeroSection = () => {
                   <Button
                     variant="gold"
                     size="icon"
-                    className="w-12 h-12 rounded-full flex-shrink-0 mr-1"
+                    className="w-10 h-10 rounded-full flex-shrink-0 mr-1"
                     onClick={handleSearch}
                   >
-                    <Search className="w-5 h-5" />
+                    <Search className="w-4 h-4" />
                   </Button>
                 </div>
               </>
