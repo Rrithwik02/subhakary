@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, MapPin, Star, Filter, X, BadgeCheck, Images } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -34,12 +35,27 @@ const POPULAR_LOCATIONS = {
 };
 
 const Providers = () => {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedArea, setSelectedArea] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
   const [showVerifiedOnly, setShowVerifiedOnly] = useState<boolean>(false);
+
+  // Initialize filters from URL params
+  useEffect(() => {
+    const serviceParam = searchParams.get("service");
+    const cityParam = searchParams.get("city");
+    
+    if (serviceParam) {
+      // Map service name to category - will be matched in filteredProviders
+      setSearchQuery(serviceParam);
+    }
+    if (cityParam) {
+      setSelectedCity(cityParam);
+    }
+  }, [searchParams]);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
