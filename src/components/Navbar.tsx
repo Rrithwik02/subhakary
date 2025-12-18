@@ -119,16 +119,17 @@ export const Navbar = () => {
                   Profile
                 </Button>
               </Link>
-              <Link to="/become-provider">
-                <Button variant="ghost" size="sm" className="font-medium">
-                  Become a Provider
-                </Button>
-              </Link>
-              {isApprovedProvider && (
+              {isApprovedProvider ? (
                 <Link to="/provider-dashboard">
-                  <Button variant="ghost" size="sm" className="font-medium text-green-600">
+                  <Button variant="ghost" size="sm" className="font-medium text-green-600 hover:text-green-700 hover:bg-green-50">
                     <LayoutDashboard className="w-4 h-4 mr-2" />
                     My Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/become-provider">
+                  <Button variant="ghost" size="sm" className="font-medium">
+                    Become a Provider
                   </Button>
                 </Link>
               )}
@@ -209,16 +210,17 @@ export const Navbar = () => {
                         My Profile
                       </Button>
                     </Link>
-                    <Link to="/become-provider" className="w-full" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" size="sm" className="w-full justify-start">
-                        Become Provider
-                      </Button>
-                    </Link>
-                    {isApprovedProvider && (
+                    {isApprovedProvider ? (
                       <Link to="/provider-dashboard" className="w-full" onClick={() => setIsOpen(false)}>
-                        <Button variant="ghost" size="sm" className="w-full justify-start text-green-600">
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50">
                           <LayoutDashboard className="w-4 h-4 mr-2" />
                           My Dashboard
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link to="/become-provider" className="w-full" onClick={() => setIsOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start">
+                          Become Provider
                         </Button>
                       </Link>
                     )}
