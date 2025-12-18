@@ -655,42 +655,58 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Documents Dialog */}
+      {/* Documents Dialog with Image Preview */}
       <Dialog open={documentsDialogOpen} onOpenChange={setDocumentsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Uploaded Documents</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto">
             {selectedDocs.map((doc) => {
               // Construct the full storage URL
               const storageUrl = doc.file_url.startsWith('http') 
                 ? doc.file_url 
                 : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/provider-documents/${doc.file_url}`;
               
+              const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(doc.file_name);
+              
               return (
                 <div
                   key={doc.id}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border"
+                  className="p-3 rounded-lg border border-border space-y-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium text-sm">{doc.file_name}</p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {doc.document_type.replace("_", " ")}
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-sm">{doc.file_name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {doc.document_type.replace("_", " ")}
+                        </p>
+                      </div>
                     </div>
+                    <a
+                      href={storageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline text-sm flex items-center gap-1"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Open
+                    </a>
                   </div>
-                  <a
-                    href={storageUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline text-sm flex items-center gap-1"
-                  >
-                    <Eye className="h-4 w-4" />
-                    View
-                  </a>
+                  {isImage && (
+                    <div className="border rounded-lg overflow-hidden bg-muted/30">
+                      <img
+                        src={storageUrl}
+                        alt={doc.file_name}
+                        className="w-full max-h-80 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
