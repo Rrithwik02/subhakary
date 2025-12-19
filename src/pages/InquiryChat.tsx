@@ -123,20 +123,42 @@ const InquiryChat = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
+      {/* Hide navbar on mobile for full-screen chat experience */}
+      <div className="hidden md:block">
+        <Navbar />
+      </div>
       
-      <section className="flex-1 pt-24 pb-6 px-4">
-        <div className="container max-w-3xl mx-auto h-full">
+      {/* Mobile header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b safe-area-top">
+        <div className="flex items-center gap-2 p-3">
           <Button
             variant="ghost"
-            className="mb-4"
+            size="icon"
+            className="h-9 w-9 touch-manipulation"
+            onClick={() => navigate(`/providers/${providerId}`)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <span className="font-display font-semibold truncate">
+            {provider.business_name}
+          </span>
+        </div>
+      </div>
+      
+      {/* Desktop back button */}
+      <section className="flex-1 pt-4 md:pt-24 pb-0 md:pb-6 px-0 md:px-4">
+        <div className="md:container max-w-3xl mx-auto h-full">
+          <Button
+            variant="ghost"
+            className="mb-4 hidden md:flex"
             onClick={() => navigate(`/providers/${providerId}`)}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Profile
           </Button>
 
-          <div className="h-[calc(100vh-220px)] min-h-[500px]">
+          {/* Full height chat on mobile, constrained on desktop */}
+          <div className="h-[calc(100dvh-56px)] md:h-[calc(100vh-220px)] min-h-0 md:min-h-[500px]">
             {conversationId && (
               <InquiryChatWindow
                 conversationId={conversationId}
@@ -155,7 +177,10 @@ const InquiryChat = () => {
         </div>
       </section>
 
-      <Footer />
+      {/* Hide footer on mobile for chat */}
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 };

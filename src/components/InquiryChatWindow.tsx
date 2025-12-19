@@ -223,9 +223,9 @@ export const InquiryChatWindow = ({
 
   return (
     <>
-      <div className="flex flex-col h-full bg-background rounded-xl border overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-card">
+      <div className="flex flex-col h-full bg-background md:rounded-xl md:border overflow-hidden">
+        {/* Header - hidden on mobile since page has its own header */}
+        <div className="hidden md:flex items-center justify-between p-4 border-b bg-card">
           <div className="flex items-center gap-3">
             {onClose && (
               <Button variant="ghost" size="icon" onClick={onClose}>
@@ -280,8 +280,45 @@ export const InquiryChatWindow = ({
           </Button>
         </div>
 
+        {/* Mobile status bar */}
+        <div className="md:hidden flex items-center justify-between px-4 py-2 border-b bg-card/50">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={providerAvatar} />
+                <AvatarFallback>
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+              <span
+                className={cn(
+                  "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card",
+                  otherUserPresence.isOnline ? "bg-green-500" : "bg-muted-foreground"
+                )}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {otherUserPresence.isTyping ? (
+                <span className="text-primary">typing...</span>
+              ) : otherUserPresence.isOnline ? (
+                "Online"
+              ) : (
+                "Offline"
+              )}
+            </span>
+          </div>
+          <Button
+            onClick={() => setBookingDialogOpen(true)}
+            className="gradient-gold text-primary-foreground h-8 text-xs px-3"
+            size="sm"
+          >
+            <Calendar className="h-3.5 w-3.5 mr-1.5" />
+            Book
+          </Button>
+        </div>
+
         {/* Messages */}
-        <ScrollArea ref={scrollRef} className="flex-1 p-4">
+        <ScrollArea ref={scrollRef} className="flex-1 p-3 md:p-4">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -294,15 +331,15 @@ export const InquiryChatWindow = ({
               ))}
             </div>
           ) : messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-3">
-              <MessageSquare className="h-12 w-12 opacity-50" />
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-3 px-4">
+              <MessageSquare className="h-10 w-10 md:h-12 md:w-12 opacity-50" />
               <div className="text-center">
                 <p className="text-sm font-medium">Start the conversation!</p>
                 <p className="text-xs">Ask about services, pricing, availability, etc.</p>
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               <AnimatePresence>
                 {messages.map((msg) => {
                   const isOwn = msg.sender_id === user?.id;
@@ -315,26 +352,26 @@ export const InquiryChatWindow = ({
                     >
                       {!isOwn && (
                         <div className="relative flex-shrink-0">
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-7 w-7 md:h-8 md:w-8">
                             <AvatarImage src={providerAvatar} />
                             <AvatarFallback>
-                              <User className="h-4 w-4" />
+                              <User className="h-3.5 w-3.5 md:h-4 md:w-4" />
                             </AvatarFallback>
                           </Avatar>
                         </div>
                       )}
                       <div
                         className={cn(
-                          "max-w-[70%] rounded-2xl px-4 py-2",
+                          "max-w-[80%] md:max-w-[70%] rounded-2xl px-3 py-2 md:px-4",
                           isOwn
                             ? "bg-primary text-primary-foreground rounded-br-sm"
                             : "bg-muted rounded-bl-sm"
                         )}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                        <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
                         <p
                           className={cn(
-                            "text-xs mt-1",
+                            "text-[10px] md:text-xs mt-1",
                             isOwn
                               ? "text-primary-foreground/70"
                               : "text-muted-foreground"
@@ -351,8 +388,8 @@ export const InquiryChatWindow = ({
           )}
         </ScrollArea>
 
-        {/* Input */}
-        <div className="p-4 border-t bg-card">
+        {/* Input - optimized for mobile */}
+        <div className="p-3 md:p-4 border-t bg-card safe-area-bottom">
           <div className="flex gap-2">
             <Input
               ref={inputRef}
@@ -363,88 +400,94 @@ export const InquiryChatWindow = ({
               }}
               onKeyDown={handleKeyPress}
               placeholder="Type a message..."
-              className="flex-1"
+              className="flex-1 h-11 md:h-10 text-base md:text-sm touch-manipulation"
               disabled={sendMessage.isPending}
+              autoComplete="off"
+              autoCorrect="on"
             />
             <Button
               onClick={handleSend}
               disabled={!message.trim() || sendMessage.isPending}
-              className="gradient-gold"
+              className="gradient-gold h-11 w-11 md:h-10 md:w-10 p-0 touch-manipulation active:scale-95 transition-transform"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-5 w-5 md:h-4 md:w-4" />
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Booking Dialog */}
+      {/* Booking Dialog - mobile optimized */}
       <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md w-[95vw] md:w-full max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">
+            <DialogTitle className="font-display text-lg md:text-xl">
               Book {providerName}
             </DialogTitle>
-            <DialogDescription>
-              Fill in all the details for your booking request
+            <DialogDescription className="text-sm">
+              Fill in the details for your booking request
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2 md:py-4">
             <div>
-              <Label>Select Date *</Label>
-              <div className="flex justify-center mt-2">
+              <Label className="text-sm">Select Date *</Label>
+              <div className="flex justify-center mt-2 overflow-x-auto">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   disabled={(date) => date < new Date()}
-                  className={cn("rounded-md border pointer-events-auto")}
+                  className={cn("rounded-md border pointer-events-auto touch-manipulation scale-[0.92] md:scale-100 origin-top")}
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="time">Preferred Time</Label>
+              <Label htmlFor="time" className="text-sm">Preferred Time</Label>
               <Input
                 id="time"
                 type="time"
                 value={selectedTime}
                 onChange={(e) => setSelectedTime(e.target.value)}
-                className="mt-1"
+                className="mt-1 h-11 md:h-10 touch-manipulation"
               />
             </div>
 
             <div>
-              <Label htmlFor="bookingMessage">Message</Label>
+              <Label htmlFor="bookingMessage" className="text-sm">Message</Label>
               <Textarea
                 id="bookingMessage"
                 placeholder="Describe your event, requirements, etc."
                 value={bookingMessage}
                 onChange={(e) => setBookingMessage(e.target.value)}
-                className="mt-1"
+                className="mt-1 text-base md:text-sm touch-manipulation"
                 rows={3}
               />
             </div>
 
             <div>
-              <Label htmlFor="specialRequirements">Special Requirements</Label>
+              <Label htmlFor="specialRequirements" className="text-sm">Special Requirements</Label>
               <Textarea
                 id="specialRequirements"
                 placeholder="Any special requirements or preferences..."
                 value={specialRequirements}
                 onChange={(e) => setSpecialRequirements(e.target.value)}
-                className="mt-1"
+                className="mt-1 text-base md:text-sm touch-manipulation"
                 rows={2}
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBookingDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setBookingDialogOpen(false)}
+              className="w-full sm:w-auto h-11 md:h-10 touch-manipulation"
+            >
               Cancel
             </Button>
             <Button
-              className="gradient-gold text-primary-foreground"
+              className="gradient-gold text-primary-foreground w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-[0.98] transition-transform"
               onClick={handleBookingSubmit}
               disabled={isSubmitting || !selectedDate}
             >
