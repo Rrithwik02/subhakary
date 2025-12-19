@@ -1685,6 +1685,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_chat_message: {
+        Args: { p_receiver_id: string; p_sender_id: string }
+        Returns: boolean
+      }
+      can_access_otp: { Args: { p_user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
