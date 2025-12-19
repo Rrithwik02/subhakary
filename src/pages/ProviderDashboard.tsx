@@ -34,6 +34,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ProviderChatSection } from "@/components/ProviderChatSection";
+import { ProviderInquiryChat } from "@/components/ProviderInquiryChat";
 import BookingCalendar from "@/components/BookingCalendar";
 
 const statusConfig = {
@@ -395,7 +396,7 @@ const ProviderDashboard = () => {
             </div>
 
             <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="pending">
                   Pending ({pendingBookings.length})
                 </TabsTrigger>
@@ -405,6 +406,10 @@ const ProviderDashboard = () => {
                 <TabsTrigger value="calendar" className="flex items-center gap-1">
                   <CalendarDays className="h-3 w-3" />
                   Calendar
+                </TabsTrigger>
+                <TabsTrigger value="inquiries" className="flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" />
+                  Inquiries
                 </TabsTrigger>
                 <TabsTrigger value="messages" className="flex items-center gap-1">
                   <MessageCircle className="h-3 w-3" />
@@ -486,6 +491,10 @@ const ProviderDashboard = () => {
 
               <TabsContent value="calendar" className="mt-6">
                 <BookingCalendar providerId={provider.id} />
+              </TabsContent>
+
+              <TabsContent value="inquiries" className="mt-6">
+                <ProviderInquiryChat providerId={provider.id} />
               </TabsContent>
 
               <TabsContent value="messages" className="mt-6">

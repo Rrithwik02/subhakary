@@ -16,6 +16,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
 import Chat from "./pages/Chat";
+import InquiryChat from "./pages/InquiryChat";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import About from "./pages/About";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/inquiry/:providerId" element={<InquiryChat />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/about" element={<About />} />
