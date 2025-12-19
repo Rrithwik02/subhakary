@@ -294,6 +294,7 @@ const MyBookings = () => {
                                     ? `/inquiry/${booking.provider?.id}?conversation=${booking.inquiryConversation.id}`
                                     : `/chat?booking=${booking.id}`
                                   }
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   <Button
                                     variant="outline"
@@ -309,7 +310,10 @@ const MyBookings = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleCancelBooking(booking.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCancelBooking(booking.id);
+                                  }}
                                 >
                                   Cancel
                                 </Button>
@@ -318,11 +322,14 @@ const MyBookings = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setReviewBooking({
-                                    id: booking.id,
-                                    providerId: booking.provider?.id || "",
-                                    providerName: booking.provider?.business_name || "Provider",
-                                  })}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setReviewBooking({
+                                      id: booking.id,
+                                      providerId: booking.provider?.id || "",
+                                      providerName: booking.provider?.business_name || "Provider",
+                                    });
+                                  }}
                                 >
                                   <Star className="h-3 w-3 mr-1" />
                                   Leave Review

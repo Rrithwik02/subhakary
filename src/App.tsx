@@ -40,6 +40,7 @@ const App = () => (
             <Route path="/become-provider" element={<BecomeProvider />} />
             <Route path="/providers" element={<Providers />} />
             <Route path="/provider/:id" element={<ProviderProfile />} />
+            <Route path="/providers/:id" element={<ProviderProfile />} />
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/booking/:bookingId" element={<BookingDetails />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
