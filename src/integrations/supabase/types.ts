@@ -100,13 +100,6 @@ export type Database = {
             foreignKeyName: "additional_services_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "additional_services_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -213,13 +206,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "bookings_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "bookings_provider_id_fkey"
             columns: ["provider_id"]
@@ -400,13 +386,6 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_connections_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "public_provider_info"
             referencedColumns: ["id"]
           },
           {
@@ -628,13 +607,6 @@ export type Database = {
             foreignKeyName: "favorites_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "favorites_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -681,13 +653,6 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inquiry_conversations_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "public_provider_info"
             referencedColumns: ["id"]
           },
           {
@@ -1024,13 +989,6 @@ export type Database = {
             foreignKeyName: "payouts_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payouts_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1120,13 +1078,6 @@ export type Database = {
             foreignKeyName: "provider_documents_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "provider_documents_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1173,13 +1124,6 @@ export type Database = {
           upi_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "provider_payment_details_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: true
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "provider_payment_details_provider_id_fkey"
             columns: ["provider_id"]
@@ -1249,13 +1193,6 @@ export type Database = {
             foreignKeyName: "quotation_requests_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quotation_requests_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1301,13 +1238,6 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: true
             referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "public_provider_info"
             referencedColumns: ["id"]
           },
           {
@@ -1412,13 +1342,6 @@ export type Database = {
             foreignKeyName: "service_bundles_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_bundles_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1489,13 +1412,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "service_provider_availability_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "service_provider_availability_provider_id_fkey"
             columns: ["provider_id"]
@@ -1694,13 +1610,6 @@ export type Database = {
             foreignKeyName: "service_requests_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "public_provider_info"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "service_requests_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1809,43 +1718,7 @@ export type Database = {
       }
     }
     Views: {
-      public_provider_info: {
-        Row: {
-          base_price: number | null
-          business_name: string | null
-          category_icon: string | null
-          category_id: string | null
-          category_name: string | null
-          city: string | null
-          description: string | null
-          experience_years: number | null
-          facebook_url: string | null
-          id: string | null
-          instagram_url: string | null
-          is_premium: boolean | null
-          is_verified: boolean | null
-          languages: string[] | null
-          portfolio_images: string[] | null
-          pricing_info: string | null
-          rating: number | null
-          service_cities: string[] | null
-          service_type: string | null
-          specializations: string[] | null
-          subcategory: string | null
-          total_reviews: number | null
-          website_url: string | null
-          youtube_url: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "service_providers_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "service_categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       can_access_chat_message: {
@@ -1853,6 +1726,29 @@ export type Database = {
         Returns: boolean
       }
       can_access_otp: { Args: { p_user_id: string }; Returns: boolean }
+      get_public_provider_info: {
+        Args: { provider_uuid: string }
+        Returns: {
+          business_name: string
+          category_icon: string
+          category_id: string
+          category_name: string
+          city: string
+          description: string
+          experience_years: number
+          id: string
+          is_premium: boolean
+          is_verified: boolean
+          languages: string[]
+          portfolio_images: string[]
+          rating: number
+          service_cities: string[]
+          service_type: string
+          specializations: string[]
+          subcategory: string
+          total_reviews: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
