@@ -161,12 +161,12 @@ const ProviderProfile = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <section className="pt-32 pb-12 px-4">
+      <section className="pt-24 md:pt-32 pb-12 px-3 md:px-4">
         <div className="container max-w-4xl mx-auto">
           {/* Back button */}
           <Button
             variant="ghost"
-            className="mb-6"
+            className="mb-4 md:mb-6 h-9 md:h-10 touch-manipulation"
             onClick={() => navigate("/providers")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -178,87 +178,118 @@ const ProviderProfile = () => {
             animate={{ opacity: 1, y: 0 }}
           >
             {/* Header */}
-            <Card className="mb-6">
-              <CardContent className="p-8">
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="flex-shrink-0">
-                    <div className="h-24 w-24 rounded-2xl bg-primary/10 flex items-center justify-center text-5xl">
-                      {provider.category?.icon || "🙏"}
+            <Card className="mb-4 md:mb-6">
+              <CardContent className="p-4 md:p-8">
+                <div className="flex flex-col gap-4 md:gap-6">
+                  {/* Mobile: Horizontal layout */}
+                  <div className="flex items-start gap-3 md:gap-6">
+                    <div className="flex-shrink-0">
+                      <div className="h-16 w-16 md:h-24 md:w-24 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center text-3xl md:text-5xl">
+                        {provider.category?.icon || "🙏"}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div>
-                        <h1 className="font-display text-3xl font-bold text-foreground">
-                          {provider.business_name}
-                        </h1>
-                        {provider.category?.name && (
-                          <Badge variant="secondary" className="mt-2">
-                            {provider.category.name}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
+                        <div className="min-w-0">
+                          <h1 className="font-display text-xl md:text-3xl font-bold text-foreground truncate">
+                            {provider.business_name}
+                          </h1>
+                          {provider.category?.name && (
+                            <Badge variant="secondary" className="mt-1 md:mt-2 text-xs">
+                              {provider.category.name}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {provider.is_verified && (
+                            <span className="verified-badge text-xs">
+                              <CheckCircle2 className="h-3 w-3" />
+                              <span className="hidden sm:inline">Verified</span>
+                            </span>
+                          )}
+                          <FavoriteButton providerId={provider.id} variant="button" />
+                        </div>
+                      </div>
+                      
+                      {/* Rating - always visible */}
+                      <div className="flex items-center gap-2 mb-2 md:mb-4">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 md:h-5 md:w-5 fill-primary text-primary" />
+                          <span className="font-bold text-base md:text-lg">
+                            {provider.rating?.toFixed(1) || "New"}
+                          </span>
+                          <span className="text-xs md:text-sm text-muted-foreground">
+                            ({provider.total_reviews || 0})
+                          </span>
+                        </div>
+                        {provider.pricing_info && (
+                          <Badge variant="outline" className="text-secondary font-medium text-xs">
+                            {provider.pricing_info}
                           </Badge>
                         )}
                       </div>
-                      {provider.is_verified && (
-                        <span className="verified-badge">
-                          <CheckCircle2 className="h-3 w-3" />
-                          Verified
-                        </span>
-                      )}
-                      <FavoriteButton providerId={provider.id} variant="button" />
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
-                      {provider.city && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {provider.city}
-                          {provider.address && `, ${provider.address}`}
-                        </span>
-                      )}
-                      {provider.experience_years ? (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {provider.experience_years}+ years experience
-                        </span>
-                      ) : null}
-                      {provider.languages && provider.languages.length > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Languages className="h-4 w-4" />
+                  </div>
+
+                  {/* Details - collapsible on mobile */}
+                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground">
+                    {provider.city && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        {provider.city}
+                        {provider.address && <span className="hidden md:inline">, {provider.address}</span>}
+                      </span>
+                    )}
+                    {provider.experience_years ? (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        {provider.experience_years}+ yrs
+                      </span>
+                    ) : null}
+                    {provider.languages && provider.languages.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Languages className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <span className="truncate max-w-[100px] md:max-w-none">
                           {provider.languages.join(", ")}
                         </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-5 w-5 fill-primary text-primary" />
-                        <span className="font-bold text-lg">
-                          {provider.rating?.toFixed(1) || "New"}
-                        </span>
-                        <span className="text-muted-foreground">
-                          ({provider.total_reviews || 0} reviews)
-                        </span>
-                      </div>
-                      {provider.pricing_info && (
-                        <Badge variant="outline" className="text-secondary font-medium">
-                          {provider.pricing_info}
-                        </Badge>
-                      )}
-                    </div>
+                      </span>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            {/* Mobile action buttons - fixed at bottom */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-3 z-40 safe-area-bottom">
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 h-11 touch-manipulation active:scale-[0.98] transition-transform"
+                  variant="outline"
+                  onClick={() => navigate(`/inquiry/${provider.id}`)}
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Chat
+                </Button>
+                <Button
+                  className="flex-1 h-11 gradient-gold text-primary-foreground touch-manipulation active:scale-[0.98] transition-transform"
+                  onClick={() => setBookingDialogOpen(true)}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Book Now
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-0">
               {/* Main content */}
-              <div className="md:col-span-2 space-y-6">
+              <div className="md:col-span-2 space-y-4 md:space-y-6">
                 {/* About */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="font-display">About</CardTitle>
+                  <CardHeader className="pb-2 md:pb-4">
+                    <CardTitle className="font-display text-lg md:text-xl">About</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground whitespace-pre-line">
+                    <p className="text-sm md:text-base text-muted-foreground whitespace-pre-line">
                       {provider.description || "No description provided."}
                     </p>
                   </CardContent>
@@ -267,11 +298,11 @@ const ProviderProfile = () => {
                 {/* Service details */}
                 {provider.category?.description && (
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="font-display">Service Category</CardTitle>
+                    <CardHeader className="pb-2 md:pb-4">
+                      <CardTitle className="font-display text-lg md:text-xl">Service Category</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground">
+                      <p className="text-sm md:text-base text-muted-foreground">
                         {provider.category.description}
                       </p>
                     </CardContent>
@@ -282,8 +313,8 @@ const ProviderProfile = () => {
                 <ReviewsList providerId={provider.id} />
               </div>
 
-              {/* Booking sidebar */}
-              <div className="space-y-6">
+              {/* Booking sidebar - hidden on mobile */}
+              <div className="hidden md:block space-y-6">
                 <Card className="sticky top-28">
                   <CardHeader>
                     <CardTitle className="font-display">Connect with Provider</CardTitle>
@@ -316,62 +347,66 @@ const ProviderProfile = () => {
         </div>
       </section>
 
-      {/* Booking Dialog */}
+      {/* Booking Dialog - mobile optimized */}
       <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[95vw] md:w-full max-h-[85vh] overflow-y-auto rounded-xl">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">
+            <DialogTitle className="font-display text-lg md:text-xl">
               Book {provider.business_name}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm">
               Select a date and provide details for your booking request
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2 md:py-4">
             <div>
-              <Label>Select Date *</Label>
-              <div className="flex justify-center mt-2">
+              <Label className="text-sm">Select Date *</Label>
+              <div className="flex justify-center mt-2 overflow-x-auto">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   disabled={(date) => date < new Date()}
-                  className={cn("rounded-md border pointer-events-auto")}
+                  className={cn("rounded-md border pointer-events-auto touch-manipulation scale-[0.92] md:scale-100 origin-top")}
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="time">Preferred Time</Label>
+              <Label htmlFor="time" className="text-sm">Preferred Time</Label>
               <Input
                 id="time"
                 type="time"
                 value={selectedTime}
                 onChange={(e) => setSelectedTime(e.target.value)}
-                className="mt-1"
+                className="mt-1 h-11 md:h-10 touch-manipulation"
               />
             </div>
 
             <div>
-              <Label htmlFor="message">Message (optional)</Label>
+              <Label htmlFor="message" className="text-sm">Message (optional)</Label>
               <Textarea
                 id="message"
                 placeholder="Describe your requirements, event details, etc."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="mt-1"
+                className="mt-1 text-base md:text-sm touch-manipulation"
                 rows={3}
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBookingDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setBookingDialogOpen(false)}
+              className="w-full sm:w-auto h-11 md:h-10 touch-manipulation"
+            >
               Cancel
             </Button>
             <Button
-              className="gradient-gold text-primary-foreground"
+              className="gradient-gold text-primary-foreground w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-[0.98] transition-transform"
               onClick={handleBookingSubmit}
               disabled={isSubmitting || !selectedDate}
             >

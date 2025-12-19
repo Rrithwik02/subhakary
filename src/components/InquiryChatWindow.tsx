@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Send, ArrowLeft, User, Calendar, MessageSquare, Circle } from "lucide-react";
+import { Send, ArrowLeft, User, Calendar, MessageSquare, Circle, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,8 +59,16 @@ export const InquiryChatWindow = ({
     userId: user?.id,
   });
 
+  // Pull to refresh state
+  const [isPulling, setIsPulling] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const touchStartY = useRef(0);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const PULL_THRESHOLD = 80;
+
   // Fetch messages
-  const { data: messages = [], isLoading } = useQuery({
+  const { data: messages = [], isLoading, refetch } = useQuery({
     queryKey: ["inquiry-messages", conversationId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -75,6 +82,39 @@ export const InquiryChatWindow = ({
     },
     enabled: !!conversationId,
   });
+
+  // Pull to refresh handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (messagesContainerRef.current?.scrollTop === 0) {
+      touchStartY.current = e.touches[0].clientY;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (messagesContainerRef.current?.scrollTop !== 0 || isRefreshing) return;
+    
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartY.current;
+    
+    if (diff > 0 && touchStartY.current > 0) {
+      setIsPulling(true);
+      setPullDistance(Math.min(diff * 0.5, PULL_THRESHOLD * 1.5));
+    }
+  }, [isRefreshing]);
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullDistance >= PULL_THRESHOLD && !isRefreshing) {
+      setIsRefreshing(true);
+      try {
+        await refetch();
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+    setIsPulling(false);
+    setPullDistance(0);
+    touchStartY.current = 0;
+  }, [pullDistance, isRefreshing, refetch]);
 
   // Real-time subscription
   useEffect(() => {
@@ -317,76 +357,107 @@ export const InquiryChatWindow = ({
           </Button>
         </div>
 
-        {/* Messages */}
-        <ScrollArea ref={scrollRef} className="flex-1 p-3 md:p-4">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-muted" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-12 bg-muted rounded-xl w-3/4" />
+        {/* Messages with pull-to-refresh */}
+        <div 
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto p-3 md:p-4 relative"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Pull to refresh indicator */}
+          <motion.div
+            className="absolute top-0 left-0 right-0 flex justify-center items-center pointer-events-none z-10"
+            initial={false}
+            animate={{ 
+              height: isPulling || isRefreshing ? Math.max(pullDistance, isRefreshing ? 40 : 0) : 0,
+              opacity: isPulling || isRefreshing ? 1 : 0 
+            }}
+          >
+            <motion.div
+              animate={{ rotate: isRefreshing ? 360 : (pullDistance / PULL_THRESHOLD) * 180 }}
+              transition={isRefreshing ? { repeat: Infinity, duration: 1, ease: "linear" } : { duration: 0 }}
+            >
+              <RefreshCw className={cn(
+                "h-5 w-5 text-primary",
+                pullDistance >= PULL_THRESHOLD && "text-primary"
+              )} />
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            animate={{ y: isPulling ? pullDistance : 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          >
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse flex gap-3">
+                    <div className="h-8 w-8 rounded-full bg-muted" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-12 bg-muted rounded-xl w-3/4" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-3 px-4">
-              <MessageSquare className="h-10 w-10 md:h-12 md:w-12 opacity-50" />
-              <div className="text-center">
-                <p className="text-sm font-medium">Start the conversation!</p>
-                <p className="text-xs">Ask about services, pricing, availability, etc.</p>
+                ))}
               </div>
-            </div>
-          ) : (
-            <div className="space-y-3 md:space-y-4">
-              <AnimatePresence>
-                {messages.map((msg) => {
-                  const isOwn = msg.sender_id === user?.id;
-                  return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={cn("flex gap-2", isOwn && "flex-row-reverse")}
-                    >
-                      {!isOwn && (
-                        <div className="relative flex-shrink-0">
-                          <Avatar className="h-7 w-7 md:h-8 md:w-8">
-                            <AvatarImage src={providerAvatar} />
-                            <AvatarFallback>
-                              <User className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                      )}
-                      <div
-                        className={cn(
-                          "max-w-[80%] md:max-w-[70%] rounded-2xl px-3 py-2 md:px-4",
-                          isOwn
-                            ? "bg-primary text-primary-foreground rounded-br-sm"
-                            : "bg-muted rounded-bl-sm"
-                        )}
+            ) : messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-3 px-4 min-h-[200px]">
+                <MessageSquare className="h-10 w-10 md:h-12 md:w-12 opacity-50" />
+                <div className="text-center">
+                  <p className="text-sm font-medium">Start the conversation!</p>
+                  <p className="text-xs">Ask about services, pricing, availability, etc.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 md:space-y-4">
+                <AnimatePresence>
+                  {messages.map((msg) => {
+                    const isOwn = msg.sender_id === user?.id;
+                    return (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={cn("flex gap-2", isOwn && "flex-row-reverse")}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
-                        <p
+                        {!isOwn && (
+                          <div className="relative flex-shrink-0">
+                            <Avatar className="h-7 w-7 md:h-8 md:w-8">
+                              <AvatarImage src={providerAvatar} />
+                              <AvatarFallback>
+                                <User className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        )}
+                        <div
                           className={cn(
-                            "text-[10px] md:text-xs mt-1",
+                            "max-w-[80%] md:max-w-[70%] rounded-2xl px-3 py-2 md:px-4",
                             isOwn
-                              ? "text-primary-foreground/70"
-                              : "text-muted-foreground"
+                              ? "bg-primary text-primary-foreground rounded-br-sm"
+                              : "bg-muted rounded-bl-sm"
                           )}
                         >
-                          {format(new Date(msg.created_at), "h:mm a")}
-                        </p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          )}
-        </ScrollArea>
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                          <p
+                            className={cn(
+                              "text-[10px] md:text-xs mt-1",
+                              isOwn
+                                ? "text-primary-foreground/70"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {format(new Date(msg.created_at), "h:mm a")}
+                          </p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            )}
+          </motion.div>
+        </div>
 
         {/* Input - optimized for mobile */}
         <div className="p-3 md:p-4 border-t bg-card safe-area-bottom">
