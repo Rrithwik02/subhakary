@@ -619,6 +619,86 @@ export type Database = {
           },
         ]
       }
+      inquiry_conversations: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          id: string
+          provider_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          provider_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          provider_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiry_conversations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inquiry_conversations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inquiry_messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          message: string
+          read: boolean | null
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean | null
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiry_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "inquiry_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscriptions: {
         Row: {
           email: string

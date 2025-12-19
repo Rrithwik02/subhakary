@@ -8,10 +8,10 @@ import {
   Star,
   Clock,
   Languages,
-  Phone,
   ArrowLeft,
   Calendar,
   CheckCircle2,
+  MessageCircle,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -286,13 +286,21 @@ const ProviderProfile = () => {
               <div className="space-y-6">
                 <Card className="sticky top-28">
                   <CardHeader>
-                    <CardTitle className="font-display">Book This Provider</CardTitle>
+                    <CardTitle className="font-display">Connect with Provider</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Send a booking request to {provider.business_name}. They will
-                      review and respond to your request.
+                      Chat with {provider.business_name} to discuss your requirements
+                      before booking.
                     </p>
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => navigate(`/inquiry/${provider.id}`)}
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Chat Now
+                    </Button>
                     <Button
                       className="w-full gradient-gold text-primary-foreground"
                       onClick={() => setBookingDialogOpen(true)}
