@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, User, MessageSquare, Inbox } from "lucide-react";
+import { Send, User, MessageSquare, Inbox, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useChatPresence } from "@/hooks/useChatPresence";
 import { cn } from "@/lib/utils";
 
 interface ProviderInquiryChatProps {
@@ -197,6 +198,12 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
 
   const selectedConvo = conversations.find((c) => c.id === selectedConversation);
 
+  // Presence tracking for typing indicators
+  const { otherUserPresence, handleTypingStart } = useChatPresence({
+    conversationId: selectedConversation || "",
+    userId: user?.id,
+  });
+
   if (conversationsLoading) {
     return (
       <Card>
@@ -290,16 +297,41 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
           <>
             {/* Header */}
             <div className="p-4 border-b flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={selectedConvo.customerAvatar} />
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={selectedConvo.customerAvatar} />
+                  <AvatarFallback>
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+                <span
+                  className={cn(
+                    "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card",
+                    otherUserPresence.isOnline ? "bg-green-500" : "bg-muted-foreground"
+                  )}
+                />
+              </div>
               <div>
                 <h3 className="font-display font-semibold">{selectedConvo.customerName}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {selectedConvo.status === "converted" ? "Converted to booking" : "Inquiry"}
+                  {otherUserPresence.isTyping ? (
+                    <motion.span
+                      className="text-primary"
+                      animate={{ opacity: [1, 0.5, 1] }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                    >
+                      typing...
+                    </motion.span>
+                  ) : otherUserPresence.isOnline ? (
+                    <span className="flex items-center gap-1">
+                      <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+                      Online
+                    </span>
+                  ) : selectedConvo.status === "converted" ? (
+                    "Converted to booking"
+                  ) : (
+                    "Inquiry"
+                  )}
                 </p>
               </div>
             </div>
@@ -373,7 +405,10 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
                 <Input
                   ref={inputRef}
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    handleTypingStart();
+                  }}
                   onKeyDown={handleKeyPress}
                   placeholder="Type a message..."
                   className="flex-1"
