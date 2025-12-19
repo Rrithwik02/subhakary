@@ -102,9 +102,20 @@ const MyBookings = () => {
       
       const reviewedBookingIds = new Set(reviewsData?.map(r => r.booking_id) || []);
       
+      // Fetch inquiry conversations linked to these bookings
+      const { data: conversationsData } = await supabase
+        .from("inquiry_conversations")
+        .select("id, booking_id, provider_id")
+        .in("booking_id", bookingIds);
+      
+      const conversationsByBookingId = new Map(
+        conversationsData?.map(c => [c.booking_id, c]) || []
+      );
+      
       return bookingsData.map(booking => ({
         ...booking,
         hasReview: reviewedBookingIds.has(booking.id),
+        inquiryConversation: conversationsByBookingId.get(booking.id),
       }));
     },
     enabled: !!user,
@@ -226,8 +237,11 @@ const MyBookings = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card className="hover-lift">
-                        <CardContent className="p-6">
+                      <Card 
+                        className="hover-lift cursor-pointer transition-colors hover:border-primary/50"
+                        onClick={() => navigate(`/booking/${booking.id}`)}
+                      >
+                        <CardContent className="p-4 md:p-6">
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex items-start gap-4">
                               <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
@@ -275,7 +289,12 @@ const MyBookings = () => {
                                 {status.label}
                               </Badge>
                               {booking.status === "accepted" && (
-                                <Link to={`/chat?booking=${booking.id}`}>
+                                <Link 
+                                  to={booking.inquiryConversation 
+                                    ? `/inquiry/${booking.provider?.id}?conversation=${booking.inquiryConversation.id}`
+                                    : `/chat?booking=${booking.id}`
+                                  }
+                                >
                                   <Button
                                     variant="outline"
                                     size="sm"

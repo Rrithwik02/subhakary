@@ -11,6 +11,7 @@ import BecomeProvider from "./pages/BecomeProvider";
 import Providers from "./pages/Providers";
 import ProviderProfile from "./pages/ProviderProfile";
 import MyBookings from "./pages/MyBookings";
+import BookingDetails from "./pages/BookingDetails";
 import ProviderDashboard from "./pages/ProviderDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/providers" element={<Providers />} />
             <Route path="/provider/:id" element={<ProviderProfile />} />
             <Route path="/my-bookings" element={<MyBookings />} />
+            <Route path="/booking/:bookingId" element={<BookingDetails />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/profile" element={<Profile />} />

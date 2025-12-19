@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Send, ArrowLeft, User, Calendar, MessageSquare } from "lucide-react";
+import { Send, ArrowLeft, User, Calendar, MessageSquare, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useChatPresence } from "@/hooks/useChatPresence";
 import { cn } from "@/lib/utils";
 
 interface InquiryChatWindowProps {
@@ -52,6 +53,12 @@ export const InquiryChatWindow = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Presence tracking for typing indicators and online status
+  const { otherUserPresence, handleTypingStart } = useChatPresence({
+    conversationId,
+    userId: user?.id,
+  });
 
   // Fetch messages
   const { data: messages = [], isLoading } = useQuery({
@@ -225,15 +232,42 @@ export const InquiryChatWindow = ({
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={providerAvatar} />
-              <AvatarFallback>
-                <User className="h-5 w-5" />
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={providerAvatar} />
+                <AvatarFallback>
+                  <User className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+              {/* Online indicator */}
+              <span
+                className={cn(
+                  "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card",
+                  otherUserPresence.isOnline ? "bg-green-500" : "bg-muted-foreground"
+                )}
+              />
+            </div>
             <div>
               <h3 className="font-display font-semibold">{providerName}</h3>
-              <p className="text-xs text-muted-foreground">Inquiry Chat</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                {otherUserPresence.isTyping ? (
+                  <span className="text-primary flex items-center gap-1">
+                    <motion.span
+                      animate={{ opacity: [1, 0.5, 1] }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                    >
+                      typing...
+                    </motion.span>
+                  </span>
+                ) : otherUserPresence.isOnline ? (
+                  <>
+                    <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+                    Online
+                  </>
+                ) : (
+                  "Offline"
+                )}
+              </p>
             </div>
           </div>
           <Button
@@ -280,12 +314,14 @@ export const InquiryChatWindow = ({
                       className={cn("flex gap-2", isOwn && "flex-row-reverse")}
                     >
                       {!isOwn && (
-                        <Avatar className="h-8 w-8 flex-shrink-0">
-                          <AvatarImage src={providerAvatar} />
-                          <AvatarFallback>
-                            <User className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative flex-shrink-0">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={providerAvatar} />
+                            <AvatarFallback>
+                              <User className="h-4 w-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
                       )}
                       <div
                         className={cn(
@@ -321,7 +357,10 @@ export const InquiryChatWindow = ({
             <Input
               ref={inputRef}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                handleTypingStart();
+              }}
               onKeyDown={handleKeyPress}
               placeholder="Type a message..."
               className="flex-1"
