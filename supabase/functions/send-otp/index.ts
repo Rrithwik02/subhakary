@@ -12,6 +12,10 @@ interface SendOTPRequest {
   purpose: "login" | "enable_2fa" | "disable_2fa";
 }
 
+// Rate limiting constants
+const MAX_OTP_REQUESTS_PER_HOUR = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,9 +31,49 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email) || email.length > 255) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate limiting: Check recent OTP requests for this email
+    const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    
+    const { count: recentRequestCount, error: countError } = await supabase
+      .from("email_otp_codes")
+      .select("*", { count: "exact", head: true })
+      .eq("email", email)
+      .gte("created_at", oneHourAgo);
+
+    if (countError) {
+      console.error("Error checking rate limit:", countError);
+    }
+
+    if (recentRequestCount && recentRequestCount >= MAX_OTP_REQUESTS_PER_HOUR) {
+      console.log(`Rate limit exceeded for email: ${email}. Requests in last hour: ${recentRequestCount}`);
+      return new Response(
+        JSON.stringify({ 
+          error: "Too many OTP requests. Please try again later.",
+          retryAfter: 3600 // seconds
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json",
+            "Retry-After": "3600"
+          } 
+        }
+      );
+    }
 
     // Get profile by email
     const { data: profile, error: profileError } = await supabase
@@ -39,15 +83,18 @@ const handler = async (req: Request): Promise<Response> => {
       .maybeSingle();
 
     if (profileError || !profile) {
-      console.error("Profile not found:", profileError);
+      // Don't reveal if user exists or not - return generic message
+      console.log("Profile not found or error:", profileError?.message || "Not found");
       return new Response(
-        JSON.stringify({ error: "User not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: true, message: "If this email exists, an OTP has been sent" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Generate 6-digit OTP
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate 6-digit OTP using crypto for better randomness
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const code = String(100000 + (array[0] % 900000));
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Invalidate any existing unused OTP codes for this user and purpose
@@ -129,7 +176,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-otp function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "An unexpected error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
