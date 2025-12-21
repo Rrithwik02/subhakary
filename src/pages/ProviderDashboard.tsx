@@ -189,19 +189,26 @@ const ProviderDashboard = () => {
     }
   };
 
-  const handleComplete = async (bookingId: string) => {
+  const handleRequestCompletion = async (bookingId: string) => {
     setIsProcessing(true);
     try {
+      const autoCompleteDate = new Date();
+      autoCompleteDate.setDate(autoCompleteDate.getDate() + 7);
+      
       const { error } = await supabase
         .from("bookings")
-        .update({ status: "completed" })
+        .update({ 
+          completion_confirmed_by_provider: true,
+          completion_requested_at: new Date().toISOString(),
+          auto_complete_at: autoCompleteDate.toISOString(),
+        })
         .eq("id", bookingId);
 
       if (error) throw error;
 
       toast({
-        title: "Booking completed",
-        description: "Great job! The booking has been marked as completed.",
+        title: "Completion requested",
+        description: "The customer has been notified to confirm. If they don't respond within 7 days, it will be auto-completed.",
       });
       refetch();
     } catch (error: any) {
@@ -339,10 +346,12 @@ const ProviderDashboard = () => {
               {showActions && booking.status === "accepted" && (
                 <Button
                   size="sm"
-                  onClick={() => handleComplete(booking.id)}
-                  disabled={isProcessing}
+                  onClick={() => handleRequestCompletion(booking.id)}
+                  disabled={isProcessing || booking.completion_confirmed_by_provider}
                 >
-                  Mark Completed
+                  {booking.completion_confirmed_by_provider 
+                    ? "Awaiting Customer Confirmation" 
+                    : "Mark Completed"}
                 </Button>
               )}
             </div>

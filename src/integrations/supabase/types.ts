@@ -128,10 +128,12 @@ export type Database = {
       }
       bookings: {
         Row: {
+          auto_complete_at: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           completion_confirmed_by_customer: boolean | null
           completion_confirmed_by_provider: boolean | null
+          completion_requested_at: string | null
           completion_status: string | null
           created_at: string
           end_date: string | null
@@ -154,10 +156,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_complete_at?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completion_confirmed_by_customer?: boolean | null
           completion_confirmed_by_provider?: boolean | null
+          completion_requested_at?: string | null
           completion_status?: string | null
           created_at?: string
           end_date?: string | null
@@ -180,10 +184,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_complete_at?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completion_confirmed_by_customer?: boolean | null
           completion_confirmed_by_provider?: boolean | null
+          completion_requested_at?: string | null
           completion_status?: string | null
           created_at?: string
           end_date?: string | null
@@ -1202,35 +1208,50 @@ export type Database = {
         Row: {
           booking_id: string
           comment: string | null
+          communication_rating: number | null
           created_at: string
           id: string
+          photos: string[] | null
           provider_id: string
+          punctuality_rating: number | null
           rating: number
           review_text: string | null
+          service_quality_rating: number | null
           status: string | null
           user_id: string
+          value_for_money_rating: number | null
         }
         Insert: {
           booking_id: string
           comment?: string | null
+          communication_rating?: number | null
           created_at?: string
           id?: string
+          photos?: string[] | null
           provider_id: string
+          punctuality_rating?: number | null
           rating: number
           review_text?: string | null
+          service_quality_rating?: number | null
           status?: string | null
           user_id: string
+          value_for_money_rating?: number | null
         }
         Update: {
           booking_id?: string
           comment?: string | null
+          communication_rating?: number | null
           created_at?: string
           id?: string
+          photos?: string[] | null
           provider_id?: string
+          punctuality_rating?: number | null
           rating?: number
           review_text?: string | null
+          service_quality_rating?: number | null
           status?: string | null
           user_id?: string
+          value_for_money_rating?: number | null
         }
         Relationships: [
           {
