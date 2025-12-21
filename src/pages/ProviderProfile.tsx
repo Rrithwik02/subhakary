@@ -184,9 +184,17 @@ const ProviderProfile = () => {
                   {/* Mobile: Horizontal layout */}
                   <div className="flex items-start gap-3 md:gap-6">
                     <div className="flex-shrink-0">
-                      <div className="h-16 w-16 md:h-24 md:w-24 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center text-3xl md:text-5xl">
-                        {provider.category?.icon || "🙏"}
-                      </div>
+                      {provider.logo_url ? (
+                        <img
+                          src={provider.logo_url}
+                          alt={provider.business_name}
+                          className="h-16 w-16 md:h-24 md:w-24 rounded-xl md:rounded-2xl object-cover"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 md:h-24 md:w-24 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center text-3xl md:text-5xl">
+                          {provider.category?.icon || "🙏"}
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
