@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Star,
   MessageCircle,
+  Bell,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReviewForm } from "@/components/ReviewForm";
+import { CompletionConfirmDialog } from "@/components/CompletionConfirmDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +63,11 @@ const MyBookings = () => {
   const [reviewBooking, setReviewBooking] = useState<{
     id: string;
     providerId: string;
+    providerName: string;
+  } | null>(null);
+  
+  const [confirmBooking, setConfirmBooking] = useState<{
+    id: string;
     providerName: string;
   } | null>(null);
 
@@ -292,7 +299,24 @@ const MyBookings = () => {
 
                             {/* Action buttons - mobile optimized */}
                             <div className="flex items-center gap-2 flex-wrap pl-0 md:pl-14">
-                              {booking.status === "accepted" && (
+                              {/* Completion confirmation alert */}
+                              {booking.status === "accepted" && booking.completion_confirmed_by_provider && !booking.completion_confirmed_by_customer && (
+                                <Button
+                                  size="sm"
+                                  className="flex-1 sm:flex-none h-9 gradient-gold text-primary-foreground touch-manipulation animate-pulse"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setConfirmBooking({
+                                      id: booking.id,
+                                      providerName: booking.provider?.business_name || "Provider",
+                                    });
+                                  }}
+                                >
+                                  <Bell className="h-3.5 w-3.5 mr-1.5" />
+                                  Confirm Completion
+                                </Button>
+                              )}
+                              {booking.status === "accepted" && !booking.completion_confirmed_by_provider && (
                                 <Link 
                                   to={booking.inquiryConversation 
                                     ? `/inquiry/${booking.provider?.id}?conversation=${booking.inquiryConversation.id}`
@@ -370,6 +394,17 @@ const MyBookings = () => {
           open={!!reviewBooking}
           onOpenChange={(open) => !open && setReviewBooking(null)}
           onReviewSubmitted={() => refetch()}
+        />
+      )}
+
+      {/* Completion Confirm Dialog */}
+      {confirmBooking && (
+        <CompletionConfirmDialog
+          bookingId={confirmBooking.id}
+          providerName={confirmBooking.providerName}
+          open={!!confirmBooking}
+          onOpenChange={(open) => !open && setConfirmBooking(null)}
+          onConfirmed={() => refetch()}
         />
       )}
 
