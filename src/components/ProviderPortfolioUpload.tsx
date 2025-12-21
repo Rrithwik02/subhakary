@@ -40,6 +40,10 @@ export const ProviderPortfolioUpload = ({
     const uploadedUrls: string[] = [];
 
     try {
+      // Get current user ID for storage path (RLS requires userId/filename format)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       for (const file of Array.from(files)) {
         // Validate file type
         if (!file.type.startsWith("image/")) {
@@ -61,9 +65,9 @@ export const ProviderPortfolioUpload = ({
           continue;
         }
 
-        // Create unique file name
+        // Create unique file name with user ID prefix to satisfy RLS
         const fileExt = file.name.split(".").pop();
-        const fileName = `provider-portfolio/${providerId}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${user.id}/portfolio-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
         // Upload to avatars bucket
         const { error: uploadError } = await supabase.storage

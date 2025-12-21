@@ -50,9 +50,13 @@ export const ProviderLogoUpload = ({
     setIsUploading(true);
 
     try {
-      // Create unique file name
+      // Get current user ID for storage path (RLS requires userId/filename format)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Create unique file name with user ID prefix to satisfy RLS
       const fileExt = file.name.split(".").pop();
-      const fileName = `provider-logos/${providerId}-${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/provider-logo-${Date.now()}.${fileExt}`;
 
       // Upload to avatars bucket (which is public)
       const { error: uploadError } = await supabase.storage
