@@ -17,6 +17,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ReviewsList } from "@/components/ReviewsList";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { ProviderBundles } from "@/components/ProviderBundles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -315,6 +316,12 @@ const ProviderProfile = () => {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Service Packages */}
+                <ProviderBundles 
+                  providerId={provider.id} 
+                  providerName={provider.business_name}
+                />
 
                 {/* Reviews */}
                 <ReviewsList providerId={provider.id} />

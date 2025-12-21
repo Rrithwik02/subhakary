@@ -38,6 +38,7 @@ const Providers = () => {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedArea, setSelectedArea] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
@@ -100,6 +101,15 @@ const Providers = () => {
     return POPULAR_LOCATIONS[selectedCity as keyof typeof POPULAR_LOCATIONS] || [];
   }, [selectedCity]);
 
+  // Get unique subcategories from providers
+  const subcategories = useMemo(() => {
+    const subs = providers
+      .filter((p) => selectedCategory === "all" || p.category_id === selectedCategory)
+      .map((p) => p.subcategory)
+      .filter(Boolean);
+    return Array.from(new Set(subs)).sort();
+  }, [providers, selectedCategory]);
+
   // Filter and sort providers
   const filteredProviders = useMemo(() => {
     let result = [...providers];
@@ -118,6 +128,11 @@ const Providers = () => {
     // Category filter
     if (selectedCategory !== "all") {
       result = result.filter((p) => p.category_id === selectedCategory);
+    }
+
+    // Subcategory filter
+    if (selectedSubcategory !== "all") {
+      result = result.filter((p) => p.subcategory === selectedSubcategory);
     }
 
     // City filter
@@ -159,15 +174,21 @@ const Providers = () => {
     }
 
     return result;
-  }, [providers, searchQuery, selectedCategory, selectedCity, selectedArea, sortBy, showVerifiedOnly]);
+  }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedCity, selectedArea, sortBy, showVerifiedOnly]);
 
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
+    setSelectedSubcategory("all");
     setSelectedCity("all");
     setSelectedArea("all");
     setSortBy("rating");
     setShowVerifiedOnly(false);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    setSelectedSubcategory("all"); // Reset subcategory when category changes
   };
 
   const handleCityChange = (value: string) => {
@@ -176,7 +197,7 @@ const Providers = () => {
   };
 
   const hasActiveFilters =
-    searchQuery || selectedCategory !== "all" || selectedCity !== "all" || selectedArea !== "all" || showVerifiedOnly;
+    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedCity !== "all" || selectedArea !== "all" || showVerifiedOnly;
 
   return (
     <div className="min-h-screen bg-background">
@@ -219,7 +240,7 @@ const Providers = () => {
             </div>
 
             {/* Category Filter */}
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
               <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
@@ -232,6 +253,23 @@ const Providers = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Subcategory Filter */}
+            {subcategories.length > 0 && (
+              <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+                <SelectTrigger className="w-full lg:w-44">
+                  <SelectValue placeholder="All Services" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Services</SelectItem>
+                  {subcategories.map((sub) => (
+                    <SelectItem key={sub} value={sub!}>
+                      {sub}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             {/* City Filter */}
             <Select value={selectedCity} onValueChange={handleCityChange}>
@@ -312,8 +350,15 @@ const Providers = () => {
               )}
               
               {selectedCategory !== "all" && (
-                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setSelectedCategory("all")}>
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => { setSelectedCategory("all"); setSelectedSubcategory("all"); }}>
                   {categories.find(c => c.id === selectedCategory)?.name || "Category"}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+              
+              {selectedSubcategory !== "all" && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setSelectedSubcategory("all")}>
+                  Service: {selectedSubcategory}
                   <X className="h-3 w-3 ml-1" />
                 </Badge>
               )}

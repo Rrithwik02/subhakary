@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Edit, Package, IndianRupee, Save, X } from "lucide-react";
+import { Plus, Trash2, Edit, Package, IndianRupee, Save, X, List } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,6 +40,15 @@ interface BundleFormData {
   is_active: boolean;
 }
 
+interface BundleItem {
+  id?: string;
+  service_name: string;
+  service_type: string;
+  description: string;
+  individual_price: number | null;
+  quantity: number;
+}
+
 const defaultFormData: BundleFormData = {
   bundle_name: "",
   description: "",
@@ -48,20 +62,35 @@ const defaultFormData: BundleFormData = {
   is_active: true,
 };
 
+const defaultItem: BundleItem = {
+  service_name: "",
+  service_type: "",
+  description: "",
+  individual_price: null,
+  quantity: 1,
+};
+
 export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [itemsDialogOpen, setItemsDialogOpen] = useState(false);
+  const [selectedBundleForItems, setSelectedBundleForItems] = useState<string | null>(null);
+  const [bundleItems, setBundleItems] = useState<BundleItem[]>([]);
+  const [newItem, setNewItem] = useState<BundleItem>(defaultItem);
   const [editingBundle, setEditingBundle] = useState<string | null>(null);
   const [formData, setFormData] = useState<BundleFormData>(defaultFormData);
 
-  // Fetch bundles
+  // Fetch bundles with items
   const { data: bundles = [], isLoading } = useQuery({
     queryKey: ["provider-bundles", providerId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_bundles")
-        .select("*")
+        .select(`
+          *,
+          items:bundle_items(*)
+        `)
         .eq("provider_id", providerId)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -124,6 +153,49 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
         description: error.message,
         variant: "destructive",
       });
+    },
+  });
+
+  // Add item mutation
+  const addItemMutation = useMutation({
+    mutationFn: async ({ bundleId, item }: { bundleId: string; item: BundleItem }) => {
+      const { error } = await supabase
+        .from("bundle_items")
+        .insert({
+          bundle_id: bundleId,
+          service_name: item.service_name,
+          service_type: item.service_type,
+          description: item.description || null,
+          individual_price: item.individual_price,
+          quantity: item.quantity,
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["provider-bundles", providerId] });
+      setNewItem(defaultItem);
+      toast({ title: "Item added", description: "Bundle item has been added." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Delete item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const { error } = await supabase
+        .from("bundle_items")
+        .delete()
+        .eq("id", itemId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["provider-bundles", providerId] });
+      toast({ title: "Item removed", description: "Bundle item has been removed." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -262,6 +334,17 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
                     <Button
                       size="icon"
                       variant="ghost"
+                      title="Manage Items"
+                      onClick={() => {
+                        setSelectedBundleForItems(bundle.id);
+                        setItemsDialogOpen(true);
+                      }}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       onClick={() => handleEdit(bundle)}
                     >
                       <Edit className="h-4 w-4" />
@@ -276,6 +359,25 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
                     </Button>
                   </div>
                 </div>
+                
+                {/* Items preview */}
+                {bundle.items && bundle.items.length > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-xs text-muted-foreground mb-2">Includes:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {bundle.items.slice(0, 4).map((item: any) => (
+                        <Badge key={item.id} variant="outline" className="text-xs">
+                          {item.quantity > 1 && `${item.quantity}x `}{item.service_name}
+                        </Badge>
+                      ))}
+                      {bundle.items.length > 4 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{bundle.items.length - 4} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -407,6 +509,103 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
             <Button onClick={handleSubmit} disabled={saveMutation.isPending}>
               <Save className="h-4 w-4 mr-1" />
               {saveMutation.isPending ? "Saving..." : "Save Package"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Items Management Dialog */}
+      <Dialog open={itemsDialogOpen} onOpenChange={setItemsDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Bundle Items</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Current items */}
+            {selectedBundleForItems && (
+              <div className="space-y-2">
+                <Label>Current Items</Label>
+                {bundles.find(b => b.id === selectedBundleForItems)?.items?.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No items added yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {bundles.find(b => b.id === selectedBundleForItems)?.items?.map((item: any) => (
+                      <div key={item.id} className="flex items-center justify-between p-2 border rounded">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {item.quantity > 1 && `${item.quantity}x `}{item.service_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{item.service_type}</p>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => deleteItemMutation.mutate(item.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Add new item */}
+            <div className="border-t pt-4 space-y-3">
+              <Label>Add New Item</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="Service name"
+                  value={newItem.service_name}
+                  onChange={(e) => setNewItem({ ...newItem, service_name: e.target.value })}
+                />
+                <Input
+                  placeholder="Type (e.g., Photography)"
+                  value={newItem.service_type}
+                  onChange={(e) => setNewItem({ ...newItem, service_type: e.target.value })}
+                />
+              </div>
+              <Input
+                placeholder="Description (optional)"
+                value={newItem.description}
+                onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  type="number"
+                  placeholder="Price (optional)"
+                  value={newItem.individual_price || ""}
+                  onChange={(e) => setNewItem({ ...newItem, individual_price: e.target.value ? Number(e.target.value) : null })}
+                />
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="Quantity"
+                  value={newItem.quantity}
+                  onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) || 1 })}
+                />
+              </div>
+              <Button
+                className="w-full"
+                disabled={!newItem.service_name.trim() || !newItem.service_type.trim() || addItemMutation.isPending}
+                onClick={() => {
+                  if (selectedBundleForItems) {
+                    addItemMutation.mutate({ bundleId: selectedBundleForItems, item: newItem });
+                  }
+                }}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Item
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setItemsDialogOpen(false)}>
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>
