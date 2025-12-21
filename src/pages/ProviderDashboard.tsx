@@ -39,6 +39,7 @@ import { ProviderInquiryChat } from "@/components/ProviderInquiryChat";
 import { ProviderLogoUpload } from "@/components/ProviderLogoUpload";
 import { ProviderPortfolioUpload } from "@/components/ProviderPortfolioUpload";
 import { ProviderProfileEdit } from "@/components/ProviderProfileEdit";
+import { ProviderAvailabilityManager } from "@/components/ProviderAvailabilityManager";
 import BookingCalendar from "@/components/BookingCalendar";
 
 const statusConfig = {
@@ -567,10 +568,14 @@ const ProviderDashboard = () => {
                     instagram_url: provider.instagram_url,
                     facebook_url: provider.facebook_url,
                     youtube_url: provider.youtube_url,
-                    pricing_info: provider.pricing_info,
+                    base_price: provider.base_price,
+                    subcategory: provider.subcategory,
+                    specializations: provider.specializations,
                   }}
                   onProfileUpdated={() => refetch()}
                 />
+
+                <ProviderAvailabilityManager providerId={provider.id} />
               </TabsContent>
             </Tabs>
           </motion.div>

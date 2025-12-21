@@ -230,9 +230,9 @@ const ProviderProfile = () => {
                             ({provider.total_reviews || 0})
                           </span>
                         </div>
-                        {provider.pricing_info && (
+                        {provider.base_price && (
                           <Badge variant="outline" className="text-secondary font-medium text-xs">
-                            {provider.pricing_info}
+                            Starting ₹{provider.base_price.toLocaleString('en-IN')}
                           </Badge>
                         )}
                       </div>
@@ -245,7 +245,6 @@ const ProviderProfile = () => {
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
                         {provider.city}
-                        {provider.address && <span className="hidden md:inline">, {provider.address}</span>}
                       </span>
                     )}
                     {provider.experience_years ? (
