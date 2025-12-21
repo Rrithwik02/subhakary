@@ -428,10 +428,31 @@ const Providers = () => {
                                 </span>
                               )}
                             </div>
-                            {provider.category?.name && (
-                              <Badge className="mt-1 bg-primary/20 text-primary hover:bg-primary/30 border-0">
-                                {provider.category.name}
-                              </Badge>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {provider.category?.name && (
+                                <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-0">
+                                  {provider.category.name}
+                                </Badge>
+                              )}
+                              {provider.subcategory && (
+                                <Badge variant="outline" className="text-xs">
+                                  {provider.subcategory}
+                                </Badge>
+                              )}
+                            </div>
+                            {provider.specializations && provider.specializations.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {provider.specializations.slice(0, 3).map((spec: string, idx: number) => (
+                                  <span key={idx} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                    {spec}
+                                  </span>
+                                ))}
+                                {provider.specializations.length > 3 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    +{provider.specializations.length - 3} more
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>

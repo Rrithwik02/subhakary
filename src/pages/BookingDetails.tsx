@@ -253,7 +253,11 @@ const BookingDetails = () => {
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Location</p>
-                        <p className="font-medium">{booking.provider.city}</p>
+                        <p className="font-medium">
+                          {["accepted", "completed"].includes(booking.status) && booking.provider.address
+                            ? `${booking.provider.address}, ${booking.provider.city}`
+                            : booking.provider.city}
+                        </p>
                       </div>
                     </div>
                   )}
