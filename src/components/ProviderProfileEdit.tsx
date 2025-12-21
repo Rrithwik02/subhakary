@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +21,9 @@ interface ProviderProfileEditProps {
     instagram_url: string | null;
     facebook_url: string | null;
     youtube_url: string | null;
-    pricing_info: string | null;
+    base_price: number | null;
+    subcategory: string | null;
+    specializations: string[] | null;
   };
   onProfileUpdated: () => void;
 }
@@ -32,6 +35,7 @@ export const ProviderProfileEdit = ({
 }: ProviderProfileEditProps) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [newSpecialization, setNewSpecialization] = useState("");
   const [formData, setFormData] = useState({
     business_name: initialData.business_name || "",
     description: initialData.description || "",
@@ -42,11 +46,34 @@ export const ProviderProfileEdit = ({
     instagram_url: initialData.instagram_url || "",
     facebook_url: initialData.facebook_url || "",
     youtube_url: initialData.youtube_url || "",
-    pricing_info: initialData.pricing_info || "",
+    base_price: initialData.base_price?.toString() || "",
+    subcategory: initialData.subcategory || "",
+    specializations: initialData.specializations || [],
   });
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addSpecialization = () => {
+    if (!newSpecialization.trim()) return;
+    if (formData.specializations.includes(newSpecialization.trim())) {
+      toast({
+        title: "Already added",
+        description: "This specialization is already in your list",
+        variant: "destructive",
+      });
+      return;
+    }
+    handleChange("specializations", [...formData.specializations, newSpecialization.trim()]);
+    setNewSpecialization("");
+  };
+
+  const removeSpecialization = (spec: string) => {
+    handleChange(
+      "specializations",
+      formData.specializations.filter((s) => s !== spec)
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,6 +91,8 @@ export const ProviderProfileEdit = ({
     setIsSaving(true);
 
     try {
+      const basePrice = formData.base_price ? parseFloat(formData.base_price) : null;
+
       const { error } = await supabase
         .from("service_providers")
         .update({
@@ -76,7 +105,9 @@ export const ProviderProfileEdit = ({
           instagram_url: formData.instagram_url.trim() || null,
           facebook_url: formData.facebook_url.trim() || null,
           youtube_url: formData.youtube_url.trim() || null,
-          pricing_info: formData.pricing_info.trim() || null,
+          base_price: basePrice,
+          subcategory: formData.subcategory.trim() || null,
+          specializations: formData.specializations,
         })
         .eq("id", providerId);
 
@@ -144,25 +175,84 @@ export const ProviderProfileEdit = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
+                <Label htmlFor="address">Full Address (visible after booking)</Label>
                 <Input
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange("address", e.target.value)}
                   placeholder="Your business address"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Address is only shown to customers who have booked your service
+                </p>
               </div>
             </div>
 
+            {/* Pricing */}
             <div className="space-y-2">
-              <Label htmlFor="pricing_info">Pricing Information</Label>
-              <Textarea
-                id="pricing_info"
-                value={formData.pricing_info}
-                onChange={(e) => handleChange("pricing_info", e.target.value)}
-                placeholder="Describe your pricing structure..."
-                rows={2}
+              <Label htmlFor="base_price">Starting Price (₹)</Label>
+              <Input
+                id="base_price"
+                type="number"
+                min="0"
+                value={formData.base_price}
+                onChange={(e) => handleChange("base_price", e.target.value)}
+                placeholder="e.g., 5000"
               />
+              <p className="text-xs text-muted-foreground">
+                Your base service price. Shown as "Starting from ₹X"
+              </p>
+            </div>
+          </div>
+
+          {/* Service Details */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-foreground">Service Details</h3>
+
+            <div className="space-y-2">
+              <Label htmlFor="subcategory">Subcategory / Service Type</Label>
+              <Input
+                id="subcategory"
+                value={formData.subcategory}
+                onChange={(e) => handleChange("subcategory", e.target.value)}
+                placeholder="e.g., Wedding Photography, Mehendi Artist"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Specializations</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newSpecialization}
+                  onChange={(e) => setNewSpecialization(e.target.value)}
+                  placeholder="e.g., Destination Weddings"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addSpecialization();
+                    }
+                  }}
+                />
+                <Button type="button" size="icon" variant="outline" onClick={addSpecialization}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {formData.specializations.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.specializations.map((spec) => (
+                    <Badge key={spec} variant="secondary" className="flex items-center gap-1">
+                      {spec}
+                      <button
+                        type="button"
+                        onClick={() => removeSpecialization(spec)}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
