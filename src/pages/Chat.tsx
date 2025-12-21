@@ -75,7 +75,7 @@ const Chat = () => {
           )
         `)
         .eq("user_id", user.id)
-        .eq("status", "accepted")
+        .in("status", ["accepted", "completed"])
         .order("created_at", { ascending: false });
 
       if (userError) {
@@ -100,7 +100,7 @@ const Chat = () => {
             user_id
           `)
           .eq("provider_id", providerProfile.id)
-          .eq("status", "accepted")
+          .in("status", ["accepted", "completed"])
           .order("created_at", { ascending: false });
 
         if (!error && data) {
@@ -237,9 +237,16 @@ const Chat = () => {
                               {format(new Date(booking.service_date), "MMM d, yyyy")}
                             </div>
                           </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {booking.isProvider ? "Customer" : "Provider"}
-                          </Badge>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {booking.isProvider ? "Customer" : "Provider"}
+                            </Badge>
+                            {booking.status === "completed" && (
+                              <Badge variant="outline" className="text-xs text-muted-foreground">
+                                Completed
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -257,6 +264,7 @@ const Chat = () => {
                       otherUserAvatar={
                         selectedBookingData.otherUser?.profile_image
                       }
+                      isCompleted={selectedBookingData.status === "completed"}
                     />
                   ) : (
                     <Card className="h-full flex items-center justify-center">
