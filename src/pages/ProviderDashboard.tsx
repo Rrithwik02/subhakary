@@ -14,6 +14,7 @@ import {
   Inbox,
   MessageCircle,
   CalendarDays,
+  Settings,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -35,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ProviderChatSection } from "@/components/ProviderChatSection";
 import { ProviderInquiryChat } from "@/components/ProviderInquiryChat";
+import { ProviderLogoUpload } from "@/components/ProviderLogoUpload";
 import BookingCalendar from "@/components/BookingCalendar";
 
 const statusConfig = {
@@ -396,7 +398,7 @@ const ProviderDashboard = () => {
             </div>
 
             <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="pending">
                   Pending ({pendingBookings.length})
                 </TabsTrigger>
@@ -417,6 +419,10 @@ const ProviderDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="history">
                   History ({pastBookings.length})
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex items-center gap-1">
+                  <Settings className="h-3 w-3" />
+                  Profile
                 </TabsTrigger>
               </TabsList>
 
@@ -531,6 +537,15 @@ const ProviderDashboard = () => {
                     ))}
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="profile" className="mt-6">
+                <ProviderLogoUpload
+                  providerId={provider.id}
+                  currentLogoUrl={provider.logo_url}
+                  businessName={provider.business_name}
+                  onLogoUpdated={() => refetch()}
+                />
               </TabsContent>
             </Tabs>
           </motion.div>
