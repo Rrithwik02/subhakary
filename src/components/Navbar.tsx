@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard } from "lucide-react";
+import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationsCenter } from "@/components/NotificationsCenter";
 import { useAuth } from "@/hooks/useAuth";
@@ -103,6 +103,11 @@ export const Navbar = () => {
         <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
           {user ? <>
               <NotificationsCenter />
+              <Link to="/notifications">
+                <Button variant="ghost" size="icon" title="All Notifications">
+                  <Bell className="h-5 w-5" />
+                </Button>
+              </Link>
               <Link to="/chat">
                 <Button variant="ghost" size="icon">
                   <MessageSquare className="h-5 w-5" />
@@ -193,6 +198,11 @@ export const Navbar = () => {
                 {user ? <>
                     <div className="flex items-center gap-2 pb-2">
                       <NotificationsCenter />
+                      <Link to="/notifications" onClick={() => setIsOpen(false)}>
+                        <Button variant="ghost" size="icon" title="All Notifications">
+                          <Bell className="h-5 w-5" />
+                        </Button>
+                      </Link>
                       <Link to="/chat" onClick={() => setIsOpen(false)}>
                         <Button variant="ghost" size="icon">
                           <MessageSquare className="h-5 w-5" />

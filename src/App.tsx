@@ -26,6 +26,7 @@ import Services from "./pages/Services";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,8 @@ const App = () => (
             <Route path="/services" element={<Services />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="*" element={<NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

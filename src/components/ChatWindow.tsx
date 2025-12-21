@@ -16,6 +16,7 @@ interface ChatWindowProps {
   otherUserName: string;
   otherUserAvatar?: string;
   onClose?: () => void;
+  isCompleted?: boolean;
 }
 
 export const ChatWindow = ({
@@ -23,6 +24,7 @@ export const ChatWindow = ({
   otherUserName,
   otherUserAvatar,
   onClose,
+  isCompleted = false,
 }: ChatWindowProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -267,24 +269,32 @@ export const ChatWindow = ({
 
       {/* Input */}
       <div className="p-4 border-t bg-card">
-        <div className="flex gap-2">
-          <Input
-            ref={inputRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Type a message..."
-            className="flex-1"
-            disabled={sendMessage.isPending}
-          />
-          <Button
-            onClick={handleSend}
-            disabled={!message.trim() || sendMessage.isPending}
-            className="gradient-gold"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+        {isCompleted ? (
+          <div className="text-center py-2">
+            <p className="text-sm text-muted-foreground">
+              This booking has been completed. Messaging is disabled.
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Input
+              ref={inputRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Type a message..."
+              className="flex-1"
+              disabled={sendMessage.isPending}
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!message.trim() || sendMessage.isPending}
+              className="gradient-gold"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
