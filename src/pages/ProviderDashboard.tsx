@@ -37,6 +37,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProviderChatSection } from "@/components/ProviderChatSection";
 import { ProviderInquiryChat } from "@/components/ProviderInquiryChat";
 import { ProviderLogoUpload } from "@/components/ProviderLogoUpload";
+import { ProviderPortfolioUpload } from "@/components/ProviderPortfolioUpload";
+import { ProviderProfileEdit } from "@/components/ProviderProfileEdit";
 import BookingCalendar from "@/components/BookingCalendar";
 
 const statusConfig = {
@@ -539,12 +541,35 @@ const ProviderDashboard = () => {
                 )}
               </TabsContent>
 
-              <TabsContent value="profile" className="mt-6">
+              <TabsContent value="profile" className="mt-6 space-y-6">
                 <ProviderLogoUpload
                   providerId={provider.id}
                   currentLogoUrl={provider.logo_url}
                   businessName={provider.business_name}
                   onLogoUpdated={() => refetch()}
+                />
+                
+                <ProviderPortfolioUpload
+                  providerId={provider.id}
+                  currentImages={provider.portfolio_images || []}
+                  onImagesUpdated={() => refetch()}
+                />
+                
+                <ProviderProfileEdit
+                  providerId={provider.id}
+                  initialData={{
+                    business_name: provider.business_name,
+                    description: provider.description,
+                    city: provider.city,
+                    address: provider.address,
+                    whatsapp_number: provider.whatsapp_number,
+                    website_url: provider.website_url,
+                    instagram_url: provider.instagram_url,
+                    facebook_url: provider.facebook_url,
+                    youtube_url: provider.youtube_url,
+                    pricing_info: provider.pricing_info,
+                  }}
+                  onProfileUpdated={() => refetch()}
                 />
               </TabsContent>
             </Tabs>
