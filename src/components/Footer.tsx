@@ -1,17 +1,29 @@
-import { Flame, MapPin, Phone, Mail } from "lucide-react";
+import { MapPin, Phone, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 const footerLinks = {
   services: [
-    "Poojari / Priest",
-    "Photography",
-    "Makeup Artist",
-    "Mehandi",
-    "Decoration",
-    "Catering",
+    { label: "Poojari / Priest", href: "/providers?service=priest" },
+    { label: "Photography", href: "/providers?service=photography" },
+    { label: "Makeup Artist", href: "/providers?service=makeup" },
+    { label: "Mehandi", href: "/providers?service=mehandi" },
+    { label: "Decoration", href: "/providers?service=decoration" },
+    { label: "Catering", href: "/providers?service=catering" },
   ],
-  company: ["About Us", "How It Works", "Become a Provider", "Blog", "Careers"],
-  support: ["Contact Us", "FAQ", "Privacy Policy", "Terms of Service"],
+  company: [
+    { label: "About Us", href: "/about" },
+    { label: "How It Works", href: "/about" },
+    { label: "Become a Provider", href: "/become-provider" },
+    { label: "Blog", href: "/blog" },
+    { label: "Contact", href: "/contact" },
+  ],
+  support: [
+    { label: "Contact Us", href: "/contact" },
+    { label: "FAQ", href: "/contact" },
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms of Service", href: "/terms-of-service" },
+  ],
 };
 
 export const Footer = () => {
@@ -21,9 +33,9 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <a href="/" className="inline-block mb-6">
+            <Link to="/" className="inline-block mb-6">
               <img src={logo} alt="Subhakary" className="h-14 w-auto" />
-            </a>
+            </Link>
             <p className="text-cream/70 mb-6 max-w-sm">
               India's most trusted platform for booking traditional and cultural
               services. Making sacred ceremonies accessible to everyone.
@@ -51,13 +63,13 @@ export const Footer = () => {
             </h4>
             <ul className="space-y-3">
               {footerLinks.services.map((link) => (
-                <li key={link}>
-                  <a
-                    href="#"
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
                     className="text-sm text-cream/70 hover:text-gold transition-colors"
                   >
-                    {link}
-                  </a>
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -70,13 +82,13 @@ export const Footer = () => {
             </h4>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
-                <li key={link}>
-                  <a
-                    href="#"
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
                     className="text-sm text-cream/70 hover:text-gold transition-colors"
                   >
-                    {link}
-                  </a>
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -89,13 +101,13 @@ export const Footer = () => {
             </h4>
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (
-                <li key={link}>
-                  <a
-                    href="#"
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
                     className="text-sm text-cream/70 hover:text-gold transition-colors"
                   >
-                    {link}
-                  </a>
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -107,6 +119,14 @@ export const Footer = () => {
           <p className="text-sm text-cream/50">
             © 2024 Subhakary. All rights reserved.
           </p>
+          <div className="flex items-center gap-4">
+            <Link to="/privacy-policy" className="text-sm text-cream/50 hover:text-gold transition-colors">
+              Privacy
+            </Link>
+            <Link to="/terms-of-service" className="text-sm text-cream/50 hover:text-gold transition-colors">
+              Terms
+            </Link>
+          </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-cream/50">Available in:</span>
             <div className="flex gap-2">
