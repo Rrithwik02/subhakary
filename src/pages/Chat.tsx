@@ -51,7 +51,16 @@ const Chat = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      // Get bookings where user is either customer or provider
+      // First get the user's profile ID
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!userProfile) return [];
+
+      // Get bookings where user is the customer (using user_id directly from auth)
       const { data: userBookings, error: userError } = await supabase
         .from("bookings")
         .select(`
@@ -62,14 +71,16 @@ const Chat = () => {
             id,
             business_name,
             user_id,
-            profile:profiles!service_providers_user_id_fkey(full_name, profile_image)
+            logo_url
           )
         `)
         .eq("user_id", user.id)
         .eq("status", "accepted")
         .order("created_at", { ascending: false });
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error("Error fetching user bookings:", userError);
+      }
 
       // Get bookings where user is the provider
       const { data: providerProfile } = await supabase
@@ -86,29 +97,42 @@ const Chat = () => {
             id,
             service_date,
             status,
-            user_id,
-            customer:profiles!bookings_user_id_fkey(full_name, profile_image)
+            user_id
           `)
           .eq("provider_id", providerProfile.id)
           .eq("status", "accepted")
           .order("created_at", { ascending: false });
 
         if (!error && data) {
+          // Fetch customer profiles separately
+          const customerIds = data.map(b => b.user_id);
+          const { data: customerProfiles } = await supabase
+            .from("profiles")
+            .select("user_id, full_name, profile_image")
+            .in("user_id", customerIds);
+
+          const profileMap = new Map(
+            customerProfiles?.map(p => [p.user_id, p]) || []
+          );
+
           providerBookings = data.map((b) => ({
             ...b,
             isProvider: true,
-            otherUser: b.customer,
+            otherUser: {
+              full_name: profileMap.get(b.user_id)?.full_name || "Customer",
+              profile_image: profileMap.get(b.user_id)?.profile_image,
+            },
           }));
         }
       }
 
-      // Combine and format
+      // Combine and format user bookings
       const formattedUserBookings = (userBookings || []).map((b: any) => ({
         ...b,
         isProvider: false,
         otherUser: {
           full_name: b.provider?.business_name,
-          profile_image: (b.provider?.profile as any)?.profile_image,
+          profile_image: b.provider?.logo_url,
         },
       }));
 
