@@ -40,6 +40,7 @@ import { ProviderLogoUpload } from "@/components/ProviderLogoUpload";
 import { ProviderPortfolioUpload } from "@/components/ProviderPortfolioUpload";
 import { ProviderProfileEdit } from "@/components/ProviderProfileEdit";
 import { ProviderAvailabilityManager } from "@/components/ProviderAvailabilityManager";
+import { ProviderBundleManager } from "@/components/ProviderBundleManager";
 import BookingCalendar from "@/components/BookingCalendar";
 
 const statusConfig = {
@@ -576,6 +577,8 @@ const ProviderDashboard = () => {
                 />
 
                 <ProviderAvailabilityManager providerId={provider.id} />
+
+                <ProviderBundleManager providerId={provider.id} />
               </TabsContent>
             </Tabs>
           </motion.div>
