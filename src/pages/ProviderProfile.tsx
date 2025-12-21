@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import {
   MapPin,
   Star,
@@ -18,6 +18,8 @@ import { Footer } from "@/components/Footer";
 import { ReviewsList } from "@/components/ReviewsList";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ProviderBundles } from "@/components/ProviderBundles";
+import { PortfolioGallery } from "@/components/PortfolioGallery";
+import { PricingTiers } from "@/components/PricingTiers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,6 +70,28 @@ const ProviderProfile = () => {
     },
     enabled: !!id,
   });
+
+  // Fetch blocked dates for this provider
+  const { data: blockedDates = [] } = useQuery({
+    queryKey: ["provider-blocked-dates-public", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_provider_availability")
+        .select("specific_date")
+        .eq("provider_id", id)
+        .eq("is_blocked", true)
+        .not("specific_date", "is", null);
+
+      if (error) throw error;
+      return (data || []).map((b) => new Date(b.specific_date!));
+    },
+    enabled: !!id,
+  });
+
+  // Check if a date is blocked
+  const isDateBlocked = (date: Date) => {
+    return blockedDates.some((blockedDate) => isSameDay(blockedDate, date));
+  };
 
   const handleBookingSubmit = async () => {
     if (!user) {
@@ -323,6 +347,17 @@ const ProviderProfile = () => {
                   providerName={provider.business_name}
                 />
 
+                {/* Pricing Tiers */}
+                <PricingTiers providerId={provider.id} />
+
+                {/* Portfolio Gallery */}
+                {provider.portfolio_images && provider.portfolio_images.length > 0 && (
+                  <PortfolioGallery 
+                    images={provider.portfolio_images} 
+                    providerName={provider.business_name}
+                  />
+                )}
+
                 {/* Reviews */}
                 <ReviewsList providerId={provider.id} />
               </div>
@@ -381,8 +416,14 @@ const ProviderProfile = () => {
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date()}
+                  disabled={(date) => date < new Date() || isDateBlocked(date)}
                   className={cn("rounded-md border pointer-events-auto touch-manipulation scale-[0.92] md:scale-100 origin-top")}
+                  modifiers={{
+                    blocked: blockedDates,
+                  }}
+                  modifiersStyles={{
+                    blocked: { textDecoration: "line-through", color: "hsl(var(--destructive))" },
+                  }}
                 />
               </div>
             </div>
