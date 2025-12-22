@@ -122,14 +122,13 @@ export const ChatWindow = ({
     mutationFn: async (text: string) => {
       if (!currentProfile || !text.trim()) return;
 
-      // Get the other participant's profile id from the booking
+      // Get the booking details
       const { data: booking } = await supabase
         .from("bookings")
         .select(`
           user_id,
           provider:service_providers!bookings_provider_id_fkey(
-            user_id,
-            profile:profiles!service_providers_user_id_fkey(id)
+            user_id
           )
         `)
         .eq("id", bookingId)
@@ -138,20 +137,30 @@ export const ChatWindow = ({
       if (!booking) throw new Error("Booking not found");
 
       // Determine receiver based on who is sending
-      let receiverId: string;
+      let receiverId: string | null = null;
+      
       if (user?.id === booking.user_id) {
         // Current user is the customer, receiver is provider
-        const providerProfile = (booking.provider as any)?.profile;
-        receiverId = providerProfile?.id;
+        const providerUserId = (booking.provider as any)?.user_id;
+        if (providerUserId) {
+          const { data: providerProfile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", providerUserId)
+            .maybeSingle();
+          receiverId = providerProfile?.id || null;
+        }
       } else {
         // Current user is the provider, get customer profile
         const { data: customerProfile } = await supabase
           .from("profiles")
           .select("id")
           .eq("user_id", booking.user_id)
-          .single();
-        receiverId = customerProfile?.id;
+          .maybeSingle();
+        receiverId = customerProfile?.id || null;
       }
+
+      if (!receiverId) throw new Error("Could not find receiver");
 
       const { error } = await supabase.from("chat_messages").insert({
         booking_id: bookingId,
