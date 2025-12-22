@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Send, ArrowLeft, User } from "lucide-react";
+import { Send, ArrowLeft, User, Check, CheckCheck, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,12 @@ interface ChatWindowProps {
   isCompleted?: boolean;
 }
 
+interface PendingMessage {
+  id: string;
+  message: string;
+  status: 'sending' | 'sent' | 'failed';
+}
+
 export const ChatWindow = ({
   bookingId,
   otherUserName,
@@ -29,6 +35,7 @@ export const ChatWindow = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -59,6 +66,7 @@ export const ChatWindow = ({
           sender_id,
           created_at,
           read,
+          delivery_status,
           sender:profiles!chat_messages_sender_id_fkey(full_name, profile_image)
         `)
         .eq("booking_id", bookingId)
@@ -70,19 +78,26 @@ export const ChatWindow = ({
     enabled: !!bookingId,
   });
 
-  // Real-time subscription
+  // Real-time subscription for new messages and updates
   useEffect(() => {
     const channel = supabase
       .channel(`chat-${bookingId}`)
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "chat_messages",
           filter: `booking_id=eq.${bookingId}`,
         },
-        () => {
+        (payload) => {
+          // Remove from pending if this is our sent message
+          if (payload.eventType === 'INSERT') {
+            const newMsg = payload.new as any;
+            setPendingMessages(prev => 
+              prev.filter(p => p.message !== newMsg.message)
+            );
+          }
           queryClient.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
         }
       )
@@ -98,9 +113,9 @@ export const ChatWindow = ({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, pendingMessages]);
 
-  // Mark messages as read
+  // Mark messages as read and update delivery status
   useEffect(() => {
     if (!currentProfile || messages.length === 0) return;
 
@@ -112,7 +127,7 @@ export const ChatWindow = ({
       const ids = unreadMessages.map((m: any) => m.id);
       supabase
         .from("chat_messages")
-        .update({ read: true })
+        .update({ read: true, delivery_status: 'read' })
         .in("id", ids)
         .then();
     }
@@ -121,6 +136,15 @@ export const ChatWindow = ({
   const sendMessage = useMutation({
     mutationFn: async (text: string) => {
       if (!currentProfile || !text.trim()) return;
+
+      const tempId = `pending-${Date.now()}`;
+      
+      // Add to pending messages immediately
+      setPendingMessages(prev => [...prev, {
+        id: tempId,
+        message: text.trim(),
+        status: 'sending'
+      }]);
 
       // Get the booking details
       const { data: booking } = await supabase
@@ -134,7 +158,12 @@ export const ChatWindow = ({
         .eq("id", bookingId)
         .single();
 
-      if (!booking) throw new Error("Booking not found");
+      if (!booking) {
+        setPendingMessages(prev => 
+          prev.map(p => p.id === tempId ? { ...p, status: 'failed' } : p)
+        );
+        throw new Error("Booking not found");
+      }
 
       // Determine receiver based on who is sending
       let receiverId: string | null = null;
@@ -160,16 +189,32 @@ export const ChatWindow = ({
         receiverId = customerProfile?.id || null;
       }
 
-      if (!receiverId) throw new Error("Could not find receiver");
+      if (!receiverId) {
+        setPendingMessages(prev => 
+          prev.map(p => p.id === tempId ? { ...p, status: 'failed' } : p)
+        );
+        throw new Error("Could not find receiver");
+      }
 
       const { error } = await supabase.from("chat_messages").insert({
         booking_id: bookingId,
         sender_id: currentProfile.id,
         receiver_id: receiverId,
         message: text.trim(),
+        delivery_status: 'sent',
       });
 
-      if (error) throw error;
+      if (error) {
+        setPendingMessages(prev => 
+          prev.map(p => p.id === tempId ? { ...p, status: 'failed' } : p)
+        );
+        throw error;
+      }
+
+      // Update to sent status (will be removed when real message arrives via subscription)
+      setPendingMessages(prev => 
+        prev.map(p => p.id === tempId ? { ...p, status: 'sent' } : p)
+      );
     },
     onSuccess: () => {
       setMessage("");
@@ -188,6 +233,17 @@ export const ChatWindow = ({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  // Get delivery status icon for own messages
+  const getDeliveryStatusIcon = (msg: any) => {
+    if (msg.read) {
+      return <CheckCheck className="h-3 w-3 text-blue-400" />;
+    }
+    if (msg.delivery_status === 'delivered') {
+      return <CheckCheck className="h-3 w-3 text-primary-foreground/70" />;
+    }
+    return <Check className="h-3 w-3 text-primary-foreground/70" />;
   };
 
   return (
@@ -224,7 +280,7 @@ export const ChatWindow = ({
               </div>
             ))}
           </div>
-        ) : messages.length === 0 ? (
+        ) : messages.length === 0 && pendingMessages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-muted-foreground">
             <p className="text-sm">No messages yet. Start the conversation!</p>
           </div>
@@ -257,20 +313,61 @@ export const ChatWindow = ({
                       )}
                     >
                       <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                      <p
+                      <div
                         className={cn(
-                          "text-xs mt-1",
-                          isOwn
-                            ? "text-primary-foreground/70"
-                            : "text-muted-foreground"
+                          "flex items-center gap-1 mt-1",
+                          isOwn ? "justify-end" : "justify-start"
                         )}
                       >
-                        {format(new Date(msg.created_at), "h:mm a")}
-                      </p>
+                        <span
+                          className={cn(
+                            "text-xs",
+                            isOwn
+                              ? "text-primary-foreground/70"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {format(new Date(msg.created_at), "h:mm a")}
+                        </span>
+                        {isOwn && getDeliveryStatusIcon(msg)}
+                      </div>
                     </div>
                   </motion.div>
                 );
               })}
+              
+              {/* Pending messages (optimistic UI) */}
+              {pendingMessages.map((pending) => (
+                <motion.div
+                  key={pending.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex gap-2 flex-row-reverse"
+                >
+                  <div
+                    className={cn(
+                      "max-w-[70%] rounded-2xl px-4 py-2 rounded-br-sm",
+                      pending.status === 'failed' 
+                        ? "bg-destructive/80 text-destructive-foreground" 
+                        : "bg-primary/80 text-primary-foreground"
+                    )}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{pending.message}</p>
+                    <div className="flex items-center gap-1 mt-1 justify-end">
+                      <span className="text-xs text-primary-foreground/70">
+                        {pending.status === 'sending' ? 'Sending...' : 
+                         pending.status === 'failed' ? 'Failed' : 'Sent'}
+                      </span>
+                      {pending.status === 'sending' && (
+                        <Clock className="h-3 w-3 text-primary-foreground/70 animate-pulse" />
+                      )}
+                      {pending.status === 'sent' && (
+                        <Check className="h-3 w-3 text-primary-foreground/70" />
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </AnimatePresence>
           </div>
         )}
