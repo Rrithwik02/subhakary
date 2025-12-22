@@ -126,6 +126,74 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_completion_details: {
+        Row: {
+          additional_notes: string | null
+          additional_notes_dispute: string | null
+          additional_notes_verified: boolean | null
+          amount_charged: number
+          amount_dispute: string | null
+          amount_verified: boolean | null
+          booking_id: string
+          completion_days: number
+          completion_days_dispute: string | null
+          completion_days_verified: boolean | null
+          created_at: string
+          customer_verified_at: string | null
+          id: string
+          service_description: string
+          service_description_dispute: string | null
+          service_description_verified: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          additional_notes_dispute?: string | null
+          additional_notes_verified?: boolean | null
+          amount_charged: number
+          amount_dispute?: string | null
+          amount_verified?: boolean | null
+          booking_id: string
+          completion_days: number
+          completion_days_dispute?: string | null
+          completion_days_verified?: boolean | null
+          created_at?: string
+          customer_verified_at?: string | null
+          id?: string
+          service_description: string
+          service_description_dispute?: string | null
+          service_description_verified?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          additional_notes?: string | null
+          additional_notes_dispute?: string | null
+          additional_notes_verified?: boolean | null
+          amount_charged?: number
+          amount_dispute?: string | null
+          amount_verified?: boolean | null
+          booking_id?: string
+          completion_days?: number
+          completion_days_dispute?: string | null
+          completion_days_verified?: boolean | null
+          created_at?: string
+          customer_verified_at?: string | null
+          id?: string
+          service_description?: string
+          service_description_dispute?: string | null
+          service_description_verified?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_completion_details_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           auto_complete_at: string | null

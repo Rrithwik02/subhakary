@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReviewForm } from "@/components/ReviewForm";
-import { CompletionConfirmDialog } from "@/components/CompletionConfirmDialog";
+import { CustomerVerificationDialog } from "@/components/CustomerVerificationDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +68,7 @@ const MyBookings = () => {
   
   const [confirmBooking, setConfirmBooking] = useState<{
     id: string;
+    providerId: string;
     providerName: string;
   } | null>(null);
 
@@ -308,12 +309,13 @@ const MyBookings = () => {
                                     e.stopPropagation();
                                     setConfirmBooking({
                                       id: booking.id,
+                                      providerId: booking.provider?.id || "",
                                       providerName: booking.provider?.business_name || "Provider",
                                     });
                                   }}
                                 >
                                   <Bell className="h-3.5 w-3.5 mr-1.5" />
-                                  Confirm Completion
+                                  Verify & Confirm
                                 </Button>
                               )}
                               {booking.status === "accepted" && !booking.completion_confirmed_by_provider && (
@@ -397,14 +399,15 @@ const MyBookings = () => {
         />
       )}
 
-      {/* Completion Confirm Dialog */}
+      {/* Customer Verification Dialog */}
       {confirmBooking && (
-        <CompletionConfirmDialog
+        <CustomerVerificationDialog
           bookingId={confirmBooking.id}
+          providerId={confirmBooking.providerId}
           providerName={confirmBooking.providerName}
           open={!!confirmBooking}
           onOpenChange={(open) => !open && setConfirmBooking(null)}
-          onConfirmed={() => refetch()}
+          onVerified={() => refetch()}
         />
       )}
 
