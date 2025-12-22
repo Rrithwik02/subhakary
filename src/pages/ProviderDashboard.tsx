@@ -82,6 +82,22 @@ const ProviderDashboard = () => {
     enabled: !!user,
   });
 
+  // Fetch provider profile id (used for booking chat)
+  const { data: providerProfile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   // Fetch bookings for this provider
   const {
     data: bookings = [],
@@ -96,24 +112,48 @@ const ProviderDashboard = () => {
         .eq("provider_id", provider!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      
+
       // Fetch customer profiles for bookings
       if (!bookingsData || bookingsData.length === 0) return [];
-      
-      const userIds = [...new Set(bookingsData.map(b => b.user_id))];
+
+      const userIds = [...new Set(bookingsData.map((b) => b.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name, email")
         .in("user_id", userIds);
-      
-      const profileMap = new Map(
-        profiles?.map(p => [p.user_id, p]) || []
+
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+
+      // Fetch customer verification timestamps (so UI reflects confirmation)
+      const bookingIds = bookingsData.map((b) => b.id);
+      const { data: completionRows } = await supabase
+        .from("booking_completion_details")
+        .select("booking_id, customer_verified_at")
+        .in("booking_id", bookingIds);
+
+      const completionMap = new Map(
+        completionRows?.map((r) => [r.booking_id, r]) || []
       );
-      
-      return bookingsData.map(booking => ({
-        ...booking,
-        customer: profileMap.get(booking.user_id) || null,
-      }));
+
+      return bookingsData.map((booking) => {
+        const completion = completionMap.get(booking.id) || null;
+        const customerVerified = !!completion?.customer_verified_at;
+
+        // UI-only status: treat as completed once customer has verified
+        const ui_status =
+          booking.status === "accepted" &&
+          booking.completion_confirmed_by_provider &&
+          customerVerified
+            ? "completed"
+            : booking.status;
+
+        return {
+          ...booking,
+          customer: profileMap.get(booking.user_id) || null,
+          completion,
+          ui_status,
+        };
+      });
     },
     enabled: !!provider?.id,
   });
