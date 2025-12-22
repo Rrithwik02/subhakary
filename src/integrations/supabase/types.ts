@@ -475,6 +475,7 @@ export type Database = {
         Row: {
           booking_id: string | null
           created_at: string | null
+          delivery_status: string | null
           id: string
           message: string
           read: boolean | null
@@ -484,6 +485,7 @@ export type Database = {
         Insert: {
           booking_id?: string | null
           created_at?: string | null
+          delivery_status?: string | null
           id?: string
           message: string
           read?: boolean | null
@@ -493,6 +495,7 @@ export type Database = {
         Update: {
           booking_id?: string | null
           created_at?: string | null
+          delivery_status?: string | null
           id?: string
           message?: string
           read?: boolean | null
