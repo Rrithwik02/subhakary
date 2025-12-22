@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NotificationsCenter } from "@/components/NotificationsCenter";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ const navLinks = [{
 }];
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -67,6 +68,58 @@ export const Navbar = () => {
     refetchOnMount: "always",
   });
 
+  // Fetch unread notifications count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!user?.id) {
+        setUnreadCount(0);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!profile?.id) {
+        setUnreadCount(0);
+        return;
+      }
+
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", profile.id)
+        .eq("read", false);
+
+      setUnreadCount(count || 0);
+    };
+
+    fetchUnreadCount();
+
+    if (user?.id) {
+      const channel = supabase
+        .channel("navbar-notifications-count")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notifications",
+          },
+          () => {
+            fetchUnreadCount();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user?.id]);
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -102,10 +155,17 @@ export const Navbar = () => {
         {/* Desktop Buttons */}
         <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
           {user ? <>
-              <NotificationsCenter />
-              <Link to="/notifications">
-                <Button variant="ghost" size="icon" title="All Notifications">
+              <Link to="/notifications" className="relative">
+                <Button variant="ghost" size="icon" title="Notifications">
                   <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <Badge 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      variant="destructive"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Badge>
+                  )}
                 </Button>
               </Link>
               <Link to="/chat">
@@ -197,10 +257,17 @@ export const Navbar = () => {
               <div className="flex flex-col gap-3 pt-2 border-t border-border">
                 {user ? <>
                     <div className="flex items-center gap-2 pb-2">
-                      <NotificationsCenter />
-                      <Link to="/notifications" onClick={() => setIsOpen(false)}>
-                        <Button variant="ghost" size="icon" title="All Notifications">
+                      <Link to="/notifications" onClick={() => setIsOpen(false)} className="relative">
+                        <Button variant="ghost" size="icon" title="Notifications">
                           <Bell className="h-5 w-5" />
+                          {unreadCount > 0 && (
+                            <Badge 
+                              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                              variant="destructive"
+                            >
+                              {unreadCount > 9 ? "9+" : unreadCount}
+                            </Badge>
+                          )}
                         </Button>
                       </Link>
                       <Link to="/chat" onClick={() => setIsOpen(false)}>
