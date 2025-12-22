@@ -42,6 +42,7 @@ import { ProviderProfileEdit } from "@/components/ProviderProfileEdit";
 import { ProviderAvailabilityManager } from "@/components/ProviderAvailabilityManager";
 import { ProviderBundleManager } from "@/components/ProviderBundleManager";
 import BookingCalendar from "@/components/BookingCalendar";
+import { CompletionDetailsForm } from "@/components/CompletionDetailsForm";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600" },
@@ -60,6 +61,10 @@ const ProviderDashboard = () => {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [completionFormBooking, setCompletionFormBooking] = useState<{
+    id: string;
+    customerName: string;
+  } | null>(null);
 
   // Fetch provider profile
   const { data: provider } = useQuery({
@@ -189,37 +194,8 @@ const ProviderDashboard = () => {
     }
   };
 
-  const handleRequestCompletion = async (bookingId: string) => {
-    setIsProcessing(true);
-    try {
-      const autoCompleteDate = new Date();
-      autoCompleteDate.setDate(autoCompleteDate.getDate() + 7);
-      
-      const { error } = await supabase
-        .from("bookings")
-        .update({ 
-          completion_confirmed_by_provider: true,
-          completion_requested_at: new Date().toISOString(),
-          auto_complete_at: autoCompleteDate.toISOString(),
-        })
-        .eq("id", bookingId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Completion requested",
-        description: "The customer has been notified to confirm. If they don't respond within 7 days, it will be auto-completed.",
-      });
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleOpenCompletionForm = (bookingId: string, customerName: string) => {
+    setCompletionFormBooking({ id: bookingId, customerName });
   };
 
   if (authLoading) {
@@ -346,7 +322,10 @@ const ProviderDashboard = () => {
               {showActions && booking.status === "accepted" && (
                 <Button
                   size="sm"
-                  onClick={() => handleRequestCompletion(booking.id)}
+                  onClick={() => handleOpenCompletionForm(
+                    booking.id, 
+                    booking.customer?.full_name || "Customer"
+                  )}
                   disabled={isProcessing || booking.completion_confirmed_by_provider}
                 >
                   {booking.completion_confirmed_by_provider 
@@ -623,6 +602,17 @@ const ProviderDashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Completion Details Form */}
+      {completionFormBooking && (
+        <CompletionDetailsForm
+          bookingId={completionFormBooking.id}
+          customerName={completionFormBooking.customerName}
+          open={!!completionFormBooking}
+          onOpenChange={(open) => !open && setCompletionFormBooking(null)}
+          onSubmitted={() => refetch()}
+        />
+      )}
 
       <Footer />
     </div>

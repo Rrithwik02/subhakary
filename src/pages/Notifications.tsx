@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { Bell, Calendar, MessageSquare, Star, CreditCard, User, CheckCheck, ArrowLeft } from "lucide-react";
+import { Bell, Calendar, MessageSquare, Star, CreditCard, User, CheckCheck, ArrowLeft, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,6 +19,7 @@ const notificationIcons: Record<string, React.ComponentType<{ className?: string
   review: Star,
   payment: CreditCard,
   system: Bell,
+  dispute: AlertTriangle,
 };
 
 const Notifications = () => {
