@@ -297,7 +297,7 @@ const ProviderDashboard = () => {
     booking: any;
     showActions?: boolean;
   }) => {
-    const status = statusConfig[booking.status as keyof typeof statusConfig];
+    const status = statusConfig[(booking.ui_status || booking.status) as keyof typeof statusConfig];
 
     return (
       <Card className="hover-lift">
@@ -374,7 +374,7 @@ const ProviderDashboard = () => {
                 </div>
               )}
 
-              {showActions && booking.status === "accepted" && (
+              {showActions && booking.status === "accepted" && booking.ui_status !== "completed" && (
                 <Button
                   size="sm"
                   onClick={() => handleOpenCompletionForm(
@@ -553,7 +553,7 @@ const ProviderDashboard = () => {
               <TabsContent value="messages" className="mt-6">
                 <ProviderChatSection 
                   providerId={provider.id} 
-                  providerProfileId={provider.profile_id || ""} 
+                  providerProfileId={providerProfile?.id || ""} 
                 />
               </TabsContent>
 
