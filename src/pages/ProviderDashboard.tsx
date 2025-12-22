@@ -90,15 +90,30 @@ const ProviderDashboard = () => {
   } = useQuery({
     queryKey: ["provider-bookings", provider?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: bookingsData, error } = await supabase
         .from("bookings")
-        .select(`
-          *
-        `)
+        .select(`*`)
         .eq("provider_id", provider!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      
+      // Fetch customer profiles for bookings
+      if (!bookingsData || bookingsData.length === 0) return [];
+      
+      const userIds = [...new Set(bookingsData.map(b => b.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", userIds);
+      
+      const profileMap = new Map(
+        profiles?.map(p => [p.user_id, p]) || []
+      );
+      
+      return bookingsData.map(booking => ({
+        ...booking,
+        customer: profileMap.get(booking.user_id) || null,
+      }));
     },
     enabled: !!provider?.id,
   });
