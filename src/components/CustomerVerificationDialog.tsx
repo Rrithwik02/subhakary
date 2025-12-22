@@ -135,9 +135,17 @@ export const CustomerVerificationDialog = ({
 
       if (bookingError) throw bookingError;
 
-      // Get user ID for review
+      // Get user's profile ID for review
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!userProfile) throw new Error("Profile not found");
 
       // Create review
       const { error: reviewError } = await supabase
@@ -145,7 +153,7 @@ export const CustomerVerificationDialog = ({
         .insert({
           booking_id: bookingId,
           provider_id: providerId,
-          user_id: user.id,
+          user_id: userProfile.id,
           rating: rating,
           review_text: reviewText || null,
         });

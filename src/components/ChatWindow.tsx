@@ -167,10 +167,10 @@ export const ChatWindow = ({
 
       // Determine receiver based on who is sending
       let receiverId: string | null = null;
+      const providerUserId = (booking.provider as any)?.user_id;
       
       if (user?.id === booking.user_id) {
         // Current user is the customer, receiver is provider
-        const providerUserId = (booking.provider as any)?.user_id;
         if (providerUserId) {
           const { data: providerProfile } = await supabase
             .from("profiles")
@@ -179,14 +179,16 @@ export const ChatWindow = ({
             .maybeSingle();
           receiverId = providerProfile?.id || null;
         }
-      } else {
+      } else if (user?.id === providerUserId) {
         // Current user is the provider, get customer profile
-        const { data: customerProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("user_id", booking.user_id)
-          .maybeSingle();
-        receiverId = customerProfile?.id || null;
+        if (booking.user_id) {
+          const { data: customerProfile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", booking.user_id)
+            .maybeSingle();
+          receiverId = customerProfile?.id || null;
+        }
       }
 
       if (!receiverId) {
