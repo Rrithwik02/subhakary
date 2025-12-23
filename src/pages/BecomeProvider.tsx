@@ -333,10 +333,13 @@ const BecomeProvider = () => {
                   <Label htmlFor="businessName">Business Name *</Label>
                   <Input
                     id="businessName"
-                    placeholder="Your business or professional name"
+                    placeholder="e.g., Sri Lakshmi Decorations, Venkat Photography"
                     value={formData.businessName}
                     onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Enter your registered business name exactly as it appears on your documents
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -362,9 +365,14 @@ const BecomeProvider = () => {
                     id="experience"
                     type="number"
                     placeholder="e.g., 5"
+                    min="0"
+                    max="50"
                     value={formData.experienceYears}
                     onChange={(e) => setFormData({ ...formData, experienceYears: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    How many years have you been providing this service?
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -436,14 +444,17 @@ const BecomeProvider = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="pricing">Pricing Information</Label>
+                  <Label htmlFor="pricing">Pricing Information *</Label>
                   <Textarea
                     id="pricing"
-                    placeholder="e.g., Starting from ₹5,000 for basic packages..."
+                    placeholder="e.g., ₹2,000 - ₹20,000 (depending on event size and requirements)"
                     value={formData.pricingInfo}
                     onChange={(e) => setFormData({ ...formData, pricingInfo: e.target.value })}
                     rows={2}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Provide a price range like "₹5,000 - ₹50,000" or describe your packages
+                  </p>
                 </div>
 
                 <div className="flex gap-4">
@@ -465,10 +476,18 @@ const BecomeProvider = () => {
 
             {step === 3 && (
               <div className="space-y-6">
-                <h2 className="font-display text-xl font-semibold">Upload Documents</h2>
-                <p className="text-sm text-muted-foreground">
-                  Please upload your identity proof and any relevant certifications. This helps us verify your profile.
-                </p>
+                <h2 className="font-display text-xl font-semibold">Upload Business Documents</h2>
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <p className="text-sm font-medium text-foreground">Required Documents:</p>
+                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                    <li><strong>Business Registration Certificate</strong> - GST certificate, Shop Act license, or trade license</li>
+                    <li><strong>Identity Proof</strong> - Aadhaar card, PAN card, or Voter ID</li>
+                    <li><strong>Business Proof</strong> - Visiting card, letterhead, or portfolio samples</li>
+                  </ul>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                    ⚠️ Business name on documents must match the name you entered above
+                  </p>
+                </div>
 
                 {/* Upload Area */}
                 <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">

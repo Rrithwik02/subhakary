@@ -266,8 +266,24 @@ const AdminDashboard = () => {
     }
   };
 
-  const viewDocuments = (documents: any[]) => {
-    setSelectedDocs(documents);
+  const viewDocuments = async (documents: any[]) => {
+    // Generate signed URLs for private documents
+    const docsWithSignedUrls = await Promise.all(
+      documents.map(async (doc) => {
+        if (doc.file_url.startsWith('http')) {
+          return doc;
+        }
+        // Create a signed URL for the private bucket
+        const { data } = await supabase.storage
+          .from('provider-documents')
+          .createSignedUrl(doc.file_url, 3600); // 1 hour expiry
+        return {
+          ...doc,
+          signed_url: data?.signedUrl || null
+        };
+      })
+    );
+    setSelectedDocs(docsWithSignedUrls);
     setDocumentsDialogOpen(true);
   };
 
@@ -897,10 +913,8 @@ const AdminDashboard = () => {
           </DialogHeader>
           <div className="space-y-4 max-h-[70vh] overflow-y-auto">
             {selectedDocs.map((doc) => {
-              // Construct the full storage URL
-              const storageUrl = doc.file_url.startsWith('http') 
-                ? doc.file_url 
-                : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/provider-documents/${doc.file_url}`;
+              // Use signed URL for private bucket
+              const storageUrl = doc.signed_url || doc.file_url;
               
               const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(doc.file_name);
               
@@ -919,17 +933,21 @@ const AdminDashboard = () => {
                         </p>
                       </div>
                     </div>
-                    <a
-                      href={storageUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline text-sm flex items-center gap-1"
-                    >
-                      <Eye className="h-4 w-4" />
-                      Open
-                    </a>
+                    {storageUrl ? (
+                      <a
+                        href={storageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline text-sm flex items-center gap-1"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Open
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Unable to load</span>
+                    )}
                   </div>
-                  {isImage && (
+                  {isImage && storageUrl && (
                     <div className="border rounded-lg overflow-hidden bg-muted/30">
                       <img
                         src={storageUrl}
