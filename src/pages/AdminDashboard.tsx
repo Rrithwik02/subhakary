@@ -20,6 +20,8 @@ import {
   BadgeCheck,
   BadgeX,
   Crown,
+  Check,
+  X,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -905,23 +907,21 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Documents Dialog with Image Preview */}
+      {/* Documents Dialog with Image Preview and Verification */}
       <Dialog open={documentsDialogOpen} onOpenChange={setDocumentsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Uploaded Documents</DialogTitle>
+            <DialogTitle>Business Proof Document</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 max-h-[70vh] overflow-y-auto">
             {selectedDocs.map((doc) => {
-              // Use signed URL for private bucket
               const storageUrl = doc.signed_url || doc.file_url;
-              
               const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(doc.file_name);
               
               return (
                 <div
                   key={doc.id}
-                  className="p-3 rounded-lg border border-border space-y-3"
+                  className="p-4 rounded-lg border border-border space-y-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -933,20 +933,27 @@ const AdminDashboard = () => {
                         </p>
                       </div>
                     </div>
-                    {storageUrl ? (
-                      <a
-                        href={storageUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline text-sm flex items-center gap-1"
-                      >
-                        <Eye className="h-4 w-4" />
-                        Open
-                      </a>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Unable to load</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Badge variant={
+                        doc.verification_status === 'verified' ? 'default' :
+                        doc.verification_status === 'rejected' ? 'destructive' : 'secondary'
+                      }>
+                        {doc.verification_status || 'pending'}
+                      </Badge>
+                      {storageUrl && (
+                        <a
+                          href={storageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline text-sm flex items-center gap-1"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Open
+                        </a>
+                      )}
+                    </div>
                   </div>
+                  
                   {isImage && storageUrl && (
                     <div className="border rounded-lg overflow-hidden bg-muted/30">
                       <img
@@ -957,6 +964,67 @@ const AdminDashboard = () => {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
+                    </div>
+                  )}
+
+                  {doc.rejection_reason && (
+                    <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                      Rejection reason: {doc.rejection_reason}
+                    </div>
+                  )}
+
+                  {/* Verification Actions */}
+                  {doc.verification_status !== 'verified' && (
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={async () => {
+                          const { error } = await supabase
+                            .from('provider_documents')
+                            .update({
+                              verification_status: 'verified',
+                              verified_at: new Date().toISOString(),
+                              verified_by: user?.id,
+                              rejection_reason: null
+                            })
+                            .eq('id', doc.id);
+                          if (!error) {
+                            toast({ title: "Document verified" });
+                            setDocumentsDialogOpen(false);
+                            refetch();
+                          }
+                        }}
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Verify Document
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex-1"
+                        onClick={async () => {
+                          const reason = prompt("Enter rejection reason:");
+                          if (reason) {
+                            const { error } = await supabase
+                              .from('provider_documents')
+                              .update({
+                                verification_status: 'rejected',
+                                rejection_reason: reason
+                              })
+                              .eq('id', doc.id);
+                            if (!error) {
+                              toast({ title: "Document rejected", variant: "destructive" });
+                              setDocumentsDialogOpen(false);
+                              refetch();
+                            }
+                          }
+                        }}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Reject
+                      </Button>
                     </div>
                   )}
                 </div>

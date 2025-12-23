@@ -1130,7 +1130,11 @@ export type Database = {
           file_url: string
           id: string
           provider_id: string
+          rejection_reason: string | null
+          verification_status: string | null
           verified: boolean | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           created_at?: string
@@ -1139,7 +1143,11 @@ export type Database = {
           file_url: string
           id?: string
           provider_id: string
+          rejection_reason?: string | null
+          verification_status?: string | null
           verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           created_at?: string
@@ -1148,7 +1156,11 @@ export type Database = {
           file_url?: string
           id?: string
           provider_id?: string
+          rejection_reason?: string | null
+          verification_status?: string | null
           verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
