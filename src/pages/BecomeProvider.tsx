@@ -8,7 +8,8 @@ import {
   Clock, 
   AlertCircle,
   ChevronRight,
-  X
+  X,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,14 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import logo from "@/assets/logo.png";
 
 interface ServiceCategory {
@@ -45,6 +54,12 @@ const BecomeProvider = () => {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [existingApplication, setExistingApplication] = useState<ProviderApplication | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [termsDialogOpen, setTermsDialogOpen] = useState(false);
+  const [supportChatOpen, setSupportChatOpen] = useState(false);
+  const [supportMessages, setSupportMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [existingTicket, setExistingTicket] = useState<any>(null);
+  const [sendingMessage, setSendingMessage] = useState(false);
   
   const [formData, setFormData] = useState({
     businessName: "",
@@ -94,8 +109,99 @@ const BecomeProvider = () => {
     
     if (data && !error) {
       setExistingApplication(data as ProviderApplication);
+      
+      // Check for existing support ticket if rejected
+      if (data.status === 'rejected') {
+        const { data: ticket } = await supabase
+          .from("support_tickets")
+          .select("*, messages:support_ticket_messages(*)")
+          .eq("provider_application_id", data.id)
+          .eq("status", "open")
+          .maybeSingle();
+        
+        if (ticket) {
+          setExistingTicket(ticket);
+          setSupportMessages(ticket.messages || []);
+        }
+      }
     }
   };
+
+  const openSupportChat = async () => {
+    if (!user || !existingApplication) return;
+    
+    // Check if ticket already exists
+    if (existingTicket) {
+      setSupportChatOpen(true);
+      return;
+    }
+    
+    // Create new support ticket
+    const { data: ticket, error } = await supabase
+      .from("support_tickets")
+      .insert({
+        user_id: user.id,
+        provider_application_id: existingApplication.id,
+        subject: `Support for rejected application: ${existingApplication.business_name}`,
+      })
+      .select()
+      .single();
+    
+    if (!error && ticket) {
+      setExistingTicket(ticket);
+      setSupportChatOpen(true);
+    }
+  };
+
+  const sendSupportMessage = async () => {
+    if (!newMessage.trim() || !existingTicket || !user) return;
+    
+    setSendingMessage(true);
+    try {
+      const { data: message, error } = await supabase
+        .from("support_ticket_messages")
+        .insert({
+          ticket_id: existingTicket.id,
+          sender_id: user.id,
+          message: newMessage.trim(),
+          is_admin: false,
+        })
+        .select()
+        .single();
+      
+      if (!error && message) {
+        setSupportMessages([...supportMessages, message]);
+        setNewMessage("");
+      }
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  // Subscribe to new messages
+  useEffect(() => {
+    if (!existingTicket) return;
+    
+    const channel = supabase
+      .channel('support-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'support_ticket_messages',
+          filter: `ticket_id=eq.${existingTicket.id}`,
+        },
+        (payload) => {
+          setSupportMessages((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [existingTicket]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -269,9 +375,17 @@ const BecomeProvider = () => {
                       <p className="text-sm text-foreground">{existingApplication.rejection_reason}</p>
                     </div>
                   )}
-                  <p className="text-sm text-muted-foreground">
-                    If you believe this was a mistake, please contact our support team.
-                  </p>
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
+                    <span>If you believe this was a mistake, please</span>
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto text-primary"
+                      onClick={openSupportChat}
+                    >
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      contact our support team
+                    </Button>
+                  </div>
                 </>
               )}
             </motion.div>
@@ -551,13 +665,160 @@ const BecomeProvider = () => {
                 </div>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  By submitting, you agree to our Terms of Service and Privacy Policy.
+                  By submitting, you agree to our{" "}
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => setTermsDialogOpen(true)}
+                  >
+                    Terms of Service
+                  </button>{" "}
+                  and Privacy Policy.
                 </p>
               </div>
             )}
           </motion.div>
         </div>
       </div>
+
+      {/* Terms of Service Dialog */}
+      <Dialog open={termsDialogOpen} onOpenChange={setTermsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Terms of Service</DialogTitle>
+            <DialogDescription>
+              Please read our terms carefully before registering.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh] pr-4">
+            <div className="prose prose-sm max-w-none space-y-6">
+              <section>
+                <h3 className="font-semibold text-foreground">1. Acceptance of Terms</h3>
+                <p className="text-muted-foreground text-sm">
+                  By accessing and using Subhakary's website and services, you agree to be bound by these Terms of Service.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-foreground">2. Service Provider Terms</h3>
+                <p className="text-muted-foreground text-sm">
+                  If you register as a service provider, you additionally agree to:
+                </p>
+                <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                  <li>Provide accurate information about your services, qualifications, and pricing</li>
+                  <li>Maintain all necessary licenses and certifications</li>
+                  <li>Deliver services as described and agreed upon with customers</li>
+                  <li>Respond to booking requests and inquiries in a timely manner</li>
+                  <li>Comply with all applicable laws and regulations</li>
+                  <li>Not engage in fraudulent or misleading practices</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-foreground">3. Document Verification</h3>
+                <p className="text-muted-foreground text-sm">
+                  All documents submitted must be authentic and belong to you or your registered business. 
+                  Submission of fraudulent documents will result in permanent ban from the platform.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-foreground">4. Booking and Payments</h3>
+                <p className="text-muted-foreground text-sm">
+                  Payment terms are agreed upon between you and the customer. Some bookings may require advance payments. 
+                  All payments are processed securely through our payment partners.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-foreground">5. Reviews and Ratings</h3>
+                <p className="text-muted-foreground text-sm">
+                  Users may leave reviews and ratings for service providers. Service providers may not incentivize 
+                  or manipulate reviews in any way.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-foreground">6. Termination</h3>
+                <p className="text-muted-foreground text-sm">
+                  We reserve the right to suspend or terminate your account at any time for violation of these terms 
+                  or for any other reason at our discretion.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-foreground">7. Contact</h3>
+                <p className="text-muted-foreground text-sm">
+                  For questions about these Terms of Service, please contact us at legal@subhakary.com
+                </p>
+              </section>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Support Chat Dialog */}
+      <Dialog open={supportChatOpen} onOpenChange={setSupportChatOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Support Chat
+            </DialogTitle>
+            <DialogDescription>
+              Chat with our support team about your application.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col h-[400px]">
+            <ScrollArea className="flex-1 pr-4">
+              <div className="space-y-3">
+                {supportMessages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No messages yet. Start a conversation with our support team.
+                  </p>
+                ) : (
+                  supportMessages.map((msg, i) => (
+                    <div
+                      key={msg.id || i}
+                      className={`flex ${msg.is_admin ? "justify-start" : "justify-end"}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                          msg.is_admin
+                            ? "bg-muted text-foreground"
+                            : "bg-primary text-primary-foreground"
+                        }`}
+                      >
+                        {msg.message}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+            
+            {existingTicket?.status === 'open' ? (
+              <div className="flex gap-2 mt-4 pt-4 border-t">
+                <Input
+                  placeholder="Type your message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendSupportMessage()}
+                />
+                <Button onClick={sendSupportMessage} disabled={sendingMessage || !newMessage.trim()}>
+                  Send
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center pt-4 border-t mt-4">
+                This conversation has been closed.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </>
   );
