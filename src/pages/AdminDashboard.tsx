@@ -22,6 +22,8 @@ import {
   Crown,
   Check,
   X,
+  MessageSquare,
+  RotateCcw,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -39,6 +41,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +65,11 @@ const AdminDashboard = () => {
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<any[]>([]);
   const [selectedProviders, setSelectedProviders] = useState<Set<string>>(new Set());
+  const [supportChatOpen, setSupportChatOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [ticketMessages, setTicketMessages] = useState<any[]>([]);
+  const [newAdminMessage, setNewAdminMessage] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   // Check if user is admin
   const { data: isAdmin, isLoading: checkingAdmin } = useQuery({
@@ -119,6 +128,23 @@ const AdminDashboard = () => {
       const { data, error } = await supabase
         .from("user_roles")
         .select("*");
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin === true,
+  });
+
+  // Fetch support tickets
+  const { data: supportTickets = [], refetch: refetchTickets } = useQuery({
+    queryKey: ["support-tickets"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .select(`
+          *,
+          messages:support_ticket_messages(*)
+        `)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -203,6 +229,98 @@ const AdminDashboard = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Revoke rejection to allow re-application
+  const handleRevokeRejection = async (providerId: string) => {
+    setIsProcessing(true);
+    try {
+      // Delete the provider record so they can re-apply
+      const { error } = await supabase
+        .from("service_providers")
+        .delete()
+        .eq("id", providerId);
+
+      if (error) throw error;
+
+      // Close any related support tickets
+      await supabase
+        .from("support_tickets")
+        .update({ status: "closed", closed_at: new Date().toISOString(), closed_by: user?.id })
+        .eq("provider_application_id", providerId);
+
+      toast({
+        title: "Rejection revoked",
+        description: "The user can now re-apply as a service provider.",
+      });
+      refetch();
+      refetchTickets();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Support ticket handlers
+  const openTicketChat = async (ticket: any) => {
+    setSelectedTicket(ticket);
+    setTicketMessages(ticket.messages || []);
+    setSupportChatOpen(true);
+  };
+
+  const sendAdminMessage = async () => {
+    if (!newAdminMessage.trim() || !selectedTicket || !user) return;
+    
+    setSendingMessage(true);
+    try {
+      const { data: message, error } = await supabase
+        .from("support_ticket_messages")
+        .insert({
+          ticket_id: selectedTicket.id,
+          sender_id: user.id,
+          message: newAdminMessage.trim(),
+          is_admin: true,
+        })
+        .select()
+        .single();
+      
+      if (!error && message) {
+        setTicketMessages([...ticketMessages, message]);
+        setNewAdminMessage("");
+      }
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const closeTicket = async () => {
+    if (!selectedTicket || !user) return;
+    
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("support_tickets")
+        .update({
+          status: "closed",
+          closed_at: new Date().toISOString(),
+          closed_by: user.id,
+        })
+        .eq("id", selectedTicket.id);
+
+      if (!error) {
+        toast({ title: "Ticket closed" });
+        setSupportChatOpen(false);
+        setSelectedTicket(null);
+        refetchTickets();
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -623,7 +741,7 @@ const AdminDashboard = () => {
             </div>
 
             <Tabs defaultValue="users" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="users">
                   Users ({allUsers.length})
                 </TabsTrigger>
@@ -635,6 +753,9 @@ const AdminDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="rejected">
                   Rejected ({rejectedProviders.length})
+                </TabsTrigger>
+                <TabsTrigger value="support">
+                  Support ({supportTickets.filter((t: any) => t.status === 'open').length})
                 </TabsTrigger>
               </TabsList>
 
@@ -866,7 +987,98 @@ const AdminDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
                       >
-                        <ProviderCard provider={provider} />
+                        <Card className="hover-lift">
+                          <CardContent className="p-6">
+                            <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-start gap-4 mb-3">
+                                  <div className="h-12 w-12 rounded-xl bg-destructive/10 flex items-center justify-center text-2xl flex-shrink-0">
+                                    {provider.category?.icon || "🙏"}
+                                  </div>
+                                  <div>
+                                    <h3 className="font-display text-lg font-semibold">
+                                      {provider.business_name}
+                                    </h3>
+                                    <Badge className={statusColors.rejected}>
+                                      Rejected
+                                    </Badge>
+                                  </div>
+                                </div>
+                                {provider.rejection_reason && (
+                                  <p className="text-sm text-destructive mb-3">
+                                    <strong>Reason:</strong> {provider.rejection_reason}
+                                  </p>
+                                )}
+                                <p className="text-sm text-muted-foreground">
+                                  Applied {format(new Date(provider.submitted_at), "PP")}
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRevokeRejection(provider.id)}
+                                disabled={isProcessing}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                Revoke (Allow Re-apply)
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Support Tickets Tab */}
+              <TabsContent value="support" className="mt-6">
+                {supportTickets.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-display text-xl font-semibold mb-2">
+                        No support tickets
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Support tickets from rejected providers will appear here
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {supportTickets.map((ticket: any, i: number) => (
+                      <motion.div
+                        key={ticket.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <Card className="hover-lift">
+                          <CardContent className="p-6">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <MessageSquare className="h-4 w-4 text-primary" />
+                                  <h3 className="font-medium">{ticket.subject}</h3>
+                                  <Badge variant={ticket.status === 'open' ? 'default' : 'secondary'}>
+                                    {ticket.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {ticket.messages?.length || 0} messages • Created {format(new Date(ticket.created_at), "PP")}
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => openTicketChat(ticket)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Chat
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
                       </motion.div>
                     ))}
                   </div>
@@ -1030,6 +1242,73 @@ const AdminDashboard = () => {
                 </div>
               );
             })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Support Chat Dialog */}
+      <Dialog open={supportChatOpen} onOpenChange={setSupportChatOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Support Chat
+            </DialogTitle>
+            <DialogDescription>
+              {selectedTicket?.subject}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col h-[400px]">
+            <ScrollArea className="flex-1 pr-4">
+              <div className="space-y-3">
+                {ticketMessages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No messages yet.
+                  </p>
+                ) : (
+                  ticketMessages.map((msg: any, i: number) => (
+                    <div
+                      key={msg.id || i}
+                      className={`flex ${msg.is_admin ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                          msg.is_admin
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-foreground"
+                        }`}
+                      >
+                        {msg.message}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+            
+            {selectedTicket?.status === 'open' ? (
+              <div className="space-y-2 mt-4 pt-4 border-t">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Type your message..."
+                    value={newAdminMessage}
+                    onChange={(e) => setNewAdminMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && sendAdminMessage()}
+                  />
+                  <Button onClick={sendAdminMessage} disabled={sendingMessage || !newAdminMessage.trim()}>
+                    Send
+                  </Button>
+                </div>
+                <Button variant="outline" className="w-full" onClick={closeTicket} disabled={isProcessing}>
+                  Close Ticket
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center pt-4 border-t mt-4">
+                This ticket is closed.
+              </p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
