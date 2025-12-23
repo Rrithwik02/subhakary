@@ -160,16 +160,15 @@ export const CustomerVerificationDialog = ({
 
       if (reviewError) throw reviewError;
 
-      // If there are disputes, create notification for provider
-      if (hasDisputes) {
-        // Get provider's profile_id
-        const { data: provider } = await supabase
-          .from("service_providers")
-          .select("profile_id")
-          .eq("id", providerId)
-          .single();
+      // Get provider's profile_id for notification
+      const { data: provider } = await supabase
+        .from("service_providers")
+        .select("profile_id")
+        .eq("id", providerId)
+        .single();
 
-        if (provider?.profile_id) {
+      if (provider?.profile_id) {
+        if (hasDisputes) {
           const disputes: string[] = [];
           if (!verification.serviceDescriptionVerified) {
             disputes.push(`Service Description: ${verification.serviceDescriptionDispute}`);
@@ -191,6 +190,16 @@ export const CustomerVerificationDialog = ({
               title: "Customer Disputed Service Details",
               message: `A customer has disputed some service details:\n${disputes.join("\n")}`,
               type: "dispute",
+            });
+        } else {
+          // Send verification success notification to provider
+          await supabase
+            .from("notifications")
+            .insert({
+              user_id: provider.profile_id,
+              title: "Service Verified by Customer",
+              message: `Great news! The customer has verified and confirmed your service completion details. They left a ${rating}-star review.`,
+              type: "completion",
             });
         }
       }
