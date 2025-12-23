@@ -476,16 +476,17 @@ const BecomeProvider = () => {
 
             {step === 3 && (
               <div className="space-y-6">
-                <h2 className="font-display text-xl font-semibold">Upload Business Documents</h2>
+                <h2 className="font-display text-xl font-semibold">Upload Business Proof Document</h2>
                 <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <p className="text-sm font-medium text-foreground">Required Documents:</p>
+                  <p className="text-sm font-medium text-foreground">Upload ONE of the following:</p>
                   <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                    <li><strong>Business Registration Certificate</strong> - GST certificate, Shop Act license, or trade license</li>
-                    <li><strong>Identity Proof</strong> - Aadhaar card, PAN card, or Voter ID</li>
-                    <li><strong>Business Proof</strong> - Visiting card, letterhead, or portfolio samples</li>
+                    <li>GST Certificate</li>
+                    <li>Shop Act License</li>
+                    <li>Trade License</li>
+                    <li>Business Registration Certificate</li>
                   </ul>
                   <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                    ⚠️ Business name on documents must match the name you entered above
+                    ⚠️ The business name on the document must match "{formData.businessName || 'your business name'}"
                   </p>
                 </div>
 
@@ -494,16 +495,18 @@ const BecomeProvider = () => {
                   <input
                     type="file"
                     id="documents"
-                    multiple
                     accept=".pdf,.jpg,.jpeg,.png"
                     onChange={handleFileUpload}
                     className="hidden"
+                    disabled={uploadedFiles.length >= 1}
                   />
-                  <label htmlFor="documents" className="cursor-pointer">
+                  <label htmlFor="documents" className={`cursor-pointer ${uploadedFiles.length >= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="font-medium text-foreground mb-1">Click to upload documents</p>
+                    <p className="font-medium text-foreground mb-1">
+                      {uploadedFiles.length >= 1 ? 'Document uploaded' : 'Click to upload document'}
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      PDF, JPG, or PNG (max 10MB each)
+                      PDF, JPG, or PNG (max 10MB)
                     </p>
                   </label>
                 </div>
