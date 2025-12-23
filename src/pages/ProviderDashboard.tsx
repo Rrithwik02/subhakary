@@ -343,6 +343,31 @@ const ProviderDashboard = () => {
                   Rejection reason: {booking.rejection_reason}
                 </p>
               )}
+
+              {/* Completion Details Summary */}
+              {booking.ui_status === "completed" && booking.completion_details && (
+                <div className="mt-4 p-3 bg-secondary/10 rounded-lg border border-secondary/20">
+                  <h4 className="text-sm font-semibold text-secondary flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Completion Details
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Amount Charged:</span>
+                      <span className="ml-2 font-medium">₹{booking.completion_details.amount_charged?.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Duration:</span>
+                      <span className="ml-2 font-medium">{booking.completion_details.completion_days} day(s)</span>
+                    </div>
+                  </div>
+                  {booking.completion_details.service_description && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      <span className="font-medium">Service:</span> {booking.completion_details.service_description}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col items-end gap-3">
