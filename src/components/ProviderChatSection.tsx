@@ -40,6 +40,8 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const MAX_MESSAGE_LENGTH = 5000;
 
   // Fetch active bookings with chat capability (accepted status)
   const { data: conversations = [], refetch: refetchConversations } = useQuery({
@@ -186,7 +188,18 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
+    const trimmedMessage = newMessage.trim();
+    if (!trimmedMessage || !selectedConversation) return;
+    
+    // Validate message length (server-side constraint is 5000 chars)
+    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+      toast({
+        title: "Message too long",
+        description: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`,
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSending(true);
     try {
@@ -194,7 +207,7 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
         booking_id: selectedConversation.booking_id,
         sender_id: providerProfileId,
         receiver_id: selectedConversation.customer_id,
-        message: newMessage.trim(),
+        message: trimmedMessage,
       });
 
       if (error) throw error;
@@ -359,9 +372,10 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
               <div className="flex gap-2">
                 <Input
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => setNewMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
                   onKeyPress={handleKeyPress}
                   placeholder="Type a message..."
+                  maxLength={MAX_MESSAGE_LENGTH}
                   disabled={sending}
                   className="flex-1"
                 />

@@ -38,6 +38,8 @@ export const ChatWindow = ({
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const MAX_MESSAGE_LENGTH = 5000;
 
   // Get current user's profile id
   const { data: currentProfile } = useQuery({
@@ -135,14 +137,20 @@ export const ChatWindow = ({
 
   const sendMessage = useMutation({
     mutationFn: async (text: string) => {
-      if (!currentProfile || !text.trim()) return;
+      const trimmedMessage = text.trim();
+      if (!currentProfile || !trimmedMessage) return;
+      
+      // Validate message length (server-side constraint is 5000 chars)
+      if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+        throw new Error(`Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`);
+      }
 
       const tempId = `pending-${Date.now()}`;
       
       // Add to pending messages immediately
       setPendingMessages(prev => [...prev, {
         id: tempId,
-        message: text.trim(),
+        message: trimmedMessage,
         status: 'sending'
       }]);
 
@@ -388,10 +396,11 @@ export const ChatWindow = ({
             <Input
               ref={inputRef}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
               onKeyDown={handleKeyPress}
               placeholder="Type a message..."
               className="flex-1"
+              maxLength={MAX_MESSAGE_LENGTH}
               disabled={sendMessage.isPending}
             />
             <Button

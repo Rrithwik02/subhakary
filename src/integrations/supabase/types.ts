@@ -105,6 +105,36 @@ export type Database = {
           },
         ]
       }
+      admin_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       admin_payment_details_access_log: {
         Row: {
           accessed_at: string | null
@@ -1909,6 +1939,7 @@ export type Database = {
         Returns: boolean
       }
       can_access_otp: { Args: { p_user_id: string }; Returns: boolean }
+      claim_admin_invitation: { Args: { p_token: string }; Returns: boolean }
       get_public_provider_info: {
         Args: { provider_uuid: string }
         Returns: {
