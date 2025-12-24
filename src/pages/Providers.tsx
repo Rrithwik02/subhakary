@@ -510,19 +510,19 @@ const Providers = () => {
       </section>
 
       {/* Results */}
-      <section className="py-12 px-4">
+      <section className="py-6 md:py-12 px-4">
         <div className="container max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-muted-foreground">
+          <div className="flex items-center justify-center md:justify-between mb-4 md:mb-6">
+            <p className="text-muted-foreground text-sm md:text-base">
               {filteredProviders.length} provider{filteredProviders.length !== 1 ? "s" : ""} found
             </p>
           </div>
 
           {isLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 md:p-6">
                     <div className="h-12 w-12 rounded-full bg-muted mb-4" />
                     <div className="h-6 bg-muted rounded w-3/4 mb-2" />
                     <div className="h-4 bg-muted rounded w-1/2" />
@@ -531,10 +531,10 @@ const Providers = () => {
               ))}
             </div>
           ) : filteredProviders.length === 0 ? (
-            <div className="text-center py-16">
-              <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-display text-xl font-semibold mb-2">No providers found</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className="text-center py-12 md:py-16">
+              <Filter className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-display text-lg md:text-xl font-semibold mb-2">No providers found</h3>
+              <p className="text-muted-foreground mb-4 text-sm md:text-base">
                 Try adjusting your filters or search terms
               </p>
               <Button variant="outline" onClick={clearFilters}>
@@ -542,7 +542,7 @@ const Providers = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {filteredProviders.map((provider, index) => (
                 <motion.div
                   key={provider.id}
@@ -552,10 +552,10 @@ const Providers = () => {
                 >
                   <Link to={`/provider/${provider.id}`}>
                     <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden group">
-                      <CardContent className="p-6">
+                      <CardContent className="p-4 md:p-6">
                         {/* Header with Avatar, Name and Verification Badge */}
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0 border-2 border-primary/20">
+                        <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                          <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0 border-2 border-primary/20">
                             {provider.logo_url ? (
                               <img 
                                 src={provider.logo_url} 
@@ -563,53 +563,53 @@ const Providers = () => {
                                 className="h-full w-full rounded-full object-cover"
                               />
                             ) : (
-                              <span className="text-3xl">👤</span>
+                              <span className="text-2xl md:text-3xl">👤</span>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-display text-lg font-semibold line-clamp-1 text-foreground">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="font-display text-base md:text-lg font-semibold line-clamp-1 text-foreground">
                                   {provider.business_name}
                                 </h3>
-                                {provider.is_premium && (
-                                  <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-xs font-bold rounded-md whitespace-nowrap shadow-sm">
-                                    ⭐ Premium
+                                {provider.is_verified ? (
+                                  <span className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-green-500/20 text-green-500 text-[10px] md:text-xs font-medium rounded-md whitespace-nowrap border border-green-500/30 flex-shrink-0">
+                                    ✓ Verified
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-yellow-500/20 text-yellow-600 text-[10px] md:text-xs font-medium rounded-md whitespace-nowrap border border-yellow-500/30 flex-shrink-0">
+                                    Unverified
                                   </span>
                                 )}
                               </div>
-                              {provider.is_verified ? (
-                                <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-500 text-xs font-medium rounded-md whitespace-nowrap border border-green-500/30">
-                                  ✓ Verified
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-600 text-xs font-medium rounded-md whitespace-nowrap border border-yellow-500/30">
-                                  Not Yet Verified
+                              {provider.is_premium && (
+                                <span className="self-start flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] md:text-xs font-bold rounded-md whitespace-nowrap shadow-sm">
+                                  ⭐ Premium
                                 </span>
                               )}
                             </div>
-                            <div className="flex flex-wrap gap-1 mt-1">
+                            <div className="flex flex-wrap gap-1 mt-1.5">
                               {provider.category?.name && (
-                                <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-0">
+                                <Badge className="bg-primary/20 text-primary hover:bg-primary/30 border-0 text-[10px] md:text-xs px-1.5 md:px-2">
                                   {provider.category.name}
                                 </Badge>
                               )}
                               {provider.subcategory && (
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="text-[10px] md:text-xs px-1.5 md:px-2">
                                   {provider.subcategory}
                                 </Badge>
                               )}
                             </div>
                             {provider.specializations && provider.specializations.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {provider.specializations.slice(0, 3).map((spec: string, idx: number) => (
-                                  <span key={idx} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {provider.specializations.slice(0, 2).map((spec: string, idx: number) => (
+                                  <span key={idx} className="text-[10px] md:text-xs text-muted-foreground bg-muted px-1 md:px-1.5 py-0.5 rounded">
                                     {spec}
                                   </span>
                                 ))}
-                                {provider.specializations.length > 3 && (
-                                  <span className="text-xs text-muted-foreground">
-                                    +{provider.specializations.length - 3} more
+                                {provider.specializations.length > 2 && (
+                                  <span className="text-[10px] md:text-xs text-muted-foreground">
+                                    +{provider.specializations.length - 2} more
                                   </span>
                                 )}
                               </div>
@@ -618,21 +618,21 @@ const Providers = () => {
                         </div>
 
                         {/* Description */}
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                        <p className="text-muted-foreground text-xs md:text-sm mb-3 md:mb-4 line-clamp-2 md:line-clamp-3">
                           {provider.description || "Professional service provider offering quality services."}
                         </p>
 
                         {/* Portfolio Preview - Shows on hover if portfolio images exist */}
                         {provider.portfolio_images && provider.portfolio_images.length > 0 && (
-                          <div className="mb-4 overflow-hidden rounded-lg">
+                          <div className="mb-3 md:mb-4 overflow-hidden rounded-lg">
                             <HoverCard>
                               <HoverCardTrigger asChild>
-                                <div className="flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline">
-                                  <Images className="h-4 w-4" />
+                                <div className="flex items-center gap-2 text-xs md:text-sm text-primary cursor-pointer hover:underline">
+                                  <Images className="h-3.5 w-3.5 md:h-4 md:w-4" />
                                   <span>{provider.portfolio_images.length} Portfolio Images</span>
                                 </div>
                               </HoverCardTrigger>
-                              <HoverCardContent className="w-80 p-2" side="top">
+                              <HoverCardContent className="w-64 md:w-80 p-2" side="top">
                                 <div className="grid grid-cols-3 gap-1">
                                   {provider.portfolio_images.slice(0, 6).map((img: string, idx: number) => (
                                     <div key={idx} className="aspect-square rounded overflow-hidden bg-muted">
@@ -658,33 +658,33 @@ const Providers = () => {
                         )}
 
                         {/* Location and Experience */}
-                        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4 pb-4 border-b border-border/50">
+                        <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground mb-3 md:mb-4 pb-3 md:pb-4 border-b border-border/50">
                           {provider.city && (
-                            <span className="flex items-center gap-1.5">
-                              <MapPin className="h-4 w-4 text-primary" />
-                              {provider.city}, India
+                            <span className="flex items-center gap-1 md:gap-1.5">
+                              <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
+                              <span className="truncate max-w-[100px] md:max-w-none">{provider.city}</span>
                             </span>
                           )}
                           {provider.experience_years ? (
-                            <span className="font-medium">{provider.experience_years}+ yrs experience</span>
+                            <span className="font-medium">{provider.experience_years}+ yrs exp</span>
                           ) : null}
                         </div>
 
                         {/* Rating and Price */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <Star className="h-4 w-4 fill-primary text-primary" />
-                            <span className="font-semibold text-primary">
+                          <div className="flex items-center gap-1 md:gap-1.5">
+                            <Star className="h-3.5 w-3.5 md:h-4 md:w-4 fill-primary text-primary" />
+                            <span className="font-semibold text-primary text-sm md:text-base">
                               {provider.rating?.toFixed(1) || "New"}
                             </span>
-                            <span className="text-muted-foreground text-sm">
-                              ({provider.total_reviews || 0} reviews)
+                            <span className="text-muted-foreground text-[10px] md:text-sm">
+                              ({provider.total_reviews || 0})
                             </span>
                           </div>
                           {(provider.base_price || provider.pricing_info) && (
-                            <span className="text-sm font-semibold text-primary">
+                            <span className="text-xs md:text-sm font-semibold text-primary">
                               {provider.base_price 
-                                ? `₹ ${provider.base_price.toLocaleString()}` 
+                                ? `₹${provider.base_price.toLocaleString()}` 
                                 : provider.pricing_info}
                             </span>
                           )}
