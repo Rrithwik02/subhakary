@@ -470,30 +470,30 @@ const ProviderDashboard = () => {
             </div>
 
             <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-7">
-                <TabsTrigger value="pending">
+              <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
+                <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                   Pending ({pendingBookings.length})
                 </TabsTrigger>
-                <TabsTrigger value="active">
+                <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                   Active ({activeBookings.length})
                 </TabsTrigger>
-                <TabsTrigger value="calendar" className="flex items-center gap-1">
-                  <CalendarDays className="h-3 w-3" />
+                <TabsTrigger value="calendar" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <CalendarDays className="h-3 w-3 hidden sm:block" />
                   Calendar
                 </TabsTrigger>
-                <TabsTrigger value="inquiries" className="flex items-center gap-1">
-                  <MessageSquare className="h-3 w-3" />
+                <TabsTrigger value="inquiries" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <MessageSquare className="h-3 w-3 hidden sm:block" />
                   Inquiries
                 </TabsTrigger>
-                <TabsTrigger value="messages" className="flex items-center gap-1">
-                  <MessageCircle className="h-3 w-3" />
+                <TabsTrigger value="messages" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <MessageCircle className="h-3 w-3 hidden sm:block" />
                   Messages
                 </TabsTrigger>
-                <TabsTrigger value="history">
+                <TabsTrigger value="history" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                   History ({pastBookings.length})
                 </TabsTrigger>
-                <TabsTrigger value="profile" className="flex items-center gap-1">
-                  <Settings className="h-3 w-3" />
+                <TabsTrigger value="profile" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <Settings className="h-3 w-3 hidden sm:block" />
                   Profile
                 </TabsTrigger>
               </TabsList>

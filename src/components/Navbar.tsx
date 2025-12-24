@@ -9,6 +9,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 const navLinks = [{
+  name: "Home",
+  href: "/"
+}, {
   name: "Find Providers",
   href: "/providers"
 }, {

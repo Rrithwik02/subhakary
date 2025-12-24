@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Search, MapPin, Star, Filter, X, BadgeCheck, Images } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, MapPin, Star, Filter, X, BadgeCheck, Images, ChevronLeft, SlidersHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -23,6 +23,14 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 
 // Popular cities and areas for the dropdown
@@ -36,6 +44,7 @@ const POPULAR_LOCATIONS = {
 
 const Providers = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
@@ -43,6 +52,7 @@ const Providers = () => {
   const [selectedArea, setSelectedArea] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
   const [showVerifiedOnly, setShowVerifiedOnly] = useState<boolean>(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Initialize filters from URL params
   useEffect(() => {
@@ -199,17 +209,145 @@ const Providers = () => {
   const hasActiveFilters =
     searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedCity !== "all" || selectedArea !== "all" || showVerifiedOnly;
 
+  const activeFilterCount = [
+    searchQuery,
+    selectedCategory !== "all" ? selectedCategory : null,
+    selectedSubcategory !== "all" ? selectedSubcategory : null,
+    selectedCity !== "all" ? selectedCity : null,
+    selectedArea !== "all" ? selectedArea : null,
+    showVerifiedOnly ? "verified" : null,
+  ].filter(Boolean).length;
+
+  // Filter component for reuse in both mobile and desktop
+  const FilterControls = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div className={`flex flex-col gap-3 ${isMobile ? '' : 'lg:flex-row lg:items-center'}`}>
+      {/* Category Filter */}
+      <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+        <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-48"}>
+          <SelectValue placeholder="All Categories" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Categories</SelectItem>
+          {categories.map((cat) => (
+            <SelectItem key={cat.id} value={cat.id}>
+              {cat.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Subcategory Filter */}
+      {subcategories.length > 0 && (
+        <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+          <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-44"}>
+            <SelectValue placeholder="All Services" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Services</SelectItem>
+            {subcategories.map((sub) => (
+              <SelectItem key={sub} value={sub!}>
+                {sub}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {/* City Filter */}
+      <Select value={selectedCity} onValueChange={handleCityChange}>
+        <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-44"}>
+          <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectValue placeholder="All Cities" />
+        </SelectTrigger>
+        <SelectContent className="bg-background border z-50">
+          <SelectItem value="all">All Cities</SelectItem>
+          {cities.map((city) => (
+            <SelectItem key={city} value={city!}>
+              {city}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Area Filter - only show when city is selected */}
+      {selectedCity !== "all" && areas.length > 0 && (
+        <Select value={selectedArea} onValueChange={setSelectedArea}>
+          <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-44"}>
+            <SelectValue placeholder="All Areas" />
+          </SelectTrigger>
+          <SelectContent className="bg-background border z-50">
+            <SelectItem value="all">All Areas in {selectedCity}</SelectItem>
+            {areas.map((area) => (
+              <SelectItem key={area} value={area}>
+                {area}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {/* Sort */}
+      <Select value={sortBy} onValueChange={setSortBy}>
+        <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-40"}>
+          <SelectValue placeholder="Sort By" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="rating">Top Rated</SelectItem>
+          <SelectItem value="reviews">Most Reviews</SelectItem>
+          <SelectItem value="experience">Experience</SelectItem>
+          <SelectItem value="name">Name (A-Z)</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* Verified Only Filter */}
+      <div 
+        className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors ${
+          showVerifiedOnly 
+            ? 'bg-green-500/10 border-green-500/30 text-green-600' 
+            : 'border-border hover:bg-muted'
+        }`}
+        onClick={() => setShowVerifiedOnly(!showVerifiedOnly)}
+      >
+        <Checkbox 
+          checked={showVerifiedOnly} 
+          onCheckedChange={(checked) => setShowVerifiedOnly(checked as boolean)}
+          className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+        />
+        <BadgeCheck className="h-4 w-4" />
+        <span className="text-sm font-medium whitespace-nowrap">Verified Only</span>
+      </div>
+
+      {isMobile && hasActiveFilters && (
+        <Button variant="outline" onClick={clearFilters} className="w-full text-destructive border-destructive/30">
+          <X className="h-4 w-4 mr-2" />
+          Clear All Filters
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-12 px-4 bg-gradient-to-b from-muted to-background">
-        <div className="container max-w-6xl mx-auto text-center">
+      {/* Hero Section - Compact on mobile */}
+      <section className="pt-24 md:pt-32 pb-6 md:pb-12 px-4 bg-gradient-to-b from-muted to-background">
+        <div className="container max-w-6xl mx-auto">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-4 -ml-2"
+            onClick={() => navigate(-1)}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4"
+            className="font-display text-2xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2 md:mb-4 text-center"
           >
             Find Trusted <span className="text-gradient-gold">Service Providers</span>
           </motion.h1>
@@ -217,15 +355,87 @@ const Providers = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-muted-foreground max-w-2xl mx-auto"
+            className="text-muted-foreground max-w-2xl mx-auto text-center text-sm md:text-base"
           >
             Browse verified providers for all your traditional and cultural service needs
           </motion.p>
         </div>
       </section>
 
-      {/* Filters */}
-      <section className="py-6 px-4 border-b border-border sticky top-20 bg-background/95 backdrop-blur-sm z-40">
+      {/* Mobile Search & Filter Bar */}
+      <section className="lg:hidden sticky top-16 z-40 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10"
+            />
+          </div>
+          
+          {/* Filter Button */}
+          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="h-10 w-10 relative flex-shrink-0">
+                <SlidersHorizontal className="h-4 w-4" />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[80vh]">
+              <SheetHeader>
+                <SheetTitle>Filters</SheetTitle>
+              </SheetHeader>
+              <ScrollArea className="h-full py-4">
+                <FilterControls isMobile />
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Active Filters Pills - Horizontal Scroll */}
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2 mt-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+            {searchQuery && (
+              <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer whitespace-nowrap flex-shrink-0" onClick={() => setSearchQuery("")}>
+                {searchQuery}
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
+            {selectedCategory !== "all" && (
+              <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer whitespace-nowrap flex-shrink-0" onClick={() => { setSelectedCategory("all"); setSelectedSubcategory("all"); }}>
+                {categories.find(c => c.id === selectedCategory)?.name}
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
+            {selectedCity !== "all" && (
+              <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer whitespace-nowrap flex-shrink-0" onClick={() => { setSelectedCity("all"); setSelectedArea("all"); }}>
+                {selectedCity}
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
+            {showVerifiedOnly && (
+              <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer whitespace-nowrap flex-shrink-0 bg-green-500/10 text-green-600" onClick={() => setShowVerifiedOnly(false)}>
+                <BadgeCheck className="h-3 w-3" />
+                Verified
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive text-xs whitespace-nowrap flex-shrink-0 h-6 px-2">
+              Clear
+            </Button>
+          </div>
+        )}
+      </section>
+
+      {/* Desktop Filters */}
+      <section className="hidden lg:block py-6 px-4 border-b border-border sticky top-20 bg-background/95 backdrop-blur-sm z-40">
         <div className="container max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
@@ -239,102 +449,7 @@ const Providers = () => {
               />
             </div>
 
-            {/* Category Filter */}
-            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Subcategory Filter */}
-            {subcategories.length > 0 && (
-              <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
-                <SelectTrigger className="w-full lg:w-44">
-                  <SelectValue placeholder="All Services" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Services</SelectItem>
-                  {subcategories.map((sub) => (
-                    <SelectItem key={sub} value={sub!}>
-                      {sub}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* City Filter */}
-            <Select value={selectedCity} onValueChange={handleCityChange}>
-              <SelectTrigger className="w-full lg:w-44">
-                <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                <SelectValue placeholder="All Cities" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border z-50">
-                <SelectItem value="all">All Cities</SelectItem>
-                {cities.map((city) => (
-                  <SelectItem key={city} value={city!}>
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Area Filter - only show when city is selected */}
-            {selectedCity !== "all" && areas.length > 0 && (
-              <Select value={selectedArea} onValueChange={setSelectedArea}>
-                <SelectTrigger className="w-full lg:w-44">
-                  <SelectValue placeholder="All Areas" />
-                </SelectTrigger>
-                <SelectContent className="bg-background border z-50">
-                  <SelectItem value="all">All Areas in {selectedCity}</SelectItem>
-                  {areas.map((area) => (
-                    <SelectItem key={area} value={area}>
-                      {area}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {/* Sort */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full lg:w-40">
-                <SelectValue placeholder="Sort By" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rating">Top Rated</SelectItem>
-                <SelectItem value="reviews">Most Reviews</SelectItem>
-                <SelectItem value="experience">Experience</SelectItem>
-                <SelectItem value="name">Name (A-Z)</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Verified Only Filter */}
-            <div 
-              className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors ${
-                showVerifiedOnly 
-                  ? 'bg-green-500/10 border-green-500/30 text-green-600' 
-                  : 'border-border hover:bg-muted'
-              }`}
-              onClick={() => setShowVerifiedOnly(!showVerifiedOnly)}
-            >
-              <Checkbox 
-                checked={showVerifiedOnly} 
-                onCheckedChange={(checked) => setShowVerifiedOnly(checked as boolean)}
-                className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-              />
-              <BadgeCheck className="h-4 w-4" />
-              <span className="text-sm font-medium whitespace-nowrap">Verified Only</span>
-            </div>
-
+            <FilterControls />
           </div>
 
           {/* Active Filter Badges */}
