@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
-import { ChevronDown, Calendar, MapPin, Search, Sparkles } from "lucide-react";
+import { ChevronDown, Calendar, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AISearch } from "@/components/AISearch";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
@@ -54,7 +53,6 @@ const heroSlides = [
 
 export const HeroSection = () => {
   const navigate = useNavigate();
-  const [showAISearch, setShowAISearch] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedService, setSelectedService] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -138,45 +136,13 @@ export const HeroSection = () => {
             {heroSlides[selectedIndex].description}
           </motion.p>
 
-          {/* Search Toggle */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="flex justify-center gap-2 mb-6"
-          >
-            <Button
-              variant={!showAISearch ? "gold" : "outline"}
-              size="sm"
-              onClick={() => setShowAISearch(false)}
-              className={!showAISearch ? "" : "bg-background/20 border-cream/30 text-cream hover:bg-background/30"}
-            >
-              <Search className="w-4 h-4 mr-2" />
-              Quick Search
-            </Button>
-            <Button
-              variant={showAISearch ? "gold" : "outline"}
-              size="sm"
-              onClick={() => setShowAISearch(true)}
-              className={showAISearch ? "" : "bg-background/20 border-cream/30 text-cream hover:bg-background/30"}
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Search
-            </Button>
-          </motion.div>
-
           {/* Search Bar */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            {showAISearch ? (
-              <div className="glass-card rounded-2xl p-6 max-w-3xl mx-auto">
-                <AISearch />
-              </div>
-            ) : (
-              <>
+            <>
                 {/* Mobile Layout */}
                 <div className="lg:hidden glass-card rounded-2xl p-4 max-w-4xl mx-auto flex flex-col gap-3">
                   {/* Service Dropdown */}
@@ -291,8 +257,7 @@ export const HeroSection = () => {
                     <Search className="w-4 h-4" />
                   </Button>
                 </div>
-              </>
-            )}
+            </>
           </motion.div>
         </div>
 

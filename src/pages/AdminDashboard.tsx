@@ -741,20 +741,20 @@ const AdminDashboard = () => {
             </div>
 
             <Tabs defaultValue="users" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="users">
+              <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
+                <TabsTrigger value="users" className="flex-1 min-w-[100px] text-xs sm:text-sm">
                   Users ({allUsers.length})
                 </TabsTrigger>
-                <TabsTrigger value="pending">
+                <TabsTrigger value="pending" className="flex-1 min-w-[100px] text-xs sm:text-sm">
                   Pending ({pendingProviders.length})
                 </TabsTrigger>
-                <TabsTrigger value="approved">
+                <TabsTrigger value="approved" className="flex-1 min-w-[100px] text-xs sm:text-sm">
                   Approved ({approvedProviders.length})
                 </TabsTrigger>
-                <TabsTrigger value="rejected">
+                <TabsTrigger value="rejected" className="flex-1 min-w-[100px] text-xs sm:text-sm">
                   Rejected ({rejectedProviders.length})
                 </TabsTrigger>
-                <TabsTrigger value="support">
+                <TabsTrigger value="support" className="flex-1 min-w-[100px] text-xs sm:text-sm">
                   Support ({supportTickets.filter((t: any) => t.status === 'open').length})
                 </TabsTrigger>
               </TabsList>
