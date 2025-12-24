@@ -186,16 +186,17 @@ const ProviderProfile = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <section className="pt-24 md:pt-32 pb-12 px-3 md:px-4">
+      <section className="pt-20 md:pt-32 pb-12 px-3 md:px-4">
         <div className="container max-w-4xl mx-auto">
           {/* Back button */}
           <Button
             variant="ghost"
-            className="mb-4 md:mb-6 h-9 md:h-10 touch-manipulation"
+            size="sm"
+            className="mb-3 md:mb-6 h-8 md:h-10 touch-manipulation -ml-2"
             onClick={() => navigate("/providers")}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Providers
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            <span className="text-sm">Back</span>
           </Button>
 
           <motion.div
@@ -204,8 +205,8 @@ const ProviderProfile = () => {
           >
             {/* Header */}
             <Card className="mb-4 md:mb-6">
-              <CardContent className="p-4 md:p-8">
-                <div className="flex flex-col gap-4 md:gap-6">
+              <CardContent className="p-3 md:p-8">
+                <div className="flex flex-col gap-3 md:gap-6">
                   {/* Mobile: Horizontal layout */}
                   <div className="flex items-start gap-3 md:gap-6">
                     <div className="flex-shrink-0">
@@ -213,76 +214,77 @@ const ProviderProfile = () => {
                         <img
                           src={provider.logo_url}
                           alt={provider.business_name}
-                          className="h-16 w-16 md:h-24 md:w-24 rounded-xl md:rounded-2xl object-cover"
+                          className="h-14 w-14 md:h-24 md:w-24 rounded-lg md:rounded-2xl object-cover"
                         />
                       ) : (
-                        <div className="h-16 w-16 md:h-24 md:w-24 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center text-3xl md:text-5xl">
+                        <div className="h-14 w-14 md:h-24 md:w-24 rounded-lg md:rounded-2xl bg-primary/10 flex items-center justify-center text-2xl md:text-5xl">
                           {provider.category?.icon || "🙏"}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
-                        <div className="min-w-0">
-                          <h1 className="font-display text-xl md:text-3xl font-bold text-foreground truncate">
+                      <div className="flex items-start justify-between gap-2 mb-1.5 md:mb-3">
+                        <div className="min-w-0 flex-1">
+                          <h1 className="font-display text-lg md:text-3xl font-bold text-foreground line-clamp-2 leading-tight">
                             {provider.business_name}
                           </h1>
-                          {provider.category?.name && (
-                            <Badge variant="secondary" className="mt-1 md:mt-2 text-xs">
-                              {provider.category.name}
-                            </Badge>
-                          )}
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
                           {provider.is_verified && (
-                            <span className="verified-badge text-xs">
+                            <span className="verified-badge text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1">
                               <CheckCircle2 className="h-3 w-3" />
-                              <span className="hidden sm:inline">Verified</span>
                             </span>
                           )}
                           <FavoriteButton providerId={provider.id} variant="button" />
                         </div>
                       </div>
                       
-                      {/* Rating - always visible */}
-                      <div className="flex items-center gap-2 mb-2 md:mb-4">
+                      {provider.category?.name && (
+                        <Badge variant="secondary" className="text-[10px] md:text-xs mb-2">
+                          {provider.category.name}
+                        </Badge>
+                      )}
+                      
+                      {/* Rating and price - compact on mobile */}
+                      <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 md:h-5 md:w-5 fill-primary text-primary" />
-                          <span className="font-bold text-base md:text-lg">
+                          <Star className="h-3.5 w-3.5 md:h-5 md:w-5 fill-primary text-primary" />
+                          <span className="font-bold text-sm md:text-lg">
                             {provider.rating?.toFixed(1) || "New"}
                           </span>
-                          <span className="text-xs md:text-sm text-muted-foreground">
+                          <span className="text-[10px] md:text-sm text-muted-foreground">
                             ({provider.total_reviews || 0})
                           </span>
                         </div>
                         {provider.base_price && (
-                          <Badge variant="outline" className="text-secondary font-medium text-xs">
-                            Starting ₹{provider.base_price.toLocaleString('en-IN')}
+                          <Badge variant="outline" className="text-secondary font-medium text-[10px] md:text-xs">
+                            From ₹{provider.base_price.toLocaleString('en-IN')}
                           </Badge>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Details - collapsible on mobile */}
-                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground">
+                  {/* Details row */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] md:text-sm text-muted-foreground border-t border-border/50 pt-3 md:pt-4">
                     {provider.city && (
                       <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <MapPin className="h-3 w-3 md:h-4 md:w-4" />
                         {provider.city}
                       </span>
                     )}
                     {provider.experience_years ? (
                       <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <Clock className="h-3 w-3 md:h-4 md:w-4" />
                         {provider.experience_years}+ yrs
                       </span>
                     ) : null}
                     {provider.languages && provider.languages.length > 0 && (
                       <span className="flex items-center gap-1">
-                        <Languages className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                        <span className="truncate max-w-[100px] md:max-w-none">
-                          {provider.languages.join(", ")}
+                        <Languages className="h-3 w-3 md:h-4 md:w-4" />
+                        <span className="truncate max-w-[80px] md:max-w-none">
+                          {provider.languages.slice(0, 2).join(", ")}
+                          {provider.languages.length > 2 && ` +${provider.languages.length - 2}`}
                         </span>
                       </span>
                     )}
@@ -292,36 +294,36 @@ const ProviderProfile = () => {
             </Card>
 
             {/* Mobile action buttons - fixed at bottom */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-3 z-40 safe-area-bottom">
-              <div className="flex gap-2">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-2.5 z-40 safe-area-bottom">
+              <div className="flex gap-2 max-w-md mx-auto">
                 <Button
-                  className="flex-1 h-11 touch-manipulation active:scale-[0.98] transition-transform"
+                  className="flex-1 h-10 touch-manipulation active:scale-[0.98] transition-transform text-sm"
                   variant="outline"
                   onClick={() => navigate(`/inquiry/${provider.id}`)}
                 >
-                  <MessageCircle className="mr-2 h-4 w-4" />
+                  <MessageCircle className="mr-1.5 h-4 w-4" />
                   Chat
                 </Button>
                 <Button
-                  className="flex-1 h-11 gradient-gold text-primary-foreground touch-manipulation active:scale-[0.98] transition-transform"
+                  className="flex-1 h-10 gradient-gold text-primary-foreground touch-manipulation active:scale-[0.98] transition-transform text-sm"
                   onClick={() => setBookingDialogOpen(true)}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <Calendar className="mr-1.5 h-4 w-4" />
                   Book Now
                 </Button>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-0">
+            <div className="grid md:grid-cols-3 gap-3 md:gap-6 pb-16 md:pb-0">
               {/* Main content */}
-              <div className="md:col-span-2 space-y-4 md:space-y-6">
+              <div className="md:col-span-2 space-y-3 md:space-y-6">
                 {/* About */}
                 <Card>
-                  <CardHeader className="pb-2 md:pb-4">
-                    <CardTitle className="font-display text-lg md:text-xl">About</CardTitle>
+                  <CardHeader className="pb-2 p-3 md:p-6 md:pb-4">
+                    <CardTitle className="font-display text-base md:text-xl">About</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm md:text-base text-muted-foreground whitespace-pre-line">
+                  <CardContent className="pt-0 px-3 pb-3 md:px-6 md:pb-6">
+                    <p className="text-xs md:text-base text-muted-foreground whitespace-pre-line leading-relaxed">
                       {provider.description || "No description provided."}
                     </p>
                   </CardContent>
@@ -330,11 +332,11 @@ const ProviderProfile = () => {
                 {/* Service details */}
                 {provider.category?.description && (
                   <Card>
-                    <CardHeader className="pb-2 md:pb-4">
-                      <CardTitle className="font-display text-lg md:text-xl">Service Category</CardTitle>
+                    <CardHeader className="pb-2 p-3 md:p-6 md:pb-4">
+                      <CardTitle className="font-display text-base md:text-xl">Service Category</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm md:text-base text-muted-foreground">
+                    <CardContent className="pt-0 px-3 pb-3 md:px-6 md:pb-6">
+                      <p className="text-xs md:text-base text-muted-foreground">
                         {provider.category.description}
                       </p>
                     </CardContent>
