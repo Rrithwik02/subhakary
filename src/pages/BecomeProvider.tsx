@@ -60,6 +60,7 @@ const BecomeProvider = () => {
   const [newMessage, setNewMessage] = useState("");
   const [existingTicket, setExistingTicket] = useState<any>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [formData, setFormData] = useState({
     businessName: "",
@@ -101,31 +102,68 @@ const BecomeProvider = () => {
   const checkExistingApplication = async () => {
     if (!user) return;
     
-    const { data, error } = await supabase
-      .from("service_providers")
-      .select("id, status, rejection_reason, business_name")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    
-    if (data && !error) {
-      setExistingApplication(data as ProviderApplication);
+    setIsRefreshing(true);
+    try {
+      const { data, error } = await supabase
+        .from("service_providers")
+        .select("id, status, rejection_reason, business_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
       
-      // Check for existing support ticket if rejected
-      if (data.status === 'rejected') {
-        const { data: ticket } = await supabase
-          .from("support_tickets")
-          .select("*, messages:support_ticket_messages(*)")
-          .eq("provider_application_id", data.id)
-          .eq("status", "open")
-          .maybeSingle();
+      if (data && !error) {
+        setExistingApplication(data as ProviderApplication);
         
-        if (ticket) {
-          setExistingTicket(ticket);
-          setSupportMessages(ticket.messages || []);
+        // Check for existing support ticket if rejected
+        if (data.status === 'rejected') {
+          const { data: ticket } = await supabase
+            .from("support_tickets")
+            .select("*, messages:support_ticket_messages(*)")
+            .eq("provider_application_id", data.id)
+            .eq("status", "open")
+            .maybeSingle();
+          
+          if (ticket) {
+            setExistingTicket(ticket);
+            setSupportMessages(ticket.messages || []);
+          }
         }
+      } else {
+        setExistingApplication(null);
       }
+    } finally {
+      setIsRefreshing(false);
     }
   };
+
+  // Subscribe to realtime updates on the provider application status
+  useEffect(() => {
+    if (!user || !existingApplication?.id) return;
+
+    const channel = supabase
+      .channel('provider-application-status')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'service_providers',
+          filter: `id=eq.${existingApplication.id}`,
+        },
+        (payload) => {
+          // Update local state with the new status
+          setExistingApplication((prev) => prev ? {
+            ...prev,
+            status: payload.new.status,
+            rejection_reason: payload.new.rejection_reason,
+          } : null);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, existingApplication?.id]);
 
   const openSupportChat = async () => {
     if (!user || !existingApplication) return;
@@ -316,6 +354,7 @@ const BecomeProvider = () => {
         <div className="min-h-screen bg-background pt-24 pb-12 px-4">
           <div className="max-w-2xl mx-auto">
             <motion.div
+              key={existingApplication.status}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="glass-card rounded-2xl p-8 text-center"
@@ -336,6 +375,15 @@ const BecomeProvider = () => {
                     <Clock className="w-4 h-4" />
                     Pending Review
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="mt-4"
+                    onClick={checkExistingApplication}
+                    disabled={isRefreshing}
+                  >
+                    {isRefreshing ? "Refreshing..." : "Refresh Status"}
+                  </Button>
                 </>
               )}
               
@@ -375,22 +423,97 @@ const BecomeProvider = () => {
                       <p className="text-sm text-foreground">{existingApplication.rejection_reason}</p>
                     </div>
                   )}
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
-                    <span>If you believe this was a mistake, please</span>
-                    <Button
-                      variant="link"
-                      className="p-0 h-auto text-primary"
-                      onClick={openSupportChat}
-                    >
-                      <MessageSquare className="w-4 h-4 mr-1" />
-                      contact our support team
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full mb-3"
+                    onClick={openSupportChat}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Contact Support Team
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Chat with our support team if you have questions or believe this was a mistake.
+                  </p>
                 </>
               )}
             </motion.div>
           </div>
         </div>
+
+        {/* Support Chat Dialog */}
+        <Dialog open={supportChatOpen} onOpenChange={setSupportChatOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Support Chat
+              </DialogTitle>
+              <DialogDescription>
+                Chat with our support team about your application.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex flex-col h-[400px]">
+              <ScrollArea className="flex-1 pr-4">
+                <div className="space-y-3">
+                  {supportMessages.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      No messages yet. Start a conversation with our support team.
+                    </p>
+                  ) : (
+                    supportMessages.map((msg, i) => (
+                      <div
+                        key={msg.id || i}
+                        className={`flex ${msg.is_admin ? "justify-start" : "justify-end"}`}
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                            msg.is_admin
+                              ? "bg-muted text-foreground"
+                              : "bg-primary text-primary-foreground"
+                          }`}
+                        >
+                          {msg.message}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+              
+              {existingTicket?.status === 'open' ? (
+                <div className="flex gap-2 mt-4 pt-4 border-t">
+                  <Input
+                    placeholder="Type your message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && sendSupportMessage()}
+                  />
+                  <Button onClick={sendSupportMessage} disabled={sendingMessage || !newMessage.trim()}>
+                    Send
+                  </Button>
+                </div>
+              ) : existingTicket ? (
+                <p className="text-sm text-muted-foreground text-center pt-4 border-t mt-4">
+                  This conversation has been closed.
+                </p>
+              ) : (
+                <div className="flex gap-2 mt-4 pt-4 border-t">
+                  <Input
+                    placeholder="Type your message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && sendSupportMessage()}
+                  />
+                  <Button onClick={sendSupportMessage} disabled={sendingMessage || !newMessage.trim()}>
+                    Send
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Footer />
       </>
     );
@@ -757,67 +880,6 @@ const BecomeProvider = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Support Chat Dialog */}
-      <Dialog open={supportChatOpen} onOpenChange={setSupportChatOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5" />
-              Support Chat
-            </DialogTitle>
-            <DialogDescription>
-              Chat with our support team about your application.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex flex-col h-[400px]">
-            <ScrollArea className="flex-1 pr-4">
-              <div className="space-y-3">
-                {supportMessages.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    No messages yet. Start a conversation with our support team.
-                  </p>
-                ) : (
-                  supportMessages.map((msg, i) => (
-                    <div
-                      key={msg.id || i}
-                      className={`flex ${msg.is_admin ? "justify-start" : "justify-end"}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                          msg.is_admin
-                            ? "bg-muted text-foreground"
-                            : "bg-primary text-primary-foreground"
-                        }`}
-                      >
-                        {msg.message}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-            
-            {existingTicket?.status === 'open' ? (
-              <div className="flex gap-2 mt-4 pt-4 border-t">
-                <Input
-                  placeholder="Type your message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendSupportMessage()}
-                />
-                <Button onClick={sendSupportMessage} disabled={sendingMessage || !newMessage.trim()}>
-                  Send
-                </Button>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center pt-4 border-t mt-4">
-                This conversation has been closed.
-              </p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Footer />
     </>
