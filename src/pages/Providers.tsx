@@ -33,8 +33,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 
-// Popular cities and areas for the dropdown
-const POPULAR_LOCATIONS = {
+// Areas for cities (used when a city is selected)
+const CITY_AREAS: Record<string, string[]> = {
   "Hyderabad": ["Madhapur", "Gachibowli", "Hitech City", "Kondapur", "Kukatpally", "Ameerpet", "Dilsukhnagar", "LB Nagar", "ECIL", "Uppal", "Miyapur", "Secunderabad"],
   "Bangalore": ["Koramangala", "Whitefield", "Electronic City", "Indiranagar", "HSR Layout", "BTM Layout", "Marathahalli"],
   "Chennai": ["T Nagar", "Anna Nagar", "Velachery", "Adyar", "Nungambakkam"],
@@ -51,7 +51,6 @@ const Providers = () => {
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedArea, setSelectedArea] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
-  const [showVerifiedOnly, setShowVerifiedOnly] = useState<boolean>(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Initialize filters from URL params
@@ -98,17 +97,16 @@ const Providers = () => {
     },
   });
 
-  // Get unique cities from providers + popular cities
+  // Get unique cities from providers only (cities with at least one provider)
   const cities = useMemo(() => {
     const providerCities = providers.map((p) => p.city).filter(Boolean);
-    const allCities = new Set([...Object.keys(POPULAR_LOCATIONS), ...providerCities]);
-    return Array.from(allCities).sort();
+    return Array.from(new Set(providerCities)).sort();
   }, [providers]);
 
   // Get areas for selected city
   const areas = useMemo(() => {
     if (selectedCity === "all") return [];
-    return POPULAR_LOCATIONS[selectedCity as keyof typeof POPULAR_LOCATIONS] || [];
+    return CITY_AREAS[selectedCity as keyof typeof CITY_AREAS] || [];
   }, [selectedCity]);
 
   // Get unique subcategories from providers
@@ -162,11 +160,6 @@ const Providers = () => {
       );
     }
 
-    // Verified filter
-    if (showVerifiedOnly) {
-      result = result.filter((p) => p.is_verified === true);
-    }
-
     // Sorting
     switch (sortBy) {
       case "rating":
@@ -184,7 +177,7 @@ const Providers = () => {
     }
 
     return result;
-  }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedCity, selectedArea, sortBy, showVerifiedOnly]);
+  }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedCity, selectedArea, sortBy]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -193,7 +186,6 @@ const Providers = () => {
     setSelectedCity("all");
     setSelectedArea("all");
     setSortBy("rating");
-    setShowVerifiedOnly(false);
   };
 
   const handleCategoryChange = (value: string) => {
@@ -207,7 +199,7 @@ const Providers = () => {
   };
 
   const hasActiveFilters =
-    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedCity !== "all" || selectedArea !== "all" || showVerifiedOnly;
+    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedCity !== "all" || selectedArea !== "all";
 
   const activeFilterCount = [
     searchQuery,
@@ -215,7 +207,6 @@ const Providers = () => {
     selectedSubcategory !== "all" ? selectedSubcategory : null,
     selectedCity !== "all" ? selectedCity : null,
     selectedArea !== "all" ? selectedArea : null,
-    showVerifiedOnly ? "verified" : null,
   ].filter(Boolean).length;
 
   // Filter component for reuse in both mobile and desktop
@@ -298,24 +289,6 @@ const Providers = () => {
           <SelectItem value="name">Name (A-Z)</SelectItem>
         </SelectContent>
       </Select>
-
-      {/* Verified Only Filter */}
-      <div 
-        className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer transition-colors ${
-          showVerifiedOnly 
-            ? 'bg-green-500/10 border-green-500/30 text-green-600' 
-            : 'border-border hover:bg-muted'
-        }`}
-        onClick={() => setShowVerifiedOnly(!showVerifiedOnly)}
-      >
-        <Checkbox 
-          checked={showVerifiedOnly} 
-          onCheckedChange={(checked) => setShowVerifiedOnly(checked as boolean)}
-          className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-        />
-        <BadgeCheck className="h-4 w-4" />
-        <span className="text-sm font-medium whitespace-nowrap">Verified Only</span>
-      </div>
 
       {isMobile && hasActiveFilters && (
         <Button variant="outline" onClick={clearFilters} className="w-full text-destructive border-destructive/30">
@@ -420,13 +393,6 @@ const Providers = () => {
                 <X className="h-3 w-3 ml-1" />
               </Badge>
             )}
-            {showVerifiedOnly && (
-              <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer whitespace-nowrap flex-shrink-0 bg-green-500/10 text-green-600" onClick={() => setShowVerifiedOnly(false)}>
-                <BadgeCheck className="h-3 w-3" />
-                Verified
-                <X className="h-3 w-3 ml-1" />
-              </Badge>
-            )}
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive text-xs whitespace-nowrap flex-shrink-0 h-6 px-2">
               Clear
             </Button>
@@ -488,14 +454,6 @@ const Providers = () => {
               {selectedArea !== "all" && (
                 <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setSelectedArea("all")}>
                   Area: {selectedArea}
-                  <X className="h-3 w-3 ml-1" />
-                </Badge>
-              )}
-              
-              {showVerifiedOnly && (
-                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20 bg-green-500/10 text-green-600" onClick={() => setShowVerifiedOnly(false)}>
-                  <BadgeCheck className="h-3 w-3" />
-                  Verified Only
                   <X className="h-3 w-3 ml-1" />
                 </Badge>
               )}
