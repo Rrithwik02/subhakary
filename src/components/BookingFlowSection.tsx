@@ -17,26 +17,31 @@ const customerSteps = [
     icon: Search,
     title: "Find Providers",
     description: "Browse verified service providers by category, location, or use AI search",
+    microcopy: null,
   },
   {
     icon: MessageSquare,
     title: "Chat & Discuss",
     description: "Connect with providers to discuss your requirements before booking",
+    microcopy: null,
   },
   {
     icon: CalendarCheck,
-    title: "Book Service",
-    description: "Select your preferred date and time, then submit your booking request",
+    title: "Check Availability",
+    description: "Select your preferred date and time, then check if the provider is available",
+    microcopy: "No payment required. Most providers respond within a few hours.",
   },
   {
     icon: CheckCircle2,
     title: "Get Confirmation",
     description: "Provider reviews and accepts your booking, you get notified instantly",
+    microcopy: null,
   },
   {
     icon: Star,
     title: "Rate & Review",
     description: "After service completion, share your experience to help others",
+    microcopy: null,
   },
 ];
 
@@ -44,27 +49,32 @@ const providerSteps = [
   {
     icon: Briefcase,
     title: "Create Your Profile",
-    description: "Add your service details to get started",
+    description: "Add your service details and upload a document that proves your business ownership (GST, Trade License, etc.)",
+    microcopy: null,
   },
   {
     icon: BadgeCheck,
     title: "Get Verified",
     description: "Our team reviews your application and approves your profile",
+    microcopy: null,
   },
   {
     icon: Users,
     title: "Receive Inquiries",
     description: "Customers can chat with you and send booking requests",
+    microcopy: "You'll start receiving booking requests once customers search for your service. Try to respond within a few hours!",
   },
   {
     icon: ClipboardCheck,
     title: "Manage Bookings",
     description: "Accept or decline bookings, manage your calendar and availability",
+    microcopy: null,
   },
   {
     icon: Star,
     title: "Get More Bookings",
     description: "Build trust with reviews and receive more customer requests",
+    microcopy: null,
   },
 ];
 
@@ -154,6 +164,9 @@ export const BookingFlowSection = () => {
                       <h4 className="font-semibold text-foreground">{step.title}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
+                    {step.microcopy && (
+                      <p className="text-xs text-primary/80 mt-1.5 italic">{step.microcopy}</p>
+                    )}
                   </div>
                   {index < customerSteps.length - 1 && (
                     <ArrowRight className="h-5 w-5 text-muted-foreground/30 flex-shrink-0 hidden sm:block" />
@@ -200,6 +213,9 @@ export const BookingFlowSection = () => {
                       <h4 className="font-semibold text-foreground">{step.title}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
+                    {step.microcopy && (
+                      <p className="text-xs text-secondary/80 mt-1.5 italic">{step.microcopy}</p>
+                    )}
                   </div>
                   {index < providerSteps.length - 1 && (
                     <ArrowRight className="h-5 w-5 text-muted-foreground/30 flex-shrink-0 hidden sm:block" />
