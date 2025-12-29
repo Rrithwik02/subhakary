@@ -43,8 +43,8 @@ const customerSteps = [
 const providerSteps = [
   {
     icon: Briefcase,
-    title: "Register Business",
-    description: "Submit your business details and documents for verification",
+    title: "Create Your Profile",
+    description: "Add your service details to get started",
   },
   {
     icon: BadgeCheck,
@@ -63,8 +63,8 @@ const providerSteps = [
   },
   {
     icon: Star,
-    title: "Grow Your Business",
-    description: "Build reputation through reviews and expand your customer base",
+    title: "Get More Bookings",
+    description: "Build trust with reviews and receive more customer requests",
   },
 ];
 
@@ -170,7 +170,7 @@ export const BookingFlowSection = () => {
             whileInView="visible"
             viewport={{ once: true }}
           >
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-3 mb-2">
               <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
                 <Briefcase className="h-5 w-5 text-secondary" />
               </div>
@@ -178,6 +178,9 @@ export const BookingFlowSection = () => {
                 For Service Providers
               </h3>
             </div>
+            <p className="text-sm text-muted-foreground mb-8 ml-[52px]">
+              No upfront cost. No obligation to accept bookings.
+            </p>
             
             <div className="space-y-4">
               {providerSteps.map((step, index) => (

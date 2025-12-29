@@ -272,6 +272,21 @@ const BecomeProvider = () => {
     
     setLoading(true);
     try {
+      // If resubmitting, delete old application first
+      if (existingApplication) {
+        // Delete old documents
+        await supabase
+          .from("provider_documents")
+          .delete()
+          .eq("provider_id", existingApplication.id);
+        
+        // Delete old application
+        await supabase
+          .from("service_providers")
+          .delete()
+          .eq("id", existingApplication.id);
+      }
+
       // Create provider application
       const { data: provider, error: providerError } = await supabase
         .from("service_providers")
@@ -415,24 +430,48 @@ const BecomeProvider = () => {
                     Application Not Approved
                   </h1>
                   <p className="text-muted-foreground mb-4">
-                    Unfortunately, your application was not approved at this time.
+                    Unfortunately, your application was not approved at this time. You can update your documents and resubmit.
                   </p>
                   {existingApplication.rejection_reason && (
                     <div className="bg-destructive/10 rounded-lg p-4 mb-6 text-left">
-                      <p className="text-sm font-medium text-destructive mb-1">Reason:</p>
+                      <p className="text-sm font-medium text-destructive mb-1">Feedback:</p>
                       <p className="text-sm text-foreground">{existingApplication.rejection_reason}</p>
                     </div>
                   )}
-                  <Button
-                    variant="outline"
-                    className="w-full mb-3"
-                    onClick={openSupportChat}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Contact Support Team
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Chat with our support team if you have questions or believe this was a mistake.
+                  <div className="space-y-3">
+                    <Button
+                      variant="gold"
+                      className="w-full rounded-full"
+                      onClick={() => {
+                        setExistingApplication(null);
+                        setFormData({
+                          businessName: existingApplication.business_name,
+                          categoryId: "",
+                          description: "",
+                          experienceYears: "",
+                          languages: [],
+                          city: "",
+                          address: "",
+                          pricingInfo: "",
+                        });
+                        setUploadedFiles([]);
+                        setStep(1);
+                      }}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Resubmit Application
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={openSupportChat}
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Contact Support Team
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Address the feedback above and resubmit, or chat with our support team.
                   </p>
                 </>
               )}
