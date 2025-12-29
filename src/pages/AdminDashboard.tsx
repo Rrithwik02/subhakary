@@ -601,6 +601,16 @@ const AdminDashboard = () => {
               )}
             </div>
 
+            {/* Show phone verification notice for providers without documents */}
+            {provider.status === "pending" && (!provider.documents || provider.documents.length === 0) && (
+              <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <p className="text-sm text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  <strong>No documents:</strong> Verify via phone call before approving
+                </p>
+              </div>
+            )}
+
             {provider.rejection_reason && (
               <p className="text-sm text-destructive mt-3">
                 <strong>Rejection reason:</strong> {provider.rejection_reason}

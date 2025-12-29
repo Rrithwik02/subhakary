@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -28,6 +28,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StateCitySelect } from "@/components/StateCitySelect";
 import logo from "@/assets/logo.png";
 
 interface ServiceCategory {
@@ -68,12 +69,30 @@ const BecomeProvider = () => {
     description: "",
     experienceYears: "",
     languages: [] as string[],
+    state: "",
     city: "",
     address: "",
     pricingInfo: "",
   });
+  const [isResubmitting, setIsResubmitting] = useState(false);
 
   const languageOptions = ["English", "Telugu", "Hindi", "Tamil", "Kannada", "Malayalam"];
+
+  // Categories that don't require document verification (priests, poojaris, etc.)
+  const noDocumentCategories = useMemo(() => {
+    return categories.filter(cat => 
+      cat.name.toLowerCase().includes("priest") || 
+      cat.name.toLowerCase().includes("poojari") ||
+      cat.name.toLowerCase().includes("pandit") ||
+      cat.slug.toLowerCase().includes("priest") ||
+      cat.slug.toLowerCase().includes("poojari") ||
+      cat.slug.toLowerCase().includes("pandit")
+    ).map(cat => cat.id);
+  }, [categories]);
+
+  const isDocumentRequired = useMemo(() => {
+    return !noDocumentCategories.includes(formData.categoryId);
+  }, [formData.categoryId, noDocumentCategories]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -272,44 +291,63 @@ const BecomeProvider = () => {
     
     setLoading(true);
     try {
-      // If resubmitting, delete old application first
-      if (existingApplication) {
-        // Delete old documents
+      let providerId: string;
+
+      // If resubmitting a rejected application, UPDATE instead of delete+insert
+      if (isResubmitting && existingApplication) {
+        // Delete old documents first
         await supabase
           .from("provider_documents")
           .delete()
           .eq("provider_id", existingApplication.id);
         
-        // Delete old application
-        await supabase
+        // Update existing application
+        const { data: updatedProvider, error: updateError } = await supabase
           .from("service_providers")
-          .delete()
-          .eq("id", existingApplication.id);
+          .update({
+            business_name: formData.businessName,
+            category_id: formData.categoryId || null,
+            description: formData.description,
+            experience_years: parseInt(formData.experienceYears) || 0,
+            languages: formData.languages,
+            city: formData.city,
+            address: formData.address,
+            pricing_info: formData.pricingInfo,
+            status: "pending",
+            rejection_reason: null,
+            reviewed_at: null,
+          })
+          .eq("id", existingApplication.id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+        providerId = updatedProvider.id;
+      } else {
+        // Create new provider application
+        const { data: provider, error: providerError } = await supabase
+          .from("service_providers")
+          .insert({
+            user_id: user.id,
+            business_name: formData.businessName,
+            category_id: formData.categoryId || null,
+            description: formData.description,
+            experience_years: parseInt(formData.experienceYears) || 0,
+            languages: formData.languages,
+            city: formData.city,
+            address: formData.address,
+            pricing_info: formData.pricingInfo,
+            status: "pending",
+          })
+          .select()
+          .single();
+
+        if (providerError) throw providerError;
+        providerId = provider.id;
       }
 
-      // Create provider application
-      const { data: provider, error: providerError } = await supabase
-        .from("service_providers")
-        .insert({
-          user_id: user.id,
-          business_name: formData.businessName,
-          category_id: formData.categoryId || null,
-          description: formData.description,
-          experience_years: parseInt(formData.experienceYears) || 0,
-          languages: formData.languages,
-          city: formData.city,
-          address: formData.address,
-          pricing_info: formData.pricingInfo,
-          status: "pending",
-        })
-        .select()
-        .single();
-
-      if (providerError) throw providerError;
-
-      // Upload documents
+      // Upload documents (if any)
       for (const file of uploadedFiles) {
-        const fileExt = file.name.split(".").pop();
         const filePath = `${user.id}/${Date.now()}-${file.name}`;
 
         const { error: uploadError } = await supabase.storage
@@ -323,7 +361,7 @@ const BecomeProvider = () => {
 
         // Save document reference
         await supabase.from("provider_documents").insert({
-          provider_id: provider.id,
+          provider_id: providerId,
           document_type: "identity",
           file_url: filePath,
           file_name: file.name,
@@ -336,11 +374,12 @@ const BecomeProvider = () => {
       });
 
       setExistingApplication({
-        id: provider.id,
+        id: providerId,
         status: "pending",
         rejection_reason: null,
         business_name: formData.businessName,
       });
+      setIsResubmitting(false);
     } catch (error: any) {
       console.error("Error submitting application:", error);
       toast({
@@ -361,8 +400,8 @@ const BecomeProvider = () => {
     );
   }
 
-  // Show status if application exists
-  if (existingApplication) {
+  // Show status if application exists and not resubmitting
+  if (existingApplication && !isResubmitting) {
     return (
       <>
         <Navbar />
@@ -443,13 +482,14 @@ const BecomeProvider = () => {
                       variant="gold"
                       className="w-full rounded-full"
                       onClick={() => {
-                        setExistingApplication(null);
+                        setIsResubmitting(true);
                         setFormData({
                           businessName: existingApplication.business_name,
                           categoryId: "",
                           description: "",
                           experienceYears: "",
                           languages: [],
+                          state: "",
                           city: "",
                           address: "",
                           pricingInfo: "",
@@ -698,15 +738,12 @@ const BecomeProvider = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="city">City *</Label>
-                  <Input
-                    id="city"
-                    placeholder="e.g., Hyderabad"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  />
-                </div>
+                <StateCitySelect
+                  selectedState={formData.state}
+                  selectedCity={formData.city}
+                  onStateChange={(state) => setFormData({ ...formData, state })}
+                  onCityChange={(city) => setFormData({ ...formData, city })}
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="address">Full Address</Label>
@@ -752,64 +789,85 @@ const BecomeProvider = () => {
 
             {step === 3 && (
               <div className="space-y-6">
-                <h2 className="font-display text-xl font-semibold">Upload Business Proof Document</h2>
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <p className="text-sm font-medium text-foreground">Upload ONE of the following:</p>
-                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                    <li>GST Certificate</li>
-                    <li>Shop Act License</li>
-                    <li>Trade License</li>
-                    <li>Business Registration Certificate</li>
-                  </ul>
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                    ⚠️ The business name on the document must match "{formData.businessName || 'your business name'}"
-                  </p>
-                </div>
+                {isDocumentRequired ? (
+                  <>
+                    <h2 className="font-display text-xl font-semibold">Upload Business Proof Document</h2>
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                      <p className="text-sm font-medium text-foreground">Upload ONE of the following:</p>
+                      <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                        <li>GST Certificate</li>
+                        <li>Shop Act License</li>
+                        <li>Trade License</li>
+                        <li>Business Registration Certificate</li>
+                      </ul>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        ⚠️ The business name on the document must match "{formData.businessName || 'your business name'}"
+                      </p>
+                    </div>
 
-                {/* Upload Area */}
-                <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
-                  <input
-                    type="file"
-                    id="documents"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    disabled={uploadedFiles.length >= 1}
-                  />
-                  <label htmlFor="documents" className={`cursor-pointer ${uploadedFiles.length >= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                    <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="font-medium text-foreground mb-1">
-                      {uploadedFiles.length >= 1 ? 'Document uploaded' : 'Click to upload document'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      PDF, JPG, or PNG (max 10MB)
-                    </p>
-                  </label>
-                </div>
+                    {/* Upload Area */}
+                    <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
+                      <input
+                        type="file"
+                        id="documents"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        disabled={uploadedFiles.length >= 1}
+                      />
+                      <label htmlFor="documents" className={`cursor-pointer ${uploadedFiles.length >= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="font-medium text-foreground mb-1">
+                          {uploadedFiles.length >= 1 ? 'Document uploaded' : 'Click to upload document'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          PDF, JPG, or PNG (max 10MB)
+                        </p>
+                      </label>
+                    </div>
 
-                {/* Uploaded Files */}
-                {uploadedFiles.length > 0 && (
-                  <div className="space-y-3">
-                    {uploadedFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-5 h-5 text-primary" />
-                          <span className="text-sm font-medium truncate max-w-[200px]">
-                            {file.name}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => removeFile(index)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
+                    {/* Uploaded Files */}
+                    {uploadedFiles.length > 0 && (
+                      <div className="space-y-3">
+                        {uploadedFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <FileText className="w-5 h-5 text-primary" />
+                              <span className="text-sm font-medium truncate max-w-[200px]">
+                                {file.name}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => removeFile(index)}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h2 className="font-display text-xl font-semibold">Review & Submit</h2>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        ✅ <strong>No document required</strong> for Priests/Poojaris. Our team will verify your application through a phone call.
+                      </p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                      <p className="text-sm font-medium text-foreground">Application Summary:</p>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><strong>Business:</strong> {formData.businessName}</li>
+                        <li><strong>Location:</strong> {formData.city}, {formData.state}</li>
+                        <li><strong>Experience:</strong> {formData.experienceYears || "Not specified"} years</li>
+                      </ul>
+                    </div>
+                  </>
                 )}
 
                 <div className="flex gap-4">
@@ -820,7 +878,7 @@ const BecomeProvider = () => {
                     variant="gold"
                     className="flex-1 rounded-full"
                     onClick={handleSubmit}
-                    disabled={loading || uploadedFiles.length === 0}
+                    disabled={loading || (isDocumentRequired && uploadedFiles.length === 0)}
                   >
                     {loading ? "Submitting..." : "Submit Application"}
                   </Button>
