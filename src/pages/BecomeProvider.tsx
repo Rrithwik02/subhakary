@@ -73,6 +73,7 @@ const BecomeProvider = () => {
     city: "",
     address: "",
     pricingInfo: "",
+    phone: "",
   });
   const [isResubmitting, setIsResubmitting] = useState(false);
 
@@ -313,6 +314,7 @@ const BecomeProvider = () => {
             city: formData.city,
             address: formData.address,
             pricing_info: formData.pricingInfo,
+            whatsapp_number: formData.phone || null,
             status: "pending",
             rejection_reason: null,
             reviewed_at: null,
@@ -337,6 +339,7 @@ const BecomeProvider = () => {
             city: formData.city,
             address: formData.address,
             pricing_info: formData.pricingInfo,
+            whatsapp_number: formData.phone || null,
             status: "pending",
           })
           .select()
@@ -493,6 +496,7 @@ const BecomeProvider = () => {
                           city: "",
                           address: "",
                           pricingInfo: "",
+                          phone: "",
                         });
                         setUploadedFiles([]);
                         setStep(1);
@@ -709,6 +713,20 @@ const BecomeProvider = () => {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Contact Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="e.g., +91 9876543210"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This number will be used for verification and customer inquiries
+                  </p>
                 </div>
 
                 <Button

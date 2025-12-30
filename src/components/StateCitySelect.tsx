@@ -71,7 +71,15 @@ export const StateCitySelect = ({
                     <CommandItem
                       key={state.name}
                       value={state.name}
-                      onSelect={() => handleStateChange(state.name)}
+                      onSelect={(currentValue) => {
+                        // cmdk lowercases value, so find the original case
+                        const originalState = indianStates.find(
+                          s => s.name.toLowerCase() === currentValue.toLowerCase()
+                        );
+                        if (originalState) {
+                          handleStateChange(originalState.name);
+                        }
+                      }}
                       className="cursor-pointer"
                     >
                       <Check
@@ -116,9 +124,15 @@ export const StateCitySelect = ({
                     <CommandItem
                       key={city}
                       value={city}
-                      onSelect={() => {
-                        onCityChange(city);
-                        setCityOpen(false);
+                      onSelect={(currentValue) => {
+                        // cmdk lowercases value, so find the original case
+                        const originalCity = cities.find(
+                          c => c.toLowerCase() === currentValue.toLowerCase()
+                        );
+                        if (originalCity) {
+                          onCityChange(originalCity);
+                          setCityOpen(false);
+                        }
                       }}
                       className="cursor-pointer"
                     >
