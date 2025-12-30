@@ -759,8 +759,14 @@ const BecomeProvider = () => {
                 <StateCitySelect
                   selectedState={formData.state}
                   selectedCity={formData.city}
-                  onStateChange={(state) => setFormData({ ...formData, state })}
-                  onCityChange={(city) => setFormData({ ...formData, city })}
+                  onStateChange={(state) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      state,
+                      city: "",
+                    }))
+                  }
+                  onCityChange={(city) => setFormData((prev) => ({ ...prev, city }))}
                 />
 
                 <div className="space-y-2">

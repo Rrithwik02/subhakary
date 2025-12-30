@@ -17,19 +17,18 @@ export const AIChatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Namaste! 🙏 I'm your Subhakary AI assistant. I can help you find:\n\n• Poojari/Priest services\n• Photography & Videography\n• Bridal Makeup & Mehandi\n• Catering & Decoration\n• Function Halls & Event Managers\n\nWhat service are you looking for today?"
-    }
+      content:
+        "Namaste! 🙏 I'm your Subhakary AI assistant. I can help you find:\n\n• Poojari/Priest services\n• Photography & Videography\n• Bridal Makeup & Mehandi\n• Catering & Decoration\n• Function Halls & Event Managers\n\nWhat service are you looking for today?",
+    },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isOpen]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -167,7 +166,7 @@ export const AIChatbot = () => {
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+            <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
                 {messages.map((message, index) => (
                   <motion.div
@@ -211,6 +210,7 @@ export const AIChatbot = () => {
                     </div>
                   </div>
                 )}
+                <div ref={bottomRef} />
               </div>
             </ScrollArea>
 
