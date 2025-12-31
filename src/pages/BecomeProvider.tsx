@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StateCitySelect } from "@/components/StateCitySelect";
+import { PincodeLookup } from "@/components/PincodeLookup";
 import logo from "@/assets/logo.png";
 
 interface ServiceCategory {
@@ -755,6 +756,16 @@ const BecomeProvider = () => {
                     rows={4}
                   />
                 </div>
+
+                <PincodeLookup
+                  onAddressFound={(data) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      state: data.state,
+                      city: data.city,
+                    }));
+                  }}
+                />
 
                 <StateCitySelect
                   selectedState={formData.state}

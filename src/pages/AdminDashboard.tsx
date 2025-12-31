@@ -46,6 +46,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminProviderDetailDialog } from "@/components/AdminProviderDetailDialog";
 
 const statusColors = {
   pending: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
@@ -70,6 +71,8 @@ const AdminDashboard = () => {
   const [ticketMessages, setTicketMessages] = useState<any[]>([]);
   const [newAdminMessage, setNewAdminMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [detailProvider, setDetailProvider] = useState<any>(null);
 
   // Check if user is admin
   const { data: isAdmin, isLoading: checkingAdmin } = useQuery({
@@ -599,6 +602,16 @@ const AdminDashboard = () => {
                   {provider.documents.length} document(s)
                 </button>
               )}
+              <button
+                className="flex items-center gap-1 text-primary hover:underline"
+                onClick={() => {
+                  setDetailProvider(provider);
+                  setDetailDialogOpen(true);
+                }}
+              >
+                <Eye className="h-3 w-3" />
+                View Details
+              </button>
             </div>
 
             {/* Admin-only: Show provider phone/WhatsApp for verification */}
@@ -1333,6 +1346,13 @@ const AdminDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Provider Detail Dialog */}
+      <AdminProviderDetailDialog
+        provider={detailProvider}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
 
       <Footer />
     </div>
