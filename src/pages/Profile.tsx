@@ -201,32 +201,33 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <section className="pt-32 pb-12 px-4">
+      <section className="pt-24 md:pt-32 pb-12 px-3 md:px-4">
         <div className="container max-w-2xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+            <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
               My Profile
             </h1>
-            <p className="text-muted-foreground mb-8">
+            <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">
               Manage your personal information and preferences
             </p>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="font-display flex items-center justify-between">
-                  Personal Information
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="font-display text-base md:text-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <span>Personal Information</span>
                   {!isEditing ? (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setIsEditing(true)}>
                       Edit Profile
                     </Button>
                   ) : (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto">
                       <Button
                         variant="outline"
                         size="sm"
+                        className="flex-1 sm:flex-none"
                         onClick={() => {
                           setIsEditing(false);
                           if (profile) {
@@ -244,7 +245,7 @@ const Profile = () => {
                       </Button>
                       <Button
                         size="sm"
-                        className="gradient-gold text-primary-foreground"
+                        className="flex-1 sm:flex-none gradient-gold text-primary-foreground"
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -259,24 +260,24 @@ const Profile = () => {
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 md:space-y-6 p-4 md:p-6 pt-0 md:pt-0">
                 {/* Avatar */}
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24">
+                <div className="flex items-center gap-4 md:gap-6">
+                  <div className="relative flex-shrink-0">
+                    <Avatar className="h-16 w-16 md:h-24 md:w-24">
                       <AvatarImage src={profile?.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-2xl">
-                        {formData.fullName?.charAt(0)?.toUpperCase() || <User className="h-8 w-8" />}
+                      <AvatarFallback className="bg-primary/10 text-xl md:text-2xl">
+                        {formData.fullName?.charAt(0)?.toUpperCase() || <User className="h-6 w-6 md:h-8 md:w-8" />}
                       </AvatarFallback>
                     </Avatar>
                     <label
                       htmlFor="avatar-upload"
-                      className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+                      className="absolute bottom-0 right-0 h-6 w-6 md:h-8 md:w-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors touch-manipulation"
                     >
                       {isUploading ? (
-                        <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
+                        <Loader2 className="h-3 w-3 md:h-4 md:w-4 text-primary-foreground animate-spin" />
                       ) : (
-                        <Camera className="h-4 w-4 text-primary-foreground" />
+                        <Camera className="h-3 w-3 md:h-4 md:w-4 text-primary-foreground" />
                       )}
                     </label>
                     <input
@@ -288,9 +289,9 @@ const Profile = () => {
                       disabled={isUploading}
                     />
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{formData.fullName || "Your Name"}</h3>
-                    <p className="text-sm text-muted-foreground">{formData.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-sm md:text-base truncate">{formData.fullName || "Your Name"}</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground truncate">{formData.email}</p>
                   </div>
                 </div>
 

@@ -46,30 +46,30 @@ const Favorites = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <section className="pt-32 pb-12 px-4">
+      <section className="pt-24 md:pt-32 pb-12 px-3 md:px-4">
         <div className="container max-w-4xl mx-auto">
           <Button
             variant="ghost"
-            className="mb-6"
+            className="mb-4 md:mb-6 h-9 -ml-2 touch-manipulation"
             onClick={() => navigate(-1)}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            <span className="text-sm">Back</span>
           </Button>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="flex items-center gap-3 mb-8">
-              <div className="p-3 rounded-full bg-destructive/10">
-                <Heart className="h-6 w-6 text-destructive" />
+            <div className="flex items-center gap-3 mb-6 md:mb-8">
+              <div className="p-2.5 md:p-3 rounded-full bg-destructive/10">
+                <Heart className="h-5 w-5 md:h-6 md:w-6 text-destructive" />
               </div>
               <div>
-                <h1 className="font-display text-3xl font-bold">
+                <h1 className="font-display text-2xl md:text-3xl font-bold">
                   My Favorites
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-sm md:text-base text-muted-foreground">
                   {favorites.length} saved provider{favorites.length !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -77,21 +77,21 @@ const Favorites = () => {
 
             {favorites.length === 0 ? (
               <Card>
-                <CardContent className="py-12 text-center">
-                  <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-display text-xl font-semibold mb-2">
+                <CardContent className="py-8 md:py-12 text-center">
+                  <Heart className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-display text-lg md:text-xl font-semibold mb-2">
                     No favorites yet
                   </h3>
-                  <p className="text-muted-foreground mb-6">
+                  <p className="text-sm md:text-base text-muted-foreground mb-6">
                     Start exploring providers and save your favorites
                   </p>
-                  <Button onClick={() => navigate("/providers")}>
+                  <Button onClick={() => navigate("/providers")} className="h-11 md:h-10 touch-manipulation">
                     Browse Providers
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3 md:gap-4 md:grid-cols-2">
                 {favorites.map((favorite: any, index: number) => (
                   <motion.div
                     key={favorite.id}
@@ -100,21 +100,21 @@ const Favorites = () => {
                     transition={{ delay: index * 0.1 }}
                   >
                     <Card 
-                      className="hover-lift cursor-pointer group"
+                      className="hover-lift cursor-pointer group active:scale-[0.98] touch-manipulation transition-transform"
                       onClick={() => navigate(`/provider/${favorite.provider_id}`)}
                     >
-                      <CardContent className="p-5">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">
+                      <CardContent className="p-3 md:p-5">
+                        <div className="flex justify-between items-start mb-2 md:mb-3">
+                          <div className="flex items-center gap-2.5 md:gap-3 min-w-0 flex-1">
+                            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
                               {favorite.provider?.category?.icon || "🙏"}
                             </div>
-                            <div>
-                              <h3 className="font-display font-semibold text-lg group-hover:text-primary transition-colors">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-display font-semibold text-sm md:text-lg group-hover:text-primary transition-colors truncate">
                                 {favorite.provider?.business_name}
                               </h3>
                               {favorite.provider?.category?.name && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-[10px] md:text-xs">
                                   {favorite.provider.category.name}
                                 </Badge>
                               )}
@@ -123,24 +123,24 @@ const Favorites = () => {
                           <FavoriteButton providerId={favorite.provider_id} />
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-3 md:gap-4 text-xs md:text-sm text-muted-foreground">
                           {favorite.provider?.city && (
                             <span className="flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5" />
+                              <MapPin className="h-3 w-3 md:h-3.5 md:w-3.5" />
                               {favorite.provider.city}
                             </span>
                           )}
                           <span className="flex items-center gap-1">
-                            <Star className="h-3.5 w-3.5 fill-primary text-primary" />
+                            <Star className="h-3 w-3 md:h-3.5 md:w-3.5 fill-primary text-primary" />
                             {favorite.provider?.rating?.toFixed(1) || "New"}
-                            <span className="text-xs">
+                            <span className="text-[10px] md:text-xs">
                               ({favorite.provider?.total_reviews || 0})
                             </span>
                           </span>
                         </div>
 
                         {favorite.provider?.pricing_info && (
-                          <p className="text-sm text-secondary font-medium mt-2">
+                          <p className="text-xs md:text-sm text-secondary font-medium mt-1.5 md:mt-2">
                             {favorite.provider.pricing_info}
                           </p>
                         )}
