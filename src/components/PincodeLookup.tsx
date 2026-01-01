@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Loader2 } from "lucide-react";
+import { Search, MapPin, Loader2, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PincodeLookupProps {
@@ -26,10 +26,11 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
   const [pincode, setPincode] = useState("");
   const [loading, setLoading] = useState(false);
   const [postOffices, setPostOffices] = useState<PostOffice[]>([]);
+  const [selectedPO, setSelectedPO] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const lookupPincode = async () => {
-    if (pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+  const lookupPincode = useCallback(async (code: string) => {
+    if (code.length !== 6 || !/^\d{6}$/.test(code)) {
       toast({
         title: "Invalid Pincode",
         description: "Please enter a valid 6-digit pincode",
@@ -39,9 +40,11 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
     }
 
     setLoading(true);
+    setSelectedPO(null);
+    
     try {
       const response = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
+        `https://api.postalpincode.in/pincode/${code}`
       );
       const data = await response.json();
 
@@ -49,6 +52,7 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
         setPostOffices(data[0].PostOffice);
         // Auto-select first post office
         const firstPO = data[0].PostOffice[0];
+        setSelectedPO(firstPO.Name);
         onAddressFound({
           state: firstPO.State,
           city: firstPO.District,
@@ -68,6 +72,7 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
         });
       }
     } catch (error) {
+      console.error("Pincode lookup error:", error);
       toast({
         title: "Error",
         description: "Failed to lookup pincode. Please try again.",
@@ -76,23 +81,37 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onAddressFound, toast]);
 
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 6);
     setPincode(value);
-    if (value.length === 6) {
-      // Auto-lookup when 6 digits entered
-      setTimeout(() => lookupPincode(), 100);
+    setPostOffices([]);
+    setSelectedPO(null);
+  };
+
+  const handleLookup = () => {
+    lookupPincode(pincode);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && pincode.length === 6) {
+      e.preventDefault();
+      lookupPincode(pincode);
     }
   };
 
   const selectPostOffice = (po: PostOffice) => {
+    setSelectedPO(po.Name);
     onAddressFound({
       state: po.State,
       city: po.District,
       district: po.District,
       postOffice: po.Name,
+    });
+    toast({
+      title: "Location Updated",
+      description: `${po.Name}, ${po.District}`,
     });
   };
 
@@ -109,6 +128,7 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
             placeholder="Enter 6-digit pincode"
             value={pincode}
             onChange={handlePincodeChange}
+            onKeyDown={handleKeyDown}
             className="pl-10"
             maxLength={6}
           />
@@ -116,7 +136,7 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
         <Button
           type="button"
           variant="outline"
-          onClick={lookupPincode}
+          onClick={handleLookup}
           disabled={loading || pincode.length !== 6}
         >
           {loading ? (
@@ -132,14 +152,19 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
           <p className="text-xs text-muted-foreground">
             Select your area:
           </p>
-          <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
             {postOffices.map((po, index) => (
               <button
                 key={index}
                 type="button"
                 onClick={() => selectPostOffice(po)}
-                className="px-3 py-1.5 text-xs rounded-full bg-muted hover:bg-primary/10 hover:text-primary transition-colors"
+                className={`px-3 py-1.5 text-xs rounded-full transition-colors flex items-center gap-1 ${
+                  selectedPO === po.Name
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted hover:bg-primary/10 hover:text-primary"
+                }`}
               >
+                {selectedPO === po.Name && <CheckCircle2 className="h-3 w-3" />}
                 {po.Name}
               </button>
             ))}
@@ -147,8 +172,15 @@ export const PincodeLookup = ({ onAddressFound }: PincodeLookupProps) => {
         </div>
       )}
 
+      {postOffices.length === 1 && selectedPO && (
+        <div className="flex items-center gap-2 text-sm text-green-600">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Location set: {selectedPO}, {postOffices[0].District}</span>
+        </div>
+      )}
+
       <p className="text-xs text-muted-foreground">
-        Enter your pincode to auto-fill state and city
+        Enter your pincode and click search to auto-fill state and city
       </p>
     </div>
   );

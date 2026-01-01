@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   BookOpen, 
@@ -22,6 +23,8 @@ const services = [
   {
     icon: BookOpen,
     name: "Poojari / Priest Services",
+    slug: "poojari",
+    searchTerms: ["poojari near me", "pandit near me", "priest near me"],
     description: "Experienced pandits and priests for all Hindu ceremonies including weddings, griha pravesh, satyanarayan puja, and more.",
     features: ["Vedic rituals", "Multiple languages", "Custom ceremonies", "Travel available"],
     color: "from-amber-500 to-orange-600",
@@ -29,6 +32,8 @@ const services = [
   {
     icon: Camera,
     name: "Photography & Videography",
+    slug: "photography",
+    searchTerms: ["photographers near me", "wedding photographer near me"],
     description: "Professional photographers and videographers to capture every precious moment of your special occasions.",
     features: ["Candid photography", "Drone coverage", "Same-day edits", "Album creation"],
     color: "from-rose-500 to-pink-600",
@@ -36,6 +41,8 @@ const services = [
   {
     icon: Palette,
     name: "Makeup Artists",
+    slug: "makeup",
+    searchTerms: ["makeup artist near me", "bridal makeup near me"],
     description: "Expert bridal, groom, and family makeup services for all your wedding and celebration needs.",
     features: ["HD & airbrush makeup", "Bridal packages", "Groom grooming", "Family makeup"],
     color: "from-purple-500 to-violet-600",
@@ -43,6 +50,8 @@ const services = [
   {
     icon: Flower2,
     name: "Mehandi Artists",
+    slug: "mehandi",
+    searchTerms: ["mehandi artist near me", "henna artist near me"],
     description: "Talented mehandi artists offering traditional and contemporary henna designs for brides and guests.",
     features: ["Bridal mehandi", "Arabic designs", "Indo-Western", "Guest services"],
     color: "from-emerald-500 to-green-600",
@@ -50,6 +59,8 @@ const services = [
   {
     icon: Music,
     name: "Mangala Vadyam",
+    slug: "mangala-vadyam",
+    searchTerms: ["mangala vadyam near me", "nadaswaram near me", "shehnai near me"],
     description: "Traditional nadaswaram, shehnai, and other auspicious musical performances for ceremonies.",
     features: ["Nadaswaram", "Shehnai", "Traditional bands", "DJ services"],
     color: "from-yellow-500 to-amber-600",
@@ -57,6 +68,8 @@ const services = [
   {
     icon: PartyPopper,
     name: "Decoration Services",
+    slug: "decoration",
+    searchTerms: ["decoration near me", "wedding decorators near me"],
     description: "Stunning venue transformations with beautiful floral arrangements, lighting, and themed decorations.",
     features: ["Mandap design", "Floral arrangements", "Lighting setup", "Theme decorations"],
     color: "from-sky-500 to-blue-600",
@@ -64,6 +77,8 @@ const services = [
   {
     icon: UtensilsCrossed,
     name: "Catering Services",
+    slug: "catering",
+    searchTerms: ["catering near me", "caterers near me", "wedding catering"],
     description: "Delicious traditional and multi-cuisine catering services for weddings and all types of events.",
     features: ["Regional cuisines", "Live counters", "Fusion menus", "Custom menus"],
     color: "from-red-500 to-rose-600",
@@ -71,6 +86,8 @@ const services = [
   {
     icon: Building2,
     name: "Function Halls & Venues",
+    slug: "venues",
+    searchTerms: ["function halls near me", "wedding venues near me", "banquet halls near me"],
     description: "Premium venues and function halls for weddings, receptions, and all ceremonial gatherings.",
     features: ["AC halls", "Outdoor venues", "Premium locations", "Full amenities"],
     color: "from-teal-500 to-cyan-600",
@@ -78,6 +95,8 @@ const services = [
   {
     icon: Users,
     name: "Event Managers",
+    slug: "event-management",
+    searchTerms: ["event managers near me", "wedding planners near me"],
     description: "End-to-end event planning and coordination services to make your celebrations stress-free.",
     features: ["Complete planning", "Vendor coordination", "Day management", "Budget handling"],
     color: "from-indigo-500 to-purple-600",
@@ -85,6 +104,17 @@ const services = [
 ];
 
 const Services = () => {
+  // Set SEO meta tags dynamically
+  useEffect(() => {
+    document.title = "Wedding & Event Services Near Me - Photographers, Poojaris, Makeup Artists | Subhakary";
+    
+    // Update meta description
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute("content", "Find photographers near me, poojaris near me, makeup artists near me, mehandi artists near me, decorators near me, caterers near me, function halls near me, event managers near me. Book verified professionals for weddings & events across India.");
+    }
+  }, []);
+
   return (
     <main className="min-h-screen bg-cream">
       <Navbar />

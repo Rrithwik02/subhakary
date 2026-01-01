@@ -53,7 +53,7 @@ const Providers = () => {
   const [sortBy, setSortBy] = useState<string>("rating");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Initialize filters from URL params
+  // Initialize filters from URL params and update SEO
   useEffect(() => {
     const serviceParam = searchParams.get("service");
     const cityParam = searchParams.get("city");
@@ -64,6 +64,33 @@ const Providers = () => {
     }
     if (cityParam) {
       setSelectedCity(cityParam);
+    }
+    
+    // Update page title for SEO based on search params
+    let title = "Find Service Providers";
+    if (serviceParam && cityParam) {
+      title = `${serviceParam} in ${cityParam} - Find Verified Providers | Subhakary`;
+    } else if (serviceParam) {
+      title = `${serviceParam} Near Me - Find Verified Providers | Subhakary`;
+    } else if (cityParam) {
+      title = `Wedding & Event Services in ${cityParam} | Subhakary`;
+    } else {
+      title = "Find Photographers, Poojaris, Makeup Artists Near Me | Subhakary";
+    }
+    document.title = title;
+    
+    // Update meta description
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      let desc = "Find and book verified photographers, poojaris, makeup artists, decorators, caterers near you for weddings and events.";
+      if (serviceParam && cityParam) {
+        desc = `Find verified ${serviceParam} in ${cityParam}. Book trusted professionals for weddings, poojas & events. Compare prices, read reviews & book online.`;
+      } else if (serviceParam) {
+        desc = `Looking for ${serviceParam} near you? Browse verified professionals, compare prices, read reviews and book online for your wedding or event.`;
+      } else if (cityParam) {
+        desc = `Find wedding photographers, poojaris, makeup artists, decorators, caterers in ${cityParam}. Book verified professionals for your special occasion.`;
+      }
+      metaDesc.setAttribute("content", desc);
     }
   }, [searchParams]);
 
