@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ComparisonProvider } from "@/hooks/useProviderComparison";
 import { AdminRoute } from "@/components/AdminRoute";
+import { CompareBar } from "@/components/CompareBar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeProvider from "./pages/BecomeProvider";
@@ -27,44 +29,48 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import Notifications from "./pages/Notifications";
+import Compare from "./pages/Compare";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/become-provider" element={<BecomeProvider />} />
-            <Route path="/providers" element={<Providers />} />
-            <Route path="/provider/:id" element={<ProviderProfile />} />
-            <Route path="/providers/:id" element={<ProviderProfile />} />
-            <Route path="/my-bookings" element={<MyBookings />} />
-            <Route path="/booking/:bookingId" element={<BookingDetails />} />
-            <Route path="/provider-dashboard" element={<ProviderDashboard />} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/inquiry/:providerId" element={<InquiryChat />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="*" element={<NotFound />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ComparisonProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/become-provider" element={<BecomeProvider />} />
+              <Route path="/providers" element={<Providers />} />
+              <Route path="/provider/:id" element={<ProviderProfile />} />
+              <Route path="/providers/:id" element={<ProviderProfile />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/booking/:bookingId" element={<BookingDetails />} />
+              <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/inquiry/:providerId" element={<InquiryChat />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <CompareBar />
+          </BrowserRouter>
+        </TooltipProvider>
+      </ComparisonProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
