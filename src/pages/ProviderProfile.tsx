@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
 import {
   MapPin,
   Star,
@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 const ProviderProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -51,6 +52,21 @@ const ProviderProfile = () => {
   const [selectedTime, setSelectedTime] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize date from URL params
+  useEffect(() => {
+    const dateParam = searchParams.get("date");
+    if (dateParam) {
+      try {
+        const parsedDate = parseISO(dateParam);
+        if (!isNaN(parsedDate.getTime()) && parsedDate >= new Date()) {
+          setSelectedDate(parsedDate);
+        }
+      } catch (e) {
+        // Invalid date format, ignore
+      }
+    }
+  }, [searchParams]);
 
   // Fetch provider details
   const { data: provider, isLoading } = useQuery({

@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
+import { indianStates, getCitiesByState } from "@/data/indianLocations";
 
 // Areas for cities (used when a city is selected)
 const CITY_AREAS: Record<string, string[]> = {
@@ -48,22 +49,35 @@ const Providers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
+  const [selectedState, setSelectedState] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedArea, setSelectedArea] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>("");
 
   // Initialize filters from URL params and update SEO
   useEffect(() => {
     const serviceParam = searchParams.get("service");
     const cityParam = searchParams.get("city");
+    const dateParam = searchParams.get("date");
     
     if (serviceParam) {
       // Map service name to category - will be matched in filteredProviders
       setSearchQuery(serviceParam);
     }
     if (cityParam) {
+      // Try to find the state for this city
+      const foundState = indianStates.find(state => 
+        state.cities.some(c => c.toLowerCase() === cityParam.toLowerCase())
+      );
+      if (foundState) {
+        setSelectedState(foundState.name);
+      }
       setSelectedCity(cityParam);
+    }
+    if (dateParam) {
+      setSelectedDate(dateParam);
     }
     
     // Update page title for SEO based on search params
@@ -124,10 +138,16 @@ const Providers = () => {
     },
   });
 
+  // Get cities based on selected state from indianLocations data
+  const stateCities = useMemo(() => {
+    if (selectedState === "all") return [];
+    return getCitiesByState(selectedState);
+  }, [selectedState]);
+
   // Get unique cities from providers only (cities with at least one provider)
-  const cities = useMemo(() => {
-    const providerCities = providers.map((p) => p.city).filter(Boolean);
-    return Array.from(new Set(providerCities)).sort();
+  const providerCities = useMemo(() => {
+    const cities = providers.map((p) => p.city).filter(Boolean);
+    return Array.from(new Set(cities)).sort();
   }, [providers]);
 
   // Get areas for selected city
@@ -170,6 +190,15 @@ const Providers = () => {
       result = result.filter((p) => p.subcategory === selectedSubcategory);
     }
 
+    // State filter - filter by city belonging to selected state
+    if (selectedState !== "all") {
+      const citiesInState = getCitiesByState(selectedState).map(c => c.toLowerCase());
+      result = result.filter((p) => 
+        citiesInState.includes(p.city?.toLowerCase() || "") ||
+        p.service_cities?.some((c: string) => citiesInState.includes(c.toLowerCase()))
+      );
+    }
+
     // City filter
     if (selectedCity !== "all") {
       result = result.filter((p) => 
@@ -187,37 +216,57 @@ const Providers = () => {
       );
     }
 
-    // Sorting
+    // Sorting - Premium providers always first, then by selected sort
     switch (sortBy) {
       case "rating":
-        result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        result.sort((a, b) => {
+          if (a.is_premium !== b.is_premium) return b.is_premium ? 1 : -1;
+          return (b.rating || 0) - (a.rating || 0);
+        });
         break;
       case "reviews":
-        result.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
+        result.sort((a, b) => {
+          if (a.is_premium !== b.is_premium) return b.is_premium ? 1 : -1;
+          return (b.total_reviews || 0) - (a.total_reviews || 0);
+        });
         break;
       case "experience":
-        result.sort((a, b) => (b.experience_years || 0) - (a.experience_years || 0));
+        result.sort((a, b) => {
+          if (a.is_premium !== b.is_premium) return b.is_premium ? 1 : -1;
+          return (b.experience_years || 0) - (a.experience_years || 0);
+        });
         break;
       case "name":
-        result.sort((a, b) => a.business_name.localeCompare(b.business_name));
+        result.sort((a, b) => {
+          if (a.is_premium !== b.is_premium) return b.is_premium ? 1 : -1;
+          return a.business_name.localeCompare(b.business_name);
+        });
         break;
     }
 
     return result;
-  }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedCity, selectedArea, sortBy]);
+  }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedState, selectedCity, selectedArea, sortBy]);
 
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
     setSelectedSubcategory("all");
+    setSelectedState("all");
     setSelectedCity("all");
     setSelectedArea("all");
     setSortBy("rating");
+    setSelectedDate("");
   };
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
     setSelectedSubcategory("all"); // Reset subcategory when category changes
+  };
+
+  const handleStateChange = (value: string) => {
+    setSelectedState(value);
+    setSelectedCity("all"); // Reset city when state changes
+    setSelectedArea("all"); // Reset area when state changes
   };
 
   const handleCityChange = (value: string) => {
@@ -226,12 +275,13 @@ const Providers = () => {
   };
 
   const hasActiveFilters =
-    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedCity !== "all" || selectedArea !== "all";
+    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedState !== "all" || selectedCity !== "all" || selectedArea !== "all";
 
   const activeFilterCount = [
     searchQuery,
     selectedCategory !== "all" ? selectedCategory : null,
     selectedSubcategory !== "all" ? selectedSubcategory : null,
+    selectedState !== "all" ? selectedState : null,
     selectedCity !== "all" ? selectedCity : null,
     selectedArea !== "all" ? selectedArea : null,
   ].filter(Boolean).length;
@@ -260,7 +310,7 @@ const Providers = () => {
           <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-44"}>
             <SelectValue placeholder="All Services" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background border z-50">
             <SelectItem value="all">All Services</SelectItem>
             {subcategories.map((sub) => (
               <SelectItem key={sub} value={sub!}>
@@ -271,15 +321,30 @@ const Providers = () => {
         </Select>
       )}
 
-      {/* City Filter */}
+      {/* State Filter */}
+      <Select value={selectedState} onValueChange={handleStateChange}>
+        <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-44"}>
+          <SelectValue placeholder="All States" />
+        </SelectTrigger>
+        <SelectContent className="bg-background border z-50 max-h-[300px]">
+          <SelectItem value="all">All States</SelectItem>
+          {indianStates.map((state) => (
+            <SelectItem key={state.name} value={state.name}>
+              {state.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* City Filter - Shows state-specific cities when state is selected */}
       <Select value={selectedCity} onValueChange={handleCityChange}>
         <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-44"}>
           <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-          <SelectValue placeholder="All Cities" />
+          <SelectValue placeholder={selectedState !== "all" ? "Select City" : "All Cities"} />
         </SelectTrigger>
-        <SelectContent className="bg-background border z-50">
-          <SelectItem value="all">All Cities</SelectItem>
-          {cities.map((city) => (
+        <SelectContent className="bg-background border z-50 max-h-[300px]">
+          <SelectItem value="all">{selectedState !== "all" ? `All Cities in ${selectedState}` : "All Cities"}</SelectItem>
+          {(selectedState !== "all" ? stateCities : providerCities).map((city) => (
             <SelectItem key={city} value={city!}>
               {city}
             </SelectItem>
@@ -414,6 +479,12 @@ const Providers = () => {
                 <X className="h-3 w-3 ml-1" />
               </Badge>
             )}
+            {selectedState !== "all" && (
+              <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer whitespace-nowrap flex-shrink-0" onClick={() => { setSelectedState("all"); setSelectedCity("all"); setSelectedArea("all"); }}>
+                {selectedState}
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
             {selectedCity !== "all" && (
               <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer whitespace-nowrap flex-shrink-0" onClick={() => { setSelectedCity("all"); setSelectedArea("all"); }}>
                 {selectedCity}
@@ -467,6 +538,13 @@ const Providers = () => {
               {selectedSubcategory !== "all" && (
                 <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setSelectedSubcategory("all")}>
                   Service: {selectedSubcategory}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+              
+              {selectedState !== "all" && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => { setSelectedState("all"); setSelectedCity("all"); setSelectedArea("all"); }}>
+                  State: {selectedState}
                   <X className="h-3 w-3 ml-1" />
                 </Badge>
               )}
@@ -535,7 +613,7 @@ const Providers = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Link to={`/provider/${provider.id}`}>
+                  <Link to={`/provider/${provider.id}${selectedDate ? `?date=${selectedDate}` : ''}`}>
                     <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden group">
                       <CardContent className="p-4 md:p-6">
                         {/* Header with Avatar, Name and Verification Badge */}
