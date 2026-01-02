@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { format, isSameDay, parseISO } from "date-fns";
+import { format, isSameDay, parseISO, differenceInDays } from "date-fns";
+import { DateRange } from "react-day-picker";
 import {
   MapPin,
   Star,
@@ -20,10 +21,10 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { ProviderBundles } from "@/components/ProviderBundles";
 import { PortfolioGallery } from "@/components/PortfolioGallery";
 import { PricingTiers } from "@/components/PricingTiers";
+import { DateRangePicker } from "@/components/DateRangePicker";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +39,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 
 const ProviderProfile = () => {
   const { id } = useParams();
@@ -49,6 +49,8 @@ const ProviderProfile = () => {
   
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [dateRange, setDateRange] = useState<DateRange>();
+  const [isMultiDay, setIsMultiDay] = useState(false);
   const [selectedTime, setSelectedTime] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -120,21 +122,40 @@ const ProviderProfile = () => {
       return;
     }
 
-    if (!selectedDate) {
+    const bookingDate = isMultiDay ? dateRange?.from : selectedDate;
+    const endDate = isMultiDay ? dateRange?.to : selectedDate;
+
+    if (!bookingDate) {
       toast({
         title: "Select a date",
-        description: "Please select a date for your booking",
+        description: isMultiDay ? "Please select a date range for your booking" : "Please select a date for your booking",
         variant: "destructive",
       });
       return;
     }
+
+    if (isMultiDay && !endDate) {
+      toast({
+        title: "Select end date",
+        description: "Please select both start and end dates for multi-day booking",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const totalDays = isMultiDay && endDate 
+      ? differenceInDays(endDate, bookingDate) + 1 
+      : 1;
 
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         provider_id: id,
-        service_date: format(selectedDate, "yyyy-MM-dd"),
+        service_date: format(bookingDate, "yyyy-MM-dd"),
+        start_date: format(bookingDate, "yyyy-MM-dd"),
+        end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
+        total_days: totalDays,
         service_time: selectedTime || null,
         message: message || null,
         status: "pending",
@@ -144,10 +165,12 @@ const ProviderProfile = () => {
 
       toast({
         title: "Booking request sent!",
-        description: "The provider will review your request and respond soon.",
+        description: `Your ${totalDays > 1 ? `${totalDays}-day` : ''} booking request has been sent.`,
       });
       setBookingDialogOpen(false);
       setSelectedDate(undefined);
+      setDateRange(undefined);
+      setIsMultiDay(false);
       setSelectedTime("");
       setMessage("");
     } catch (error: any) {
@@ -428,22 +451,16 @@ const ProviderProfile = () => {
 
           <div className="space-y-4 py-2 md:py-4">
             <div>
-              <Label className="text-sm">Select Date *</Label>
-              <div className="flex justify-center mt-2 overflow-x-auto">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date() || isDateBlocked(date)}
-                  className={cn("rounded-md border pointer-events-auto touch-manipulation scale-[0.92] md:scale-100 origin-top")}
-                  modifiers={{
-                    blocked: blockedDates,
-                  }}
-                  modifiersStyles={{
-                    blocked: { textDecoration: "line-through", color: "hsl(var(--destructive))" },
-                  }}
-                />
-              </div>
+              <Label className="text-sm mb-2 block">Select Date *</Label>
+              <DateRangePicker
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                singleDate={selectedDate}
+                onSingleDateChange={setSelectedDate}
+                isMultiDay={isMultiDay}
+                onMultiDayToggle={setIsMultiDay}
+                disabledDates={blockedDates}
+              />
             </div>
 
             <div>

@@ -2,8 +2,9 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Star, Filter, X, BadgeCheck, Images, ChevronLeft, SlidersHorizontal } from "lucide-react";
+import { Search, MapPin, Star, Filter, X, BadgeCheck, Images, ChevronLeft, SlidersHorizontal, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
+import { CompareButton } from "@/components/CompareButton";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -733,7 +734,7 @@ const Providers = () => {
                           ) : null}
                         </div>
 
-                        {/* Rating and Price */}
+                        {/* Rating, Price and Compare */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 md:gap-1.5">
                             <Star className="h-3.5 w-3.5 md:h-4 md:w-4 fill-primary text-primary" />
@@ -744,13 +745,16 @@ const Providers = () => {
                               ({provider.total_reviews || 0})
                             </span>
                           </div>
-                          {(provider.base_price || provider.pricing_info) && (
-                            <span className="text-xs md:text-sm font-semibold text-primary">
-                              {provider.base_price 
-                                ? `₹${provider.base_price.toLocaleString()}` 
-                                : provider.pricing_info}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {(provider.base_price || provider.pricing_info) && (
+                              <span className="text-xs md:text-sm font-semibold text-primary">
+                                {provider.base_price 
+                                  ? `₹${provider.base_price.toLocaleString()}` 
+                                  : provider.pricing_info}
+                              </span>
+                            )}
+                            <CompareButton provider={provider} variant="icon" />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
