@@ -26,6 +26,7 @@ import { PortfolioGallery } from "@/components/PortfolioGallery";
 import { PricingTiers } from "@/components/PricingTiers";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
+import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -331,11 +332,14 @@ const ProviderProfile = () => {
                         </div>
                       </div>
                       
-                      {provider.category?.name && (
-                        <Badge variant="secondary" className="text-xs mb-2">
-                          {provider.category.name}
-                        </Badge>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        {provider.category?.name && (
+                          <Badge variant="secondary" className="text-xs">
+                            {provider.category.name}
+                          </Badge>
+                        )}
+                        <AvailabilityStatusBadge status={provider.availability_status as 'online' | 'offline' | 'busy'} />
+                      </div>
                       
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center gap-1">
@@ -405,13 +409,19 @@ const ProviderProfile = () => {
                           <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
                         )}
                       </div>
-                      {/* Profession/Category */}
-                      {provider.category?.name && (
-                        <p className="text-xs text-muted-foreground">
-                          {provider.category.name}
-                          {provider.subcategory && ` • ${provider.subcategory}`}
-                        </p>
-                      )}
+                      {/* Profession/Category + Status */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {provider.category?.name && (
+                          <span className="text-xs text-muted-foreground">
+                            {provider.category.name}
+                            {provider.subcategory && ` • ${provider.subcategory}`}
+                          </span>
+                        )}
+                        <AvailabilityStatusBadge 
+                          status={provider.availability_status as 'online' | 'offline' | 'busy'} 
+                          size="sm"
+                        />
+                      </div>
                     </div>
                   </div>
 

@@ -1560,6 +1560,7 @@ export type Database = {
           address: string | null
           advance_booking_days: number | null
           advance_payment_percentage: number | null
+          availability_status: string | null
           base_price: number | null
           business_name: string
           category_id: string | null
@@ -1605,6 +1606,7 @@ export type Database = {
           address?: string | null
           advance_booking_days?: number | null
           advance_payment_percentage?: number | null
+          availability_status?: string | null
           base_price?: number | null
           business_name: string
           category_id?: string | null
@@ -1650,6 +1652,7 @@ export type Database = {
           address?: string | null
           advance_booking_days?: number | null
           advance_payment_percentage?: number | null
+          availability_status?: string | null
           base_price?: number | null
           business_name?: string
           category_id?: string | null
