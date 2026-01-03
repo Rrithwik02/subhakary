@@ -285,39 +285,39 @@ const ProviderProfile = () => {
             {/* Header */}
             <Card className="mb-4 md:mb-6">
               <CardContent className="p-3 md:p-8">
-                <div className="flex flex-col gap-3 md:gap-6">
-                  {/* Mobile: Horizontal layout */}
-                  <div className="flex items-start gap-3 md:gap-6">
+                {/* Desktop Layout */}
+                <div className="hidden md:flex flex-col gap-6">
+                  <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
                       {provider.logo_url ? (
                         <img
                           src={provider.logo_url}
                           alt={provider.business_name}
-                          className="h-14 w-14 md:h-24 md:w-24 rounded-lg md:rounded-2xl object-cover"
+                          className="h-24 w-24 rounded-2xl object-cover"
                         />
                       ) : (
-                        <div className="h-14 w-14 md:h-24 md:w-24 rounded-lg md:rounded-2xl bg-primary/10 flex items-center justify-center text-2xl md:text-5xl">
+                        <div className="h-24 w-24 rounded-2xl bg-primary/10 flex items-center justify-center text-5xl">
                           {provider.category?.icon || "🙏"}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1.5 md:mb-3">
+                      <div className="flex items-start justify-between gap-2 mb-3">
                         <div className="min-w-0 flex-1">
-                          <h1 className="font-display text-lg md:text-3xl font-bold text-foreground line-clamp-2 leading-tight">
+                          <h1 className="font-display text-3xl font-bold text-foreground leading-tight">
                             {provider.business_name}
                           </h1>
                         </div>
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           {provider.is_verified && (
-                            <span className="verified-badge text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1">
+                            <span className="verified-badge text-xs px-2 py-1">
                               <CheckCircle2 className="h-3 w-3" />
                             </span>
                           )}
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 md:h-9 md:w-9"
+                            className="h-9 w-9"
                             onClick={handleShare}
                             title="Share profile"
                           >
@@ -332,24 +332,23 @@ const ProviderProfile = () => {
                       </div>
                       
                       {provider.category?.name && (
-                        <Badge variant="secondary" className="text-[10px] md:text-xs mb-2">
+                        <Badge variant="secondary" className="text-xs mb-2">
                           {provider.category.name}
                         </Badge>
                       )}
                       
-                      {/* Rating and price - compact on mobile */}
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 md:h-5 md:w-5 fill-primary text-primary" />
-                          <span className="font-bold text-sm md:text-lg">
+                          <Star className="h-5 w-5 fill-primary text-primary" />
+                          <span className="font-bold text-lg">
                             {provider.rating?.toFixed(1) || "New"}
                           </span>
-                          <span className="text-[10px] md:text-sm text-muted-foreground">
+                          <span className="text-sm text-muted-foreground">
                             ({provider.total_reviews || 0})
                           </span>
                         </div>
                         {provider.base_price && (
-                          <Badge variant="outline" className="text-secondary font-medium text-[10px] md:text-xs">
+                          <Badge variant="outline" className="text-secondary font-medium text-xs">
                             From ₹{provider.base_price.toLocaleString('en-IN')}
                           </Badge>
                         )}
@@ -357,27 +356,104 @@ const ProviderProfile = () => {
                     </div>
                   </div>
 
-                  {/* Details row */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] md:text-sm text-muted-foreground border-t border-border/50 pt-3 md:pt-4">
+                  {/* Details row - Desktop */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground border-t border-border/50 pt-4">
                     {provider.city && (
                       <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3 md:h-4 md:w-4" />
+                        <MapPin className="h-4 w-4" />
                         {provider.city}
                       </span>
                     )}
                     {provider.experience_years ? (
                       <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 md:h-4 md:w-4" />
+                        <Clock className="h-4 w-4" />
                         {provider.experience_years}+ yrs
                       </span>
                     ) : null}
                     {provider.languages && provider.languages.length > 0 && (
                       <span className="flex items-center gap-1">
-                        <Languages className="h-3 w-3 md:h-4 md:w-4" />
-                        <span className="truncate max-w-[80px] md:max-w-none">
-                          {provider.languages.slice(0, 2).join(", ")}
-                          {provider.languages.length > 2 && ` +${provider.languages.length - 2}`}
+                        <Languages className="h-4 w-4" />
+                        {provider.languages.join(", ")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile Layout - Restructured */}
+                <div className="flex flex-col gap-3 md:hidden">
+                  {/* Row 1: Avatar + Full Name */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {provider.logo_url ? (
+                        <img
+                          src={provider.logo_url}
+                          alt={provider.business_name}
+                          className="h-16 w-16 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center text-3xl">
+                          {provider.category?.icon || "🙏"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <h1 className="font-display text-lg font-bold text-foreground leading-tight">
+                          {provider.business_name}
+                        </h1>
+                        {provider.is_verified && (
+                          <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        )}
+                      </div>
+                      {/* Profession/Category */}
+                      {provider.category?.name && (
+                        <p className="text-xs text-muted-foreground">
+                          {provider.category.name}
+                          {provider.subcategory && ` • ${provider.subcategory}`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Row 2: Save button, Rating, Price */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FavoriteButton providerId={provider.id} variant="button" />
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-primary text-primary" />
+                        <span className="font-bold text-sm">
+                          {provider.rating?.toFixed(1) || "New"}
                         </span>
+                        <span className="text-xs text-muted-foreground">
+                          ({provider.total_reviews || 0})
+                        </span>
+                      </div>
+                    </div>
+                    {provider.base_price && (
+                      <Badge variant="outline" className="text-secondary font-medium text-xs">
+                        From ₹{provider.base_price.toLocaleString('en-IN')}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Row 3: Experience & Languages */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground border-t border-border/50 pt-2">
+                    {provider.city && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {provider.city}
+                      </span>
+                    )}
+                    {provider.experience_years ? (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {provider.experience_years}+ yrs experience
+                      </span>
+                    ) : null}
+                    {provider.languages && provider.languages.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Languages className="h-3 w-3" />
+                        {provider.languages.join(", ")}
                       </span>
                     )}
                   </div>
@@ -388,6 +464,19 @@ const ProviderProfile = () => {
             {/* Mobile action buttons - fixed at bottom */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-2.5 z-40 safe-area-bottom">
               <div className="flex gap-2 max-w-md mx-auto">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 flex-shrink-0 touch-manipulation active:scale-[0.98] transition-transform"
+                  onClick={handleShare}
+                  title="Share profile"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Share2 className="h-4 w-4" />
+                  )}
+                </Button>
                 <Button
                   className="flex-1 h-10 touch-manipulation active:scale-[0.98] transition-transform text-sm"
                   variant="outline"
