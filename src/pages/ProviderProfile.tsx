@@ -13,6 +13,9 @@ import {
   Calendar,
   CheckCircle2,
   MessageCircle,
+  Share2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -55,6 +58,42 @@ const ProviderProfile = () => {
   const [selectedTime, setSelectedTime] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/provider/${id}`;
+    
+    // Try native share first (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: provider?.business_name || "Service Provider",
+          text: `Check out ${provider?.business_name} on our platform!`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // User cancelled or share failed, fall back to copy
+      }
+    }
+    
+    // Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast({
+        title: "Link copied!",
+        description: "Share this link with anyone to show this provider.",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the URL manually from the address bar.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Initialize date from URL params
   useEffect(() => {
@@ -275,6 +314,19 @@ const ProviderProfile = () => {
                               <CheckCircle2 className="h-3 w-3" />
                             </span>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 md:h-9 md:w-9"
+                            onClick={handleShare}
+                            title="Share profile"
+                          >
+                            {copied ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Share2 className="h-4 w-4" />
+                            )}
+                          </Button>
                           <FavoriteButton providerId={provider.id} variant="button" />
                         </div>
                       </div>
