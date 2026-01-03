@@ -35,6 +35,23 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
         .eq("provider_id", providerId)
         .order("created_at", { ascending: false });
       if (error) throw error;
+      
+      // Fetch profile info for reviewers
+      if (data.length > 0) {
+        const userIds = [...new Set(data.map(r => r.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, avatar_url")
+          .in("user_id", userIds);
+        
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        
+        return data.map(review => ({
+          ...review,
+          reviewer: profileMap.get(review.user_id) || null,
+        }));
+      }
+      
       return data;
     },
     enabled: !!providerId,
@@ -142,20 +159,33 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
               <div key={review.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < review.rating
-                              ? "fill-primary text-primary"
-                              : "text-muted-foreground"
-                          }`}
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                      {(review as any).reviewer?.avatar_url ? (
+                        <img 
+                          src={(review as any).reviewer.avatar_url} 
+                          alt={(review as any).reviewer?.full_name || "Reviewer"}
+                          className="h-full w-full object-cover"
                         />
-                      ))}
+                      ) : (
+                        <User className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      {(review as any).reviewer?.full_name && (
+                        <span className="text-sm font-medium mr-2">{(review as any).reviewer.full_name}</span>
+                      )}
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < review.rating
+                                ? "fill-primary text-primary"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground">

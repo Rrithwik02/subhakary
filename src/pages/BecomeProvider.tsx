@@ -469,55 +469,82 @@ const BecomeProvider = () => {
                   <div className="w-20 h-20 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-6">
                     <AlertCircle className="w-10 h-10 text-destructive" />
                   </div>
-                  <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
-                    Application Not Approved
-                  </h1>
-                  <p className="text-muted-foreground mb-4">
-                    Unfortunately, your application was not approved at this time. You can update your documents and resubmit.
-                  </p>
-                  {existingApplication.rejection_reason && (
-                    <div className="bg-destructive/10 rounded-lg p-4 mb-6 text-left">
-                      <p className="text-sm font-medium text-destructive mb-1">Feedback:</p>
-                      <p className="text-sm text-foreground">{existingApplication.rejection_reason}</p>
-                    </div>
+                  
+                  {/* Check if this was a user-initiated deletion */}
+                  {existingApplication.rejection_reason?.includes("User deleted their provider account") ? (
+                    <>
+                      <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
+                        Provider Account Deleted
+                      </h1>
+                      <p className="text-muted-foreground mb-6">
+                        You previously deleted your service provider account. If you would like to register again, 
+                        please contact our support team to get your account reinstated.
+                      </p>
+                      <Button
+                        variant="gold"
+                        className="w-full rounded-full"
+                        onClick={openSupportChat}
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Contact Support to Re-register
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-4">
+                        Our support team will help you reactivate your provider account.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
+                        Application Not Approved
+                      </h1>
+                      <p className="text-muted-foreground mb-4">
+                        Unfortunately, your application was not approved at this time. You can update your documents and resubmit.
+                      </p>
+                      {existingApplication.rejection_reason && (
+                        <div className="bg-destructive/10 rounded-lg p-4 mb-6 text-left">
+                          <p className="text-sm font-medium text-destructive mb-1">Feedback:</p>
+                          <p className="text-sm text-foreground">{existingApplication.rejection_reason}</p>
+                        </div>
+                      )}
+                      <div className="space-y-3">
+                        <Button
+                          variant="gold"
+                          className="w-full rounded-full"
+                          onClick={() => {
+                            setIsResubmitting(true);
+                            setFormData({
+                              businessName: existingApplication.business_name,
+                              categoryId: "",
+                              description: "",
+                              experienceYears: "",
+                              languages: [],
+                              state: "",
+                              city: "",
+                              address: "",
+                              pricingInfo: "",
+                              phone: "",
+                            });
+                            setUploadedFiles([]);
+                            setStep(1);
+                          }}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Resubmit Application
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={openSupportChat}
+                        >
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Contact Support Team
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-4">
+                        Address the feedback above and resubmit, or chat with our support team.
+                      </p>
+                    </>
                   )}
-                  <div className="space-y-3">
-                    <Button
-                      variant="gold"
-                      className="w-full rounded-full"
-                      onClick={() => {
-                        setIsResubmitting(true);
-                        setFormData({
-                          businessName: existingApplication.business_name,
-                          categoryId: "",
-                          description: "",
-                          experienceYears: "",
-                          languages: [],
-                          state: "",
-                          city: "",
-                          address: "",
-                          pricingInfo: "",
-                          phone: "",
-                        });
-                        setUploadedFiles([]);
-                        setStep(1);
-                      }}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Resubmit Application
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={openSupportChat}
-                    >
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Contact Support Team
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-4">
-                    Address the feedback above and resubmit, or chat with our support team.
-                  </p>
                 </>
               )}
             </motion.div>

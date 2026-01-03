@@ -94,6 +94,7 @@ const MyBookings = () => {
             id,
             business_name,
             city,
+            logo_url,
             category:service_categories(name, icon)
           )
         `)
@@ -251,10 +252,18 @@ const MyBookings = () => {
                       >
                         <CardContent className="p-3 md:p-6">
                           <div className="flex flex-col gap-3 md:gap-4">
-                            {/* Top section: Icon + Info */}
+                            {/* Top section: Logo + Info */}
                             <div className="flex items-start gap-3">
-                              <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
-                                {booking.provider?.category?.icon || "🙏"}
+                              <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl md:text-2xl flex-shrink-0 overflow-hidden">
+                                {booking.provider?.logo_url ? (
+                                  <img 
+                                    src={booking.provider.logo_url} 
+                                    alt={booking.provider?.business_name || "Provider"}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  booking.provider?.category?.icon || "🙏"
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2">
