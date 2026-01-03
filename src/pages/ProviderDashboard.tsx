@@ -15,6 +15,8 @@ import {
   MessageCircle,
   CalendarDays,
   Settings,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -43,6 +45,7 @@ import { ProviderAvailabilityManager } from "@/components/ProviderAvailabilityMa
 import { ProviderBundleManager } from "@/components/ProviderBundleManager";
 import BookingCalendar from "@/components/BookingCalendar";
 import { CompletionDetailsForm } from "@/components/CompletionDetailsForm";
+import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600" },
@@ -65,6 +68,7 @@ const ProviderDashboard = () => {
     id: string;
     customerName: string;
   } | null>(null);
+  const [deleteProviderDialogOpen, setDeleteProviderDialogOpen] = useState(false);
 
   // Fetch provider profile
   const { data: provider } = useQuery({
@@ -251,6 +255,36 @@ const ProviderDashboard = () => {
 
   const handleOpenCompletionForm = (bookingId: string, customerName: string) => {
     setCompletionFormBooking({ id: bookingId, customerName });
+  };
+
+  const handleDeleteAsProvider = async (reason: string) => {
+    if (!provider) return;
+
+    try {
+      // Mark the provider as deleted by updating status
+      const { error } = await supabase
+        .from("service_providers")
+        .update({ 
+          status: "rejected" as const,
+          rejection_reason: "User deleted their provider account" + (reason ? `: ${reason}` : "")
+        })
+        .eq("id", provider.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Provider account deleted",
+        description: "You have been reverted to a customer account.",
+      });
+
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete provider account",
+        variant: "destructive",
+      });
+    }
   };
 
   if (authLoading) {
@@ -647,6 +681,29 @@ const ProviderDashboard = () => {
                 <ProviderAvailabilityManager providerId={provider.id} />
 
                 <ProviderBundleManager providerId={provider.id} />
+
+                {/* Danger Zone */}
+                <Card className="border-destructive/50">
+                  <CardHeader>
+                    <CardTitle className="font-display flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="h-5 w-5" />
+                      Danger Zone
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Deleting your service provider account will revert you to a customer account. 
+                      Your bookings and reviews will be preserved but you won't be able to accept new bookings.
+                    </p>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => setDeleteProviderDialogOpen(true)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete as Service Provider
+                    </Button>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </motion.div>
@@ -693,6 +750,17 @@ const ProviderDashboard = () => {
           onSubmitted={() => refetch()}
         />
       )}
+
+      {/* Delete as Provider Dialog */}
+      <DeleteAccountDialog
+        open={deleteProviderDialogOpen}
+        onOpenChange={setDeleteProviderDialogOpen}
+        onConfirm={handleDeleteAsProvider}
+        title="Delete Service Provider Account"
+        description="You will be reverted to a customer account. Your provider profile will be removed but your customer account will remain."
+        isProvider={true}
+        willDeleteProvider={false}
+      />
 
       <Footer />
     </div>

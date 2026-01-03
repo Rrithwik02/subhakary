@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Camera, User, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
+import { Camera, User, Mail, Phone, MapPin, Save, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TwoFactorSettings } from "@/components/TwoFactorSettings";
+import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +25,7 @@ const profileSchema = z.object({
 });
 
 const Profile = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -32,6 +33,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -52,6 +54,21 @@ const Profile = () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Check if user is also a provider
+  const { data: providerProfile } = useQuery({
+    queryKey: ["my-provider", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_providers")
+        .select("id, business_name, status")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -186,6 +203,43 @@ const Profile = () => {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async (reason: string) => {
+    if (!user || !profile) return;
+
+    try {
+      // Create deletion request
+      await supabase.from("account_deletion_requests").insert({
+        user_id: profile.id,
+        reason: reason || null,
+        status: "pending",
+      });
+
+      // If user is a provider, delete provider profile first
+      if (providerProfile) {
+        await supabase
+          .from("service_providers")
+          .delete()
+          .eq("id", providerProfile.id);
+      }
+
+      // Sign out
+      await signOut();
+      
+      toast({
+        title: "Account deletion requested",
+        description: "Your account deletion request has been submitted. We'll process it within 7 days.",
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to process deletion request",
+        variant: "destructive",
+      });
     }
   };
 
@@ -374,9 +428,41 @@ const Profile = () => {
               twoFactorEnabled={profile?.two_factor_enabled || false}
               onUpdate={() => refetch()}
             />
+
+            {/* Danger Zone */}
+            <Card className="border-destructive/50">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="font-display text-base md:text-lg flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+                <p className="text-sm text-muted-foreground mb-4">
+                  {providerProfile 
+                    ? "Deleting your account will also remove your service provider profile and all associated data." 
+                    : "Once you delete your account, there is no going back. Please be certain."}
+                </p>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="w-full sm:w-auto"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Account
+                </Button>
+              </CardContent>
+            </Card>
           </motion.div>
         </div>
       </section>
+
+      <DeleteAccountDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteAccount}
+        willDeleteProvider={!!providerProfile}
+      />
 
       <Footer />
     </div>

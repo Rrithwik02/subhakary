@@ -56,6 +56,8 @@ const Providers = () => {
   const [sortBy, setSortBy] = useState<string>("rating");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
 
   // Initialize filters from URL params and update SEO
   useEffect(() => {
@@ -217,6 +219,16 @@ const Providers = () => {
       );
     }
 
+    // Price range filter
+    if (minPrice) {
+      const min = parseFloat(minPrice);
+      result = result.filter((p) => (p.base_price || 0) >= min);
+    }
+    if (maxPrice) {
+      const max = parseFloat(maxPrice);
+      result = result.filter((p) => (p.base_price || 0) <= max);
+    }
+
     // Sorting - Premium providers always first, then by selected sort
     switch (sortBy) {
       case "rating":
@@ -243,10 +255,22 @@ const Providers = () => {
           return a.business_name.localeCompare(b.business_name);
         });
         break;
+      case "price_low":
+        result.sort((a, b) => {
+          if (a.is_premium !== b.is_premium) return b.is_premium ? 1 : -1;
+          return (a.base_price || 0) - (b.base_price || 0);
+        });
+        break;
+      case "price_high":
+        result.sort((a, b) => {
+          if (a.is_premium !== b.is_premium) return b.is_premium ? 1 : -1;
+          return (b.base_price || 0) - (a.base_price || 0);
+        });
+        break;
     }
 
     return result;
-  }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedState, selectedCity, selectedArea, sortBy]);
+  }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedState, selectedCity, selectedArea, sortBy, minPrice, maxPrice]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -257,6 +281,8 @@ const Providers = () => {
     setSelectedArea("all");
     setSortBy("rating");
     setSelectedDate("");
+    setMinPrice("");
+    setMaxPrice("");
   };
 
   const handleCategoryChange = (value: string) => {
@@ -276,7 +302,7 @@ const Providers = () => {
   };
 
   const hasActiveFilters =
-    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedState !== "all" || selectedCity !== "all" || selectedArea !== "all";
+    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedState !== "all" || selectedCity !== "all" || selectedArea !== "all" || minPrice || maxPrice;
 
   const activeFilterCount = [
     searchQuery,
@@ -285,6 +311,8 @@ const Providers = () => {
     selectedState !== "all" ? selectedState : null,
     selectedCity !== "all" ? selectedCity : null,
     selectedArea !== "all" ? selectedArea : null,
+    minPrice || null,
+    maxPrice || null,
   ].filter(Boolean).length;
 
   // Filter component for reuse in both mobile and desktop
@@ -370,6 +398,27 @@ const Providers = () => {
         </Select>
       )}
 
+      {/* Price Range Filter */}
+      <div className={`flex items-center gap-2 ${isMobile ? "w-full" : ""}`}>
+        <Input
+          type="number"
+          placeholder="Min ₹"
+          value={minPrice}
+          onChange={(e) => setMinPrice(e.target.value)}
+          className={isMobile ? "flex-1" : "w-24"}
+          min="0"
+        />
+        <span className="text-muted-foreground text-sm">-</span>
+        <Input
+          type="number"
+          placeholder="Max ₹"
+          value={maxPrice}
+          onChange={(e) => setMaxPrice(e.target.value)}
+          className={isMobile ? "flex-1" : "w-24"}
+          min="0"
+        />
+      </div>
+
       {/* Sort */}
       <Select value={sortBy} onValueChange={setSortBy}>
         <SelectTrigger className={isMobile ? "w-full" : "w-full lg:w-40"}>
@@ -380,6 +429,8 @@ const Providers = () => {
           <SelectItem value="reviews">Most Reviews</SelectItem>
           <SelectItem value="experience">Experience</SelectItem>
           <SelectItem value="name">Name (A-Z)</SelectItem>
+          <SelectItem value="price_low">Price: Low to High</SelectItem>
+          <SelectItem value="price_high">Price: High to Low</SelectItem>
         </SelectContent>
       </Select>
 
@@ -560,6 +611,13 @@ const Providers = () => {
               {selectedArea !== "all" && (
                 <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setSelectedArea("all")}>
                   Area: {selectedArea}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+              
+              {(minPrice || maxPrice) && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => { setMinPrice(""); setMaxPrice(""); }}>
+                  Price: {minPrice ? `₹${minPrice}` : "Any"} - {maxPrice ? `₹${maxPrice}` : "Any"}
                   <X className="h-3 w-3 ml-1" />
                 </Badge>
               )}

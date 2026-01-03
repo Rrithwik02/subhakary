@@ -22,6 +22,7 @@ import { ProviderBundles } from "@/components/ProviderBundles";
 import { PortfolioGallery } from "@/components/PortfolioGallery";
 import { PricingTiers } from "@/components/PricingTiers";
 import { DateRangePicker } from "@/components/DateRangePicker";
+import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -401,6 +402,12 @@ const ProviderProfile = () => {
 
                 {/* Reviews */}
                 <ReviewsList providerId={provider.id} />
+
+                {/* Availability Calendar */}
+                <ProviderAvailabilityCalendar 
+                  providerId={provider.id} 
+                  providerName={provider.business_name}
+                />
               </div>
 
               {/* Booking sidebar - hidden on mobile */}

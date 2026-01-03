@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +70,22 @@ export const Navbar = () => {
     enabled: !!user?.id,
     staleTime: 0,
     refetchOnMount: "always",
+  });
+
+  // Fetch user profile for avatar
+  const { data: userProfile } = useQuery({
+    queryKey: ["user-profile", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!user?.id,
   });
 
   // Fetch unread notifications count
@@ -182,9 +199,14 @@ export const Navbar = () => {
                 </Button>
               </Link>
               <Link to="/profile">
-                <Button variant="ghost" size="sm" className="font-medium">
-                  <User className="w-4 h-4 mr-2" />
-                  Profile
+                <Button variant="ghost" size="sm" className="font-medium gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={userProfile?.avatar_url || undefined} />
+                    <AvatarFallback className="text-xs bg-primary/10">
+                      {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-3 w-3" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden xl:inline">Profile</span>
                 </Button>
               </Link>
               {isApprovedProvider ? (
@@ -285,8 +307,13 @@ export const Navbar = () => {
                       </Link>
                     </div>
                     <Link to="/profile" className="w-full" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" size="sm" className="w-full justify-start">
-                        <User className="w-4 h-4 mr-2" />
+                      <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={userProfile?.avatar_url || undefined} />
+                          <AvatarFallback className="text-xs bg-primary/10">
+                            {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-3 w-3" />}
+                          </AvatarFallback>
+                        </Avatar>
                         My Profile
                       </Button>
                     </Link>
