@@ -12,6 +12,27 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the request using CRON_SECRET_TOKEN
+    const authHeader = req.headers.get("authorization");
+    const expectedToken = Deno.env.get("CRON_SECRET_TOKEN");
+
+    if (!expectedToken) {
+      console.error("CRON_SECRET_TOKEN is not configured");
+      return new Response(
+        JSON.stringify({ error: "Server misconfiguration" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
+      console.error("Unauthorized request - invalid or missing token");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Request authenticated successfully");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
