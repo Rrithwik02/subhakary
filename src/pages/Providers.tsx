@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, MapPin, Star, Filter, X, BadgeCheck, Images, ChevronLeft, SlidersHorizontal, Scale } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CompareButton } from "@/components/CompareButton";
+import { ShareButton } from "@/components/ShareButton";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -811,6 +812,11 @@ const Providers = () => {
                                   : provider.pricing_info}
                               </span>
                             )}
+                            <ShareButton
+                              title={provider.business_name}
+                              text={`Check out ${provider.business_name} on our platform!`}
+                              url={`/provider/${provider.id}`}
+                            />
                             <CompareButton provider={provider} variant="icon" />
                           </div>
                         </div>
