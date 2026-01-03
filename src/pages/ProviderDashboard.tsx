@@ -17,6 +17,7 @@ import {
   Settings,
   Trash2,
   AlertTriangle,
+  Circle,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -33,6 +34,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +77,7 @@ const ProviderDashboard = () => {
     customerName: string;
   } | null>(null);
   const [deleteProviderDialogOpen, setDeleteProviderDialogOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Fetch provider profile
   const { data: provider } = useQuery({
@@ -287,6 +296,44 @@ const ProviderDashboard = () => {
     }
   };
 
+  const handleStatusChange = async (newStatus: string) => {
+    if (!provider) return;
+    
+    setIsUpdatingStatus(true);
+    try {
+      const { error } = await supabase
+        .from("service_providers")
+        .update({ availability_status: newStatus })
+        .eq("id", provider.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status updated",
+        description: `You are now ${newStatus}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "online":
+        return "text-green-500";
+      case "busy":
+        return "text-yellow-500";
+      default:
+        return "text-muted-foreground";
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -464,7 +511,7 @@ const ProviderDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
               <div>
                 <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
                   Provider Dashboard
@@ -472,6 +519,45 @@ const ProviderDashboard = () => {
                 <p className="text-muted-foreground mt-1">
                   Manage your bookings for {provider.business_name}
                 </p>
+              </div>
+              
+              {/* Availability Status Toggle */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Select
+                  value={provider.availability_status || "offline"}
+                  onValueChange={handleStatusChange}
+                  disabled={isUpdatingStatus}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue>
+                      <div className="flex items-center gap-2">
+                        <Circle className={`h-2 w-2 fill-current ${getStatusColor(provider.availability_status || "offline")}`} />
+                        <span className="capitalize">{provider.availability_status || "offline"}</span>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="online">
+                      <div className="flex items-center gap-2">
+                        <Circle className="h-2 w-2 fill-current text-green-500" />
+                        <span>Online</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="busy">
+                      <div className="flex items-center gap-2">
+                        <Circle className="h-2 w-2 fill-current text-yellow-500" />
+                        <span>Busy</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="offline">
+                      <div className="flex items-center gap-2">
+                        <Circle className="h-2 w-2 fill-current text-muted-foreground" />
+                        <span>Offline</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
