@@ -49,6 +49,10 @@ export const ReviewForm = ({
   const [aspectScores, setAspectScores] = useState<Record<string, number>>({});
   const [aspectHover, setAspectHover] = useState<Record<string, number>>({});
 
+  // File validation constants
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
   const handlePhotoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (photos.length + files.length > 5) {
@@ -60,7 +64,35 @@ export const ReviewForm = ({
       return;
     }
 
-    const newPhotos = [...photos, ...files].slice(0, 5);
+    // Validate each file
+    const validFiles: File[] = [];
+    for (const file of files) {
+      // Check file type
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: `"${file.name}" is not a valid image. Only JPEG, PNG, WEBP, and GIF are allowed.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "File too large",
+          description: `"${file.name}" exceeds the 5MB size limit.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    const newPhotos = [...photos, ...validFiles].slice(0, 5);
     setPhotos(newPhotos);
 
     // Create previews
