@@ -307,6 +307,18 @@ const AdminDashboard = () => {
           { onConflict: "user_id,role" }
         );
 
+        // Log reinstatement in security_audit_log
+        await supabase.from("security_audit_log").insert({
+          user_id: user.id,
+          action: "provider_reinstated",
+          resource_type: "service_provider",
+          resource_id: providerId,
+          details: {
+            provider_user_id: providerRow.user_id,
+            reason: "Admin reinstated deleted provider account",
+          },
+        });
+
         toast({
           title: "Provider reinstated",
           description: "The provider can access their dashboard again.",
@@ -322,6 +334,18 @@ const AdminDashboard = () => {
           .eq("id", providerId);
 
         if (error) throw error;
+
+        // Log rejection revoke in security_audit_log
+        await supabase.from("security_audit_log").insert({
+          user_id: user.id,
+          action: "rejection_revoked",
+          resource_type: "service_provider",
+          resource_id: providerId,
+          details: {
+            provider_user_id: providerRow.user_id,
+            reason: "Admin revoked rejection to allow re-application",
+          },
+        });
 
         toast({
           title: "Rejection revoked",
@@ -1199,7 +1223,9 @@ const AdminDashboard = () => {
                                 disabled={isProcessing}
                               >
                                 <RotateCcw className="h-4 w-4 mr-1" />
-                                Revoke (Allow Re-apply)
+                                {(provider.rejection_reason || "").includes("User deleted their provider account")
+                                  ? "Reinstate Provider"
+                                  : "Revoke (Allow Re-apply)"}
                               </Button>
                             </div>
                           </CardContent>
