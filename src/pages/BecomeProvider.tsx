@@ -68,6 +68,7 @@ const BecomeProvider = () => {
   const [formData, setFormData] = useState({
     businessName: "",
     categoryId: "",
+    additionalCategoryIds: [] as string[],
     description: "",
     experienceYears: "",
     languages: [] as string[],
@@ -77,6 +78,7 @@ const BecomeProvider = () => {
     pricingInfo: "",
     phone: "",
   });
+  const [additionalServiceFiles, setAdditionalServiceFiles] = useState<{ [categoryId: string]: File[] }>({});
   const [isResubmitting, setIsResubmitting] = useState(false);
 
   const languageOptions = ["English", "Telugu", "Hindi", "Tamil", "Kannada", "Malayalam"];
@@ -351,7 +353,7 @@ const BecomeProvider = () => {
         providerId = provider.id;
       }
 
-      // Upload documents (if any)
+      // Upload primary service documents (if any)
       for (const file of uploadedFiles) {
         const filePath = `${user.id}/${Date.now()}-${file.name}`;
 
@@ -370,7 +372,48 @@ const BecomeProvider = () => {
           document_type: "identity",
           file_url: filePath,
           file_name: file.name,
+          service_category_id: formData.categoryId || null,
         });
+      }
+
+      // Create additional services and upload their documents
+      for (const categoryId of formData.additionalCategoryIds) {
+        const category = categories.find(c => c.id === categoryId);
+        if (!category) continue;
+
+        // Create additional service entry
+        await supabase.from("additional_services").insert({
+          provider_id: providerId,
+          service_type: category.name,
+          description: `Additional service: ${category.name}`,
+          category_id: categoryId,
+          verification_status: "pending",
+          min_price: 0,
+          max_price: 0,
+        });
+
+        // Upload documents for this additional service
+        const files = additionalServiceFiles[categoryId] || [];
+        for (const file of files) {
+          const filePath = `${user.id}/${Date.now()}-${file.name}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("provider-documents")
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            continue;
+          }
+
+          await supabase.from("provider_documents").insert({
+            provider_id: providerId,
+            document_type: "additional_service_proof",
+            file_url: filePath,
+            file_name: file.name,
+            service_category_id: categoryId,
+          });
+        }
       }
 
       toast({
@@ -523,6 +566,7 @@ const BecomeProvider = () => {
                             setFormData({
                               businessName: existingApplication.business_name,
                               categoryId: "",
+                              additionalCategoryIds: [],
                               description: "",
                               experienceYears: "",
                               languages: [],
@@ -699,21 +743,73 @@ const BecomeProvider = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Service Category *</Label>
+                  <Label htmlFor="category">Primary Service Category *</Label>
                   <select
                     id="category"
                     className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
                     value={formData.categoryId}
-                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value, additionalCategoryIds: [] })}
                   >
-                    <option value="">Select a category</option>
+                    <option value="">Select your main category</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-muted-foreground">
+                    This will be your primary service displayed on your profile
+                  </p>
                 </div>
+
+                {/* Additional Services Selection */}
+                {formData.categoryId && (
+                  <div className="space-y-2">
+                    <Label>Additional Services (Optional)</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Select other services you can offer. You'll need to provide proof for each.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {categories
+                        .filter(cat => cat.id !== formData.categoryId)
+                        .map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              if (formData.additionalCategoryIds.includes(cat.id)) {
+                                setFormData({
+                                  ...formData,
+                                  additionalCategoryIds: formData.additionalCategoryIds.filter(id => id !== cat.id)
+                                });
+                                // Remove files for this category
+                                const newFiles = { ...additionalServiceFiles };
+                                delete newFiles[cat.id];
+                                setAdditionalServiceFiles(newFiles);
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  additionalCategoryIds: [...formData.additionalCategoryIds, cat.id]
+                                });
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                              formData.additionalCategoryIds.includes(cat.id)
+                                ? "gradient-gold text-brown-dark"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                    </div>
+                    {formData.additionalCategoryIds.length > 0 && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        ⚠️ You'll need to upload proof documents for each additional service in the next step
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="experience">Years of Experience</Label>
@@ -861,64 +957,135 @@ const BecomeProvider = () => {
               <div className="space-y-6">
                 {isDocumentRequired ? (
                   <>
-                    <h2 className="font-display text-xl font-semibold">Upload Business Proof Document</h2>
-                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                      <p className="text-sm font-medium text-foreground">Upload ONE of the following:</p>
-                      <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                        <li>GST Certificate</li>
-                        <li>Shop Act License</li>
-                        <li>Trade License</li>
-                        <li>Business Registration Certificate</li>
-                      </ul>
-                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                        ⚠️ The business name on the document must match "{formData.businessName || 'your business name'}"
-                      </p>
-                    </div>
-
-                    {/* Upload Area */}
-                    <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
-                      <input
-                        type="file"
-                        id="documents"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        disabled={uploadedFiles.length >= 1}
-                      />
-                      <label htmlFor="documents" className={`cursor-pointer ${uploadedFiles.length >= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                        <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="font-medium text-foreground mb-1">
-                          {uploadedFiles.length >= 1 ? 'Document uploaded' : 'Click to upload document'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          PDF, JPG, or PNG (max 10MB)
-                        </p>
-                      </label>
-                    </div>
-
-                    {/* Uploaded Files */}
-                    {uploadedFiles.length > 0 && (
-                      <div className="space-y-3">
-                        {uploadedFiles.map((file, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <FileText className="w-5 h-5 text-primary" />
-                              <span className="text-sm font-medium truncate max-w-[200px]">
-                                {file.name}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => removeFile(index)}
-                              className="text-muted-foreground hover:text-destructive"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-                        ))}
+                    <h2 className="font-display text-xl font-semibold">Upload Business Proof Documents</h2>
+                    
+                    {/* Primary Service Document */}
+                    <div className="p-4 rounded-lg border bg-muted/20">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-medium">
+                          Primary: {categories.find(c => c.id === formData.categoryId)?.name}
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">Required</span>
                       </div>
+                      
+                      <div className="bg-muted/50 rounded-lg p-3 mb-3">
+                        <p className="text-xs text-muted-foreground">
+                          Upload GST Certificate, Shop Act License, Trade License, or Business Registration
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                          ⚠️ Business name must match "{formData.businessName}"
+                        </p>
+                      </div>
+
+                      {/* Upload Area */}
+                      <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                        <input
+                          type="file"
+                          id="documents"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          disabled={uploadedFiles.length >= 1}
+                        />
+                        <label htmlFor="documents" className={`cursor-pointer ${uploadedFiles.length >= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium text-foreground">
+                            {uploadedFiles.length >= 1 ? 'Document uploaded' : 'Click to upload'}
+                          </p>
+                        </label>
+                      </div>
+
+                      {/* Uploaded Files */}
+                      {uploadedFiles.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {uploadedFiles.map((file, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-2 bg-background rounded"
+                            >
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-primary" />
+                                <span className="text-sm truncate max-w-[180px]">{file.name}</span>
+                              </div>
+                              <button onClick={() => removeFile(index)} className="text-muted-foreground hover:text-destructive">
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Additional Services Documents */}
+                    {formData.additionalCategoryIds.length > 0 && (
+                      <>
+                        <h3 className="font-medium text-lg">Additional Services Proof</h3>
+                        <p className="text-sm text-muted-foreground -mt-4">
+                          Upload portfolio images, equipment invoices, or certificates for each additional service
+                        </p>
+                        
+                        {formData.additionalCategoryIds.map((catId) => {
+                          const category = categories.find(c => c.id === catId);
+                          const files = additionalServiceFiles[catId] || [];
+                          
+                          return (
+                            <div key={catId} className="p-4 rounded-lg border bg-muted/20">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-medium">{category?.name}</span>
+                                <span className="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-600">Required</span>
+                              </div>
+                              
+                              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                                <input
+                                  type="file"
+                                  id={`additional-${catId}`}
+                                  accept=".pdf,.jpg,.jpeg,.png"
+                                  onChange={(e) => {
+                                    const newFiles = e.target.files;
+                                    if (newFiles) {
+                                      setAdditionalServiceFiles(prev => ({
+                                        ...prev,
+                                        [catId]: [...(prev[catId] || []), ...Array.from(newFiles)]
+                                      }));
+                                    }
+                                  }}
+                                  className="hidden"
+                                  multiple
+                                />
+                                <label htmlFor={`additional-${catId}`} className="cursor-pointer">
+                                  <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                                  <p className="text-sm font-medium text-foreground">Click to upload proof</p>
+                                  <p className="text-xs text-muted-foreground">Portfolio, invoices, or certificates</p>
+                                </label>
+                              </div>
+
+                              {files.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                  {files.map((file, index) => (
+                                    <div key={index} className="flex items-center justify-between p-2 bg-background rounded">
+                                      <div className="flex items-center gap-2">
+                                        <FileText className="w-4 h-4 text-primary" />
+                                        <span className="text-sm truncate max-w-[180px]">{file.name}</span>
+                                      </div>
+                                      <button 
+                                        onClick={() => {
+                                          setAdditionalServiceFiles(prev => ({
+                                            ...prev,
+                                            [catId]: prev[catId]?.filter((_, i) => i !== index) || []
+                                          }));
+                                        }}
+                                        className="text-muted-foreground hover:text-destructive"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </>
                     )}
                   </>
                 ) : (
@@ -948,7 +1115,11 @@ const BecomeProvider = () => {
                     variant="gold"
                     className="flex-1 rounded-full"
                     onClick={handleSubmit}
-                    disabled={loading || (isDocumentRequired && uploadedFiles.length === 0)}
+                    disabled={
+                      loading || 
+                      (isDocumentRequired && uploadedFiles.length === 0) ||
+                      formData.additionalCategoryIds.some(catId => !additionalServiceFiles[catId] || additionalServiceFiles[catId].length === 0)
+                    }
                   >
                     {loading ? "Submitting..." : "Submit Application"}
                   </Button>

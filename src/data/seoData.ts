@@ -80,6 +80,14 @@ export const servicesSEO: ServiceSEO[] = [
     keywords: ["event manager", "wedding planner", "event planner", "coordinator", "event management"],
     description: "Hire professional event managers and wedding planners for seamless ceremony coordination",
     filter: "event-planning"
+  },
+  {
+    slug: "videographer",
+    name: "Videographer",
+    pluralName: "Videographers",
+    keywords: ["videographer", "wedding videographer", "cinematographer", "video coverage", "event videography"],
+    description: "Find professional videographers for wedding cinematography, event coverage, and ceremony documentation",
+    filter: "videography"
   }
 ];
 
