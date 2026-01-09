@@ -142,6 +142,26 @@ const ProviderProfile = () => {
     enabled: !!id,
   });
 
+  // Fetch verified additional services for this provider
+  const { data: verifiedServices = [] } = useQuery({
+    queryKey: ["provider-verified-services", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("additional_services")
+        .select(`
+          id,
+          service_type,
+          category:service_categories(name, icon)
+        `)
+        .eq("provider_id", id)
+        .eq("verification_status", "verified");
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!id,
+  });
+
   // Fetch blocked dates for this provider
   const { data: blockedDates = [] } = useQuery({
     queryKey: ["provider-blocked-dates-public", id],
@@ -358,6 +378,12 @@ const ProviderProfile = () => {
                             {provider.category.name}
                           </Badge>
                         )}
+                        {verifiedServices.map((service: any) => (
+                          <Badge key={service.id} variant="outline" className="text-xs border-green-500/50 text-green-600">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            {service.category?.name || service.service_type}
+                          </Badge>
+                        ))}
                         <AvailabilityStatusBadge status={provider.availability_status as 'online' | 'offline' | 'busy'} />
                       </div>
                       
@@ -435,6 +461,11 @@ const ProviderProfile = () => {
                           <span className="text-xs text-muted-foreground">
                             {provider.category.name}
                             {provider.subcategory && ` • ${provider.subcategory}`}
+                          </span>
+                        )}
+                        {verifiedServices.length > 0 && (
+                          <span className="text-xs text-green-600">
+                            +{verifiedServices.length} more
                           </span>
                         )}
                         <AvailabilityStatusBadge 

@@ -24,6 +24,7 @@ import {
   X,
   MessageSquare,
   RotateCcw,
+  Layers,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -150,6 +151,33 @@ const AdminDashboard = () => {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
+    },
+    enabled: isAdmin === true,
+  });
+
+  // Fetch additional services pending verification
+  const { data: additionalServices = [], refetch: refetchAdditionalServices } = useQuery({
+    queryKey: ["admin-additional-services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("additional_services")
+        .select(`
+          *,
+          provider:service_providers(id, business_name, user_id, category:service_categories(name, icon)),
+          category:service_categories(name, icon),
+          documents:provider_documents(*)
+        `)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      
+      // Filter documents to only include those for this additional service's category
+      return (data || []).map((service: any) => ({
+        ...service,
+        documents: (service.documents || []).filter((doc: any) => 
+          doc.service_category_id === service.category_id && 
+          doc.document_type === 'additional_service_proof'
+        )
+      }));
     },
     enabled: isAdmin === true,
   });
@@ -453,6 +481,69 @@ const AdminDashboard = () => {
       
       setSelectedProviders(new Set());
       refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Additional Services handlers
+  const handleApproveAdditionalService = async (serviceId: string) => {
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("additional_services")
+        .update({
+          verification_status: "verified",
+          verified_at: new Date().toISOString(),
+          verified_by: user?.id,
+        })
+        .eq("id", serviceId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Service verified",
+        description: "The additional service has been approved.",
+      });
+      refetchAdditionalServices();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRejectAdditionalService = async (serviceId: string) => {
+    const reason = prompt("Enter rejection reason:");
+    if (!reason) return;
+    
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("additional_services")
+        .update({
+          verification_status: "rejected",
+        })
+        .eq("id", serviceId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Service rejected",
+        description: "The additional service has been rejected.",
+        variant: "destructive",
+      });
+      refetchAdditionalServices();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -791,6 +882,10 @@ const AdminDashboard = () => {
                 <TabsTrigger value="support" className="flex-1 min-w-[100px] text-xs sm:text-sm">
                   Support ({supportTickets.filter((t: any) => t.status === 'open').length})
                 </TabsTrigger>
+                <TabsTrigger value="additional-services" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+                  <Layers className="h-3 w-3 mr-1" />
+                  Services ({additionalServices.filter((s: any) => s.verification_status === 'pending').length})
+                </TabsTrigger>
               </TabsList>
 
               {/* Users Tab */}
@@ -1115,6 +1210,181 @@ const AdminDashboard = () => {
                         </Card>
                       </motion.div>
                     ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Additional Services Tab */}
+              <TabsContent value="additional-services" className="mt-6">
+                {additionalServices.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-display text-xl font-semibold mb-2">
+                        No additional services
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Additional service requests from providers will appear here
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Pending services first */}
+                    {additionalServices.filter((s: any) => s.verification_status === 'pending').length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <Clock className="h-5 w-5 text-yellow-600" />
+                          Pending Verification ({additionalServices.filter((s: any) => s.verification_status === 'pending').length})
+                        </h3>
+                        <div className="space-y-3">
+                          {additionalServices
+                            .filter((s: any) => s.verification_status === 'pending')
+                            .map((service: any, i: number) => (
+                              <motion.div
+                                key={service.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                              >
+                                <Card className="hover-lift border-yellow-500/30">
+                                  <CardContent className="p-4">
+                                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl">
+                                            {service.category?.icon || "📋"}
+                                          </div>
+                                          <div>
+                                            <h4 className="font-semibold">{service.service_type}</h4>
+                                            <p className="text-sm text-muted-foreground">
+                                              by {service.provider?.business_name || 'Unknown Provider'}
+                                            </p>
+                                          </div>
+                                          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-200">
+                                            Pending
+                                          </Badge>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mb-2">
+                                          {service.description}
+                                        </p>
+                                        {service.documents?.length > 0 && (
+                                          <button
+                                            className="flex items-center gap-1 text-primary hover:underline text-sm"
+                                            onClick={() => viewDocuments(service.documents)}
+                                          >
+                                            <FileText className="h-3 w-3" />
+                                            {service.documents.length} proof document(s)
+                                          </button>
+                                        )}
+                                        {(!service.documents || service.documents.length === 0) && (
+                                          <p className="text-xs text-amber-600 flex items-center gap-1">
+                                            <AlertCircle className="h-3 w-3" />
+                                            No proof documents uploaded
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => handleRejectAdditionalService(service.id)}
+                                          disabled={isProcessing}
+                                        >
+                                          <XCircle className="h-4 w-4 mr-1" />
+                                          Reject
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          className="gradient-gold text-primary-foreground"
+                                          onClick={() => handleApproveAdditionalService(service.id)}
+                                          disabled={isProcessing}
+                                        >
+                                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                                          Approve
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </motion.div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Verified services */}
+                    {additionalServices.filter((s: any) => s.verification_status === 'verified').length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                          Verified ({additionalServices.filter((s: any) => s.verification_status === 'verified').length})
+                        </h3>
+                        <div className="space-y-3">
+                          {additionalServices
+                            .filter((s: any) => s.verification_status === 'verified')
+                            .map((service: any, i: number) => (
+                              <Card key={service.id} className="border-green-500/30">
+                                <CardContent className="p-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-xl">
+                                        {service.category?.icon || "📋"}
+                                      </div>
+                                      <div>
+                                        <h4 className="font-semibold">{service.service_type}</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                          by {service.provider?.business_name || 'Unknown Provider'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Badge className="bg-green-500/10 text-green-600 border-green-200">
+                                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                                      Verified
+                                    </Badge>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Rejected services */}
+                    {additionalServices.filter((s: any) => s.verification_status === 'rejected').length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                          <XCircle className="h-5 w-5 text-red-600" />
+                          Rejected ({additionalServices.filter((s: any) => s.verification_status === 'rejected').length})
+                        </h3>
+                        <div className="space-y-3">
+                          {additionalServices
+                            .filter((s: any) => s.verification_status === 'rejected')
+                            .map((service: any) => (
+                              <Card key={service.id} className="border-red-500/30">
+                                <CardContent className="p-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="h-10 w-10 rounded-lg bg-red-500/10 flex items-center justify-center text-xl">
+                                        {service.category?.icon || "📋"}
+                                      </div>
+                                      <div>
+                                        <h4 className="font-semibold">{service.service_type}</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                          by {service.provider?.business_name || 'Unknown Provider'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Badge variant="destructive">
+                                      Rejected
+                                    </Badge>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </TabsContent>
