@@ -265,28 +265,69 @@ const AdminDashboard = () => {
     }
   };
 
-  // Revoke rejection to allow re-application (without deleting provider record)
+  // Revoke rejection / reinstate deleted provider
   const handleRevokeRejection = async (providerId: string) => {
     if (!user) return;
 
     setIsProcessing(true);
     try {
-      // Instead of deleting the provider (can fail due to foreign key relationships),
-      // simply clear the rejection reason so the user can resubmit their application.
-      const { error } = await supabase
+      // Fetch the current provider record to decide whether this is a user-deletion reinstatement
+      const { data: providerRow, error: providerFetchError } = await supabase
         .from("service_providers")
-        .update({
-          rejection_reason: null,
-          reviewed_at: null,
-        })
-        .eq("id", providerId);
+        .select("id, user_id, rejection_reason, status, is_verified")
+        .eq("id", providerId)
+        .single();
 
-      if (error) throw error;
+      if (providerFetchError) throw providerFetchError;
 
-      toast({
-        title: "Rejection revoked",
-        description: "The user can now resubmit their provider application.",
-      });
+      const wasUserDeleted = (providerRow.rejection_reason || "").includes(
+        "User deleted their provider account"
+      );
+
+      if (wasUserDeleted) {
+        // Reinstate: restore to approved so the user doesn't see the "Provider Account Deleted" gate.
+        const { error: reinstateError } = await supabase
+          .from("service_providers")
+          .update({
+            status: "approved",
+            rejection_reason: null,
+            reviewed_at: new Date().toISOString(),
+            is_verified: providerRow.is_verified ?? true,
+          })
+          .eq("id", providerId);
+
+        if (reinstateError) throw reinstateError;
+
+        // Ensure provider role exists (safe no-op if already present)
+        await supabase.from("user_roles").upsert(
+          {
+            user_id: providerRow.user_id,
+            role: "provider",
+          },
+          { onConflict: "user_id,role" }
+        );
+
+        toast({
+          title: "Provider reinstated",
+          description: "The provider can access their dashboard again.",
+        });
+      } else {
+        // For normal rejections, just clear review fields so they can resubmit in the application flow.
+        const { error } = await supabase
+          .from("service_providers")
+          .update({
+            rejection_reason: null,
+            reviewed_at: null,
+          })
+          .eq("id", providerId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Rejection revoked",
+          description: "The user can now resubmit their provider application.",
+        });
+      }
 
       refetch();
       refetchTickets();
@@ -294,7 +335,7 @@ const AdminDashboard = () => {
       console.error("Revoke rejection error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to revoke rejection. Please try again.",
+        description: error.message || "Failed to update provider. Please try again.",
         variant: "destructive",
       });
     } finally {
