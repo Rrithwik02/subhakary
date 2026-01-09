@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, X, Upload, FileText, Check, Clock, AlertCircle, Trash2 } from "lucide-react";
+import { Plus, X, Upload, FileText, Check, Clock, AlertCircle, Trash2, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +31,19 @@ interface AdditionalService {
   description: string;
   category_id: string | null;
   verification_status: string | null;
+  min_price: number;
+  max_price: number;
   category?: ServiceCategory;
 }
 
 interface AdditionalServicesManagerProps {
   providerId: string;
   primaryCategoryId?: string;
+}
+
+interface ServicePricing {
+  min_price: number;
+  max_price: number;
 }
 
 export const AdditionalServicesManager = ({ 
@@ -47,6 +55,7 @@ export const AdditionalServicesManager = ({
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<{ [categoryId: string]: File[] }>({});
+  const [servicePricing, setServicePricing] = useState<{ [categoryId: string]: ServicePricing }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch all service categories
@@ -99,11 +108,32 @@ export const AdditionalServicesManager = ({
   );
 
   const handleCategoryToggle = (categoryId: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(categoryId)
+    setSelectedCategories(prev => {
+      const newCategories = prev.includes(categoryId)
         ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-    );
+        : [...prev, categoryId];
+      
+      // Initialize pricing when selecting
+      if (!prev.includes(categoryId)) {
+        setServicePricing(p => ({
+          ...p,
+          [categoryId]: { min_price: 0, max_price: 0 }
+        }));
+      }
+      
+      return newCategories;
+    });
+  };
+
+  const handlePricingChange = (categoryId: string, field: 'min_price' | 'max_price', value: string) => {
+    const numValue = parseInt(value) || 0;
+    setServicePricing(prev => ({
+      ...prev,
+      [categoryId]: {
+        ...(prev[categoryId] || { min_price: 0, max_price: 0 }),
+        [field]: numValue
+      }
+    }));
   };
 
   const handleFileUpload = (categoryId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,6 +190,8 @@ export const AdditionalServicesManager = ({
         const category = categories.find(c => c.id === categoryId);
         if (!category) continue;
 
+        const pricing = servicePricing[categoryId] || { min_price: 0, max_price: 0 };
+
         // Create additional service entry
         const { data: service, error: serviceError } = await supabase
           .from("additional_services")
@@ -169,8 +201,8 @@ export const AdditionalServicesManager = ({
             description: `Additional service: ${category.name}`,
             category_id: categoryId,
             verification_status: "pending",
-            min_price: 0,
-            max_price: 0,
+            min_price: pricing.min_price,
+            max_price: pricing.max_price,
           })
           .select()
           .single();
@@ -210,6 +242,7 @@ export const AdditionalServicesManager = ({
       setAddDialogOpen(false);
       setSelectedCategories([]);
       setUploadedFiles({});
+      setServicePricing({});
       refetch();
       queryClient.invalidateQueries({ queryKey: ["additional-services", providerId] });
     } catch (error: any) {
@@ -278,11 +311,22 @@ export const AdditionalServicesManager = ({
                 key={service.id} 
                 className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
               >
-                <div className="flex items-center gap-3">
-                  <div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium">{service.category?.name || service.service_type}</p>
                     {getStatusBadge(service.verification_status)}
                   </div>
+                  {(service.min_price > 0 || service.max_price > 0) && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                      <IndianRupee className="h-3 w-3" />
+                      {service.min_price > 0 && service.max_price > 0 
+                        ? `₹${service.min_price.toLocaleString('en-IN')} - ₹${service.max_price.toLocaleString('en-IN')}`
+                        : service.min_price > 0 
+                          ? `From ₹${service.min_price.toLocaleString('en-IN')}`
+                          : `Up to ₹${service.max_price.toLocaleString('en-IN')}`
+                      }
+                    </p>
+                  )}
                 </div>
                 <Button
                   variant="ghost"
@@ -364,6 +408,28 @@ export const AdditionalServicesManager = ({
                         <div className="flex items-center justify-between mb-3">
                           <span className="font-medium">{category?.name}</span>
                           <Badge variant="outline">Required</Badge>
+                        </div>
+
+                        {/* Pricing inputs */}
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Min Price (₹)</Label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              value={servicePricing[categoryId]?.min_price || ""}
+                              onChange={(e) => handlePricingChange(categoryId, 'min_price', e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Max Price (₹)</Label>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              value={servicePricing[categoryId]?.max_price || ""}
+                              onChange={(e) => handlePricingChange(categoryId, 'max_price', e.target.value)}
+                            />
+                          </div>
                         </div>
                         
                         {/* Upload area */}
