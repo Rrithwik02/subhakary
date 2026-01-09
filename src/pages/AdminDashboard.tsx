@@ -265,79 +265,29 @@ const AdminDashboard = () => {
     }
   };
 
-  // Revoke rejection to allow re-application
+  // Revoke rejection to allow re-application (without deleting provider record)
   const handleRevokeRejection = async (providerId: string) => {
+    if (!user) return;
+
     setIsProcessing(true);
     try {
-      // Close any related support tickets (update, not delete - FK allows NULL)
-      await supabase
-        .from("support_tickets")
-        .update({ 
-          status: "closed", 
-          closed_at: new Date().toISOString(), 
-          closed_by: user?.id,
-          provider_application_id: null 
-        })
-        .eq("provider_application_id", providerId);
-
-      // Delete related additional services
-      await supabase
-        .from("additional_services")
-        .delete()
-        .eq("provider_id", providerId);
-
-      // Delete related documents
-      await supabase
-        .from("provider_documents")
-        .delete()
-        .eq("provider_id", providerId);
-
-      // Delete related service bundles and their items
-      const { data: bundles } = await supabase
-        .from("service_bundles")
-        .select("id")
-        .eq("provider_id", providerId);
-      
-      if (bundles && bundles.length > 0) {
-        const bundleIds = bundles.map(b => b.id);
-        await supabase.from("bundle_items").delete().in("bundle_id", bundleIds);
-        await supabase.from("bundle_bookings").delete().in("bundle_id", bundleIds);
-        await supabase.from("service_bundles").delete().eq("provider_id", providerId);
-      }
-
-      // Delete other related records
-      await supabase.from("favorites").delete().eq("provider_id", providerId);
-      await supabase.from("service_provider_availability").delete().eq("provider_id", providerId);
-      await supabase.from("service_requests").delete().eq("provider_id", providerId);
-      await supabase.from("quotation_requests").delete().eq("provider_id", providerId);
-      await supabase.from("payouts").delete().eq("provider_id", providerId);
-      await supabase.from("provider_payment_details").delete().eq("provider_id", providerId);
-      await supabase.from("chat_connections").delete().eq("provider_id", providerId);
-      
-      // Handle inquiry conversations - delete messages first
-      const { data: conversations } = await supabase
-        .from("inquiry_conversations")
-        .select("id")
-        .eq("provider_id", providerId);
-      
-      if (conversations && conversations.length > 0) {
-        const conversationIds = conversations.map(c => c.id);
-        await supabase.from("inquiry_messages").delete().in("conversation_id", conversationIds);
-        await supabase.from("inquiry_conversations").delete().eq("provider_id", providerId);
-      }
-
-      // Delete the provider record so they can re-apply
+      // Instead of deleting the provider (can fail due to foreign key relationships),
+      // simply clear the rejection reason so the user can resubmit their application.
       const { error } = await supabase
         .from("service_providers")
-        .delete()
+        .update({
+          rejection_reason: null,
+          reviewed_at: null,
+        })
         .eq("id", providerId);
 
       if (error) throw error;
 
       toast({
         title: "Rejection revoked",
-        description: "The user can now re-apply as a service provider.",
+        description: "The user can now resubmit their provider application.",
       });
+
       refetch();
       refetchTickets();
     } catch (error: any) {
@@ -386,7 +336,12 @@ const AdminDashboard = () => {
 
   const closeTicket = async () => {
     if (!selectedTicket || !user) return;
-    
+
+    const confirmed = window.confirm(
+      "Mark this ticket as resolved and close it? You can still reopen the chat window without closing the ticket using the (X) button."
+    );
+    if (!confirmed) return;
+
     setIsProcessing(true);
     try {
       const { error } = await supabase
@@ -402,6 +357,8 @@ const AdminDashboard = () => {
         toast({ title: "Ticket closed" });
         setSupportChatOpen(false);
         setSelectedTicket(null);
+        setTicketMessages([]);
+        setNewAdminMessage("");
         refetchTickets();
       }
     } finally {
@@ -1603,7 +1560,18 @@ const AdminDashboard = () => {
       </Dialog>
 
       {/* Support Chat Dialog */}
-      <Dialog open={supportChatOpen} onOpenChange={setSupportChatOpen}>
+      <Dialog
+        open={supportChatOpen}
+        onOpenChange={(open) => {
+          setSupportChatOpen(open);
+          if (!open) {
+            // Closing the window should NOT close the ticket.
+            setSelectedTicket(null);
+            setTicketMessages([]);
+            setNewAdminMessage("");
+          }
+        }}
+      >
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1656,8 +1624,13 @@ const AdminDashboard = () => {
                     Send
                   </Button>
                 </div>
-                <Button variant="outline" className="w-full" onClick={closeTicket} disabled={isProcessing}>
-                  Close Ticket
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={closeTicket}
+                  disabled={isProcessing}
+                >
+                  Mark as Resolved (Close Ticket)
                 </Button>
               </div>
             ) : (
