@@ -1,8 +1,13 @@
+# Subhakary Robots.txt
+# https://subhakary.com
+
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -10,5 +15,22 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
 User-agent: *
 Allow: /
+
+# Sitemap location
+Sitemap: https://subhakary.com/sitemap.xml
+
+# Disallow admin and private pages
+Disallow: /admin
+Disallow: /provider-dashboard
+Disallow: /my-bookings
+Disallow: /profile
+Disallow: /chat
+Disallow: /booking/
