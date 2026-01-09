@@ -7,6 +7,24 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
+    <!-- Google Search Console Verification -->
+    <!-- Replace YOUR_VERIFICATION_CODE with your actual Google Search Console verification code -->
+    <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
+    
+    <!-- Google Analytics 4 -->
+    <!-- Replace G-XXXXXXXXXX with your actual GA4 Measurement ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX', {
+        page_title: document.title,
+        page_location: window.location.href,
+        send_page_view: true
+      });
+    </script>
+    
     <!-- Primary SEO Meta Tags -->
     <title>Subhakary - Book Photographers, Poojaris, Makeup Artists, Caterers Near You | India</title>
     <meta name="description" content="Find and book trusted photographers near me, poojaris near me, makeup artists near me, mehandi artists near me, decorators near me, caterers near me, function halls near me, and event managers near me. Book verified professionals for weddings, poojas & events across India." />
@@ -26,7 +44,7 @@
     <meta property="og:url" content="https://subhakary.com/" />
     <meta property="og:title" content="Subhakary - Book Photographers, Poojaris, Makeup Artists Near You" />
     <meta property="og:description" content="Find trusted photographers near me, poojaris near me, makeup artists near me, decorators near me, caterers near me. Book verified professionals for weddings & events across India." />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property:og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     <meta property="og:locale" content="en_IN" />
     <meta property="og:site_name" content="Subhakary" />
 
@@ -46,6 +64,8 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    <link rel="preconnect" href="https://www.google-analytics.com" />
     
     <!-- JSON-LD Structured Data for Local Business & Services -->
     <script type="application/ld+json">
