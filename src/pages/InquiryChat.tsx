@@ -9,6 +9,7 @@ import { InquiryChatWindow } from "@/components/InquiryChatWindow";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { trackChatStarted } from "@/lib/analytics";
 
 const InquiryChat = () => {
   const { providerId } = useParams();
@@ -78,6 +79,15 @@ const InquiryChat = () => {
         .single();
 
       if (error) throw error;
+      
+      // Track chat started for new conversations
+      if (provider) {
+        trackChatStarted({
+          providerId: providerId,
+          providerName: provider.business_name,
+        });
+      }
+      
       setConversationId(newConvo.id);
       return newConvo;
     },

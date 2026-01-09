@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
+import { trackContactFormSubmit } from "@/lib/analytics";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -84,6 +85,7 @@ const Contact = () => {
 
       if (error) throw error;
 
+      trackContactFormSubmit();
       toast.success("Thank you! We've received your message and will get back to you soon.");
       setFormData({ name: "", email: "", phone: "", message: "" });
     } catch (error) {

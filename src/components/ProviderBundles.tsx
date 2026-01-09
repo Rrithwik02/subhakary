@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { trackBundleBooking } from "@/lib/analytics";
 
 interface ProviderBundlesProps {
   providerId: string;
@@ -96,6 +97,15 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
       });
 
       if (error) throw error;
+
+      // Track bundle booking
+      trackBundleBooking({
+        bundleId: selectedBundle.id,
+        bundleName: selectedBundle.bundle_name,
+        providerId,
+        providerName,
+        price: selectedBundle.discounted_price,
+      });
 
       toast({
         title: "Package booking request sent!",

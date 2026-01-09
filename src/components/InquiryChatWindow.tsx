@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { cn } from "@/lib/utils";
+import { trackMessageSent, trackBookingInquiry } from "@/lib/analytics";
 
 interface InquiryChatWindowProps {
   conversationId: string;
@@ -183,6 +184,12 @@ export const InquiryChatWindow = ({
       });
 
       if (error) throw error;
+      
+      // Track message sent
+      trackMessageSent({
+        providerId,
+        conversationId,
+      });
     },
     onSuccess: () => {
       setMessage("");

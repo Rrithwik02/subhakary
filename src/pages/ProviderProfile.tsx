@@ -44,6 +44,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { trackProviderView, trackProviderContact, trackBookingRequest } from "@/lib/analytics";
 
 const ProviderProfile = () => {
   const { id } = useParams();
@@ -125,6 +126,17 @@ const ProviderProfile = () => {
         .eq("status", "approved")
         .maybeSingle();
       if (error) throw error;
+      
+      // Track provider view when data is loaded
+      if (data) {
+        trackProviderView({
+          providerId: data.id,
+          providerName: data.business_name,
+          category: data.category?.name,
+          city: data.city || undefined,
+        });
+      }
+      
       return data;
     },
     enabled: !!id,
@@ -203,6 +215,14 @@ const ProviderProfile = () => {
       });
 
       if (error) throw error;
+
+      // Track successful booking request
+      trackBookingRequest({
+        providerId: id!,
+        providerName: provider?.business_name || '',
+        totalDays,
+        serviceDate: format(bookingDate, "yyyy-MM-dd"),
+      });
 
       toast({
         title: "Booking request sent!",
@@ -490,7 +510,14 @@ const ProviderProfile = () => {
                 <Button
                   className="flex-1 h-10 touch-manipulation active:scale-[0.98] transition-transform text-sm"
                   variant="outline"
-                  onClick={() => navigate(`/inquiry/${provider.id}`)}
+                  onClick={() => {
+                    trackProviderContact({
+                      providerId: provider.id,
+                      providerName: provider.business_name,
+                      contactMethod: 'chat',
+                    });
+                    navigate(`/inquiry/${provider.id}`);
+                  }}
                 >
                   <MessageCircle className="mr-1.5 h-4 w-4" />
                   Chat
@@ -575,7 +602,14 @@ const ProviderProfile = () => {
                     <Button
                       className="w-full"
                       variant="outline"
-                      onClick={() => navigate(`/inquiry/${provider.id}`)}
+                      onClick={() => {
+                        trackProviderContact({
+                          providerId: provider.id,
+                          providerName: provider.business_name,
+                          contactMethod: 'chat',
+                        });
+                        navigate(`/inquiry/${provider.id}`);
+                      }}
                     >
                       <MessageCircle className="mr-2 h-4 w-4" />
                       Chat Now
