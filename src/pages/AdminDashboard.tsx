@@ -269,6 +269,63 @@ const AdminDashboard = () => {
   const handleRevokeRejection = async (providerId: string) => {
     setIsProcessing(true);
     try {
+      // Close any related support tickets (update, not delete - FK allows NULL)
+      await supabase
+        .from("support_tickets")
+        .update({ 
+          status: "closed", 
+          closed_at: new Date().toISOString(), 
+          closed_by: user?.id,
+          provider_application_id: null 
+        })
+        .eq("provider_application_id", providerId);
+
+      // Delete related additional services
+      await supabase
+        .from("additional_services")
+        .delete()
+        .eq("provider_id", providerId);
+
+      // Delete related documents
+      await supabase
+        .from("provider_documents")
+        .delete()
+        .eq("provider_id", providerId);
+
+      // Delete related service bundles and their items
+      const { data: bundles } = await supabase
+        .from("service_bundles")
+        .select("id")
+        .eq("provider_id", providerId);
+      
+      if (bundles && bundles.length > 0) {
+        const bundleIds = bundles.map(b => b.id);
+        await supabase.from("bundle_items").delete().in("bundle_id", bundleIds);
+        await supabase.from("bundle_bookings").delete().in("bundle_id", bundleIds);
+        await supabase.from("service_bundles").delete().eq("provider_id", providerId);
+      }
+
+      // Delete other related records
+      await supabase.from("favorites").delete().eq("provider_id", providerId);
+      await supabase.from("service_provider_availability").delete().eq("provider_id", providerId);
+      await supabase.from("service_requests").delete().eq("provider_id", providerId);
+      await supabase.from("quotation_requests").delete().eq("provider_id", providerId);
+      await supabase.from("payouts").delete().eq("provider_id", providerId);
+      await supabase.from("provider_payment_details").delete().eq("provider_id", providerId);
+      await supabase.from("chat_connections").delete().eq("provider_id", providerId);
+      
+      // Handle inquiry conversations - delete messages first
+      const { data: conversations } = await supabase
+        .from("inquiry_conversations")
+        .select("id")
+        .eq("provider_id", providerId);
+      
+      if (conversations && conversations.length > 0) {
+        const conversationIds = conversations.map(c => c.id);
+        await supabase.from("inquiry_messages").delete().in("conversation_id", conversationIds);
+        await supabase.from("inquiry_conversations").delete().eq("provider_id", providerId);
+      }
+
       // Delete the provider record so they can re-apply
       const { error } = await supabase
         .from("service_providers")
@@ -277,12 +334,6 @@ const AdminDashboard = () => {
 
       if (error) throw error;
 
-      // Close any related support tickets
-      await supabase
-        .from("support_tickets")
-        .update({ status: "closed", closed_at: new Date().toISOString(), closed_by: user?.id })
-        .eq("provider_application_id", providerId);
-
       toast({
         title: "Rejection revoked",
         description: "The user can now re-apply as a service provider.",
@@ -290,9 +341,10 @@ const AdminDashboard = () => {
       refetch();
       refetchTickets();
     } catch (error: any) {
+      console.error("Revoke rejection error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to revoke rejection. Please try again.",
         variant: "destructive",
       });
     } finally {

@@ -143,7 +143,8 @@ const BecomeProvider = () => {
             .from("support_tickets")
             .select("*, messages:support_ticket_messages(*)")
             .eq("provider_application_id", data.id)
-            .eq("status", "open")
+            .order("created_at", { ascending: false })
+            .limit(1)
             .maybeSingle();
           
           if (ticket) {
@@ -240,11 +241,11 @@ const BecomeProvider = () => {
     }
   };
 
-  // Subscribe to new messages
+  // Subscribe to new messages and ticket status changes
   useEffect(() => {
     if (!existingTicket) return;
     
-    const channel = supabase
+    const messagesChannel = supabase
       .channel('support-messages')
       .on(
         'postgres_changes',
@@ -259,11 +260,35 @@ const BecomeProvider = () => {
         }
       )
       .subscribe();
+
+    // Subscribe to ticket status updates
+    const ticketChannel = supabase
+      .channel('ticket-status')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'support_tickets',
+          filter: `id=eq.${existingTicket.id}`,
+        },
+        (payload) => {
+          // Update ticket status in local state
+          setExistingTicket((prev: any) => prev ? {
+            ...prev,
+            status: payload.new.status,
+            closed_at: payload.new.closed_at,
+            closed_by: payload.new.closed_by,
+          } : null);
+        }
+      )
+      .subscribe();
     
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(ticketChannel);
     };
-  }, [existingTicket]);
+  }, [existingTicket?.id]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
