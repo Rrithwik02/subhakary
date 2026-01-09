@@ -31,6 +31,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { StateCitySelect } from "@/components/StateCitySelect";
 import { PincodeLookup } from "@/components/PincodeLookup";
 import logo from "@/assets/logo.png";
+import { trackProviderApplicationSubmit } from "@/lib/analytics";
 
 interface ServiceCategory {
   id: string;
@@ -375,6 +376,13 @@ const BecomeProvider = () => {
       toast({
         title: "Application submitted!",
         description: "Your provider application is under review. We'll notify you once it's processed.",
+      });
+
+      // Track provider application submission
+      const selectedCategory = categories.find(c => c.id === formData.categoryId);
+      trackProviderApplicationSubmit({
+        businessName: formData.businessName,
+        category: selectedCategory?.name,
       });
 
       setExistingApplication({
