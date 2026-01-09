@@ -51,6 +51,7 @@ export type Database = {
       }
       additional_services: {
         Row: {
+          category_id: string | null
           created_at: string | null
           description: string
           id: string
@@ -64,8 +65,12 @@ export type Database = {
           status: string | null
           subcategory: string | null
           updated_at: string | null
+          verification_status: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
+          category_id?: string | null
           created_at?: string | null
           description: string
           id?: string
@@ -79,8 +84,12 @@ export type Database = {
           status?: string | null
           subcategory?: string | null
           updated_at?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          category_id?: string | null
           created_at?: string | null
           description?: string
           id?: string
@@ -94,8 +103,18 @@ export type Database = {
           status?: string | null
           subcategory?: string | null
           updated_at?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "additional_services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "additional_services_provider_id_fkey"
             columns: ["provider_id"]
@@ -1161,6 +1180,7 @@ export type Database = {
           id: string
           provider_id: string
           rejection_reason: string | null
+          service_category_id: string | null
           verification_status: string | null
           verified: boolean | null
           verified_at: string | null
@@ -1174,6 +1194,7 @@ export type Database = {
           id?: string
           provider_id: string
           rejection_reason?: string | null
+          service_category_id?: string | null
           verification_status?: string | null
           verified?: boolean | null
           verified_at?: string | null
@@ -1187,6 +1208,7 @@ export type Database = {
           id?: string
           provider_id?: string
           rejection_reason?: string | null
+          service_category_id?: string | null
           verification_status?: string | null
           verified?: boolean | null
           verified_at?: string | null
@@ -1198,6 +1220,13 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_documents_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
             referencedColumns: ["id"]
           },
         ]

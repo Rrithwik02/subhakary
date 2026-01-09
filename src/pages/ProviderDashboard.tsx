@@ -54,6 +54,7 @@ import { ProviderBundleManager } from "@/components/ProviderBundleManager";
 import BookingCalendar from "@/components/BookingCalendar";
 import { CompletionDetailsForm } from "@/components/CompletionDetailsForm";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
+import { AdditionalServicesManager } from "@/components/AdditionalServicesManager";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600" },
@@ -767,6 +768,11 @@ const ProviderDashboard = () => {
                 <ProviderAvailabilityManager providerId={provider.id} />
 
                 <ProviderBundleManager providerId={provider.id} />
+
+                <AdditionalServicesManager 
+                  providerId={provider.id} 
+                  primaryCategoryId={provider.category_id || undefined}
+                />
 
                 {/* Danger Zone */}
                 <Card className="border-destructive/50">
