@@ -26,6 +26,8 @@ import { CustomerVerificationDialog } from "@/components/CustomerVerificationDia
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileMyBookings from "@/components/mobile/MobileMyBookings";
 
 const statusConfig = {
   pending: {
@@ -56,9 +58,15 @@ const statusConfig = {
 };
 
 const MyBookings = () => {
+  const isMobile = useMobileLayout();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Return mobile version if on mobile
+  if (isMobile) {
+    return <MobileMyBookings />;
+  }
   
   const [reviewBooking, setReviewBooking] = useState<{
     id: string;

@@ -4,6 +4,7 @@ import { Home, Search, Calendar, MessageSquare, User, LayoutDashboard } from "lu
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useHaptics } from "@/hooks/useHaptics";
 
 interface NavItem {
   icon: React.ElementType;
@@ -16,6 +17,7 @@ interface NavItem {
 export const MobileBottomNav = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const { lightImpact } = useHaptics();
 
   // Check if user is an approved provider
   const { data: isApprovedProvider } = useQuery({
@@ -49,6 +51,10 @@ export const MobileBottomNav = () => {
     return location.pathname.startsWith(path);
   };
 
+  const handleNavClick = () => {
+    lightImpact();
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-area-inset-bottom md:hidden">
       <div className="flex items-center justify-around h-16 px-2">
@@ -62,6 +68,7 @@ export const MobileBottomNav = () => {
               <Link
                 key={item.path}
                 to="/auth"
+                onClick={handleNavClick}
                 className="flex flex-col items-center justify-center flex-1 h-full touch-active"
               >
                 <div className="relative flex flex-col items-center">
@@ -78,6 +85,7 @@ export const MobileBottomNav = () => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={handleNavClick}
               className="flex flex-col items-center justify-center flex-1 h-full touch-active"
             >
               <div className="relative flex flex-col items-center">

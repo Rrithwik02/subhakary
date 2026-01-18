@@ -45,9 +45,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { trackProviderView, trackProviderContact, trackBookingRequest } from "@/lib/analytics";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileProviderProfile from "@/components/mobile/MobileProviderProfile";
 
 const ProviderProfile = () => {
+  const isMobile = useMobileLayout();
   const { id } = useParams();
+  
+  // Return mobile version if on mobile
+  if (isMobile) {
+    return <MobileProviderProfile />;
+  }
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();

@@ -35,6 +35,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { indianStates, getCitiesByState } from "@/data/indianLocations";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import { MobileProviders } from "@/components/mobile/MobileProviders";
 
 // Areas for cities (used when a city is selected)
 const CITY_AREAS: Record<string, string[]> = {
@@ -46,8 +48,14 @@ const CITY_AREAS: Record<string, string[]> = {
 };
 
 const Providers = () => {
+  const isMobile = useMobileLayout();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // Return mobile version if on mobile
+  if (isMobile) {
+    return <MobileProviders />;
+  }
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
