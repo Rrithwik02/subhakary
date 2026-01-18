@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ComparisonProvider } from "@/hooks/useProviderComparison";
 import { AdminRoute } from "@/components/AdminRoute";
 import { CompareBar } from "@/components/CompareBar";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeProvider from "./pages/BecomeProvider";
@@ -32,6 +33,7 @@ import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import Notifications from "./pages/Notifications";
 import Compare from "./pages/Compare";
+import Install from "./pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -69,9 +71,11 @@ const App = () => (
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/compare" element={<Compare />} />
+              <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CompareBar />
+            <PWAInstallPrompt />
           </BrowserRouter>
         </TooltipProvider>
       </ComparisonProvider>
