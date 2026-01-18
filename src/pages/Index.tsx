@@ -11,10 +11,10 @@ import { MobileHome } from "@/components/mobile/MobileHome";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 
 const Index = () => {
-  const isNativeApp = useMobileLayout();
+  const isMobileLayout = useMobileLayout();
 
-  // Show mobile-specific layout only for native Capacitor apps
-  if (isNativeApp) {
+  // Show mobile-specific layout for native apps, PWAs, and mobile browsers
+  if (isMobileLayout) {
     return <MobileHome />;
   }
 
