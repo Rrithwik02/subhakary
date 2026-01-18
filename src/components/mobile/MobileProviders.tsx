@@ -334,7 +334,7 @@ export const MobileProviders = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (user) {
-                            toggleFavorite(provider.id);
+                            toggleFavorite.mutate(provider.id);
                           } else {
                             navigate("/auth");
                           }
