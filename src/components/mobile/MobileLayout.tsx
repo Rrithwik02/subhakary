@@ -2,13 +2,14 @@ import { ReactNode } from "react";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { MobileHeader } from "./MobileHeader";
 
-interface MobileLayoutProps {
+export interface MobileLayoutProps {
   children: ReactNode;
   title?: string;
   showBackButton?: boolean;
   showNotifications?: boolean;
   rightAction?: ReactNode;
   hideHeader?: boolean;
+  hideNav?: boolean;
 }
 
 export const MobileLayout = ({
@@ -18,6 +19,7 @@ export const MobileLayout = ({
   showNotifications = true,
   rightAction,
   hideHeader = false,
+  hideNav = false,
 }: MobileLayoutProps) => {
   return (
     <div className="min-h-screen bg-background md:hidden">
@@ -29,10 +31,10 @@ export const MobileLayout = ({
           rightAction={rightAction}
         />
       )}
-      <main className={`pb-20 ${!hideHeader ? 'pt-16' : ''}`}>
+      <main className={`${!hideNav ? 'pb-20' : ''} ${!hideHeader ? 'pt-16' : ''}`}>
         {children}
       </main>
-      <MobileBottomNav />
+      {!hideNav && <MobileBottomNav />}
     </div>
   );
 };

@@ -479,11 +479,12 @@ const MobileProviderProfile = () => {
                     <div>
                       <Label className="mb-2 block">Select Date{isMultiDay ? "s" : ""}</Label>
                       <DateRangePicker
-                        date={selectedDate}
+                        singleDate={selectedDate}
                         dateRange={dateRange}
-                        onDateChange={setSelectedDate}
+                        onSingleDateChange={setSelectedDate}
                         onDateRangeChange={setDateRange}
                         isMultiDay={isMultiDay}
+                        onMultiDayToggle={setIsMultiDay}
                       />
                     </div>
 
