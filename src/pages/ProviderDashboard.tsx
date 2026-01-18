@@ -48,6 +48,8 @@ import { ProviderChatSection } from "@/components/ProviderChatSection";
 import { ProviderInquiryChat } from "@/components/ProviderInquiryChat";
 import { ProviderLogoUpload } from "@/components/ProviderLogoUpload";
 import { ProviderPortfolioUpload } from "@/components/ProviderPortfolioUpload";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileProviderDashboard from "@/components/mobile/MobileProviderDashboard";
 import { ProviderProfileEdit } from "@/components/ProviderProfileEdit";
 import { ProviderAvailabilityManager } from "@/components/ProviderAvailabilityManager";
 import { ProviderBundleManager } from "@/components/ProviderBundleManager";
@@ -65,9 +67,15 @@ const statusConfig = {
 };
 
 const ProviderDashboard = () => {
+  const isMobile = useMobileLayout();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Return mobile version if on mobile
+  if (isMobile) {
+    return <MobileProviderDashboard />;
+  }
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);

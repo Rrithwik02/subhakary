@@ -14,8 +14,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileChat from "@/components/mobile/MobileChat";
 
 const Chat = () => {
+  const isMobile = useMobileLayout();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const bookingIdFromUrl = searchParams.get("booking");
@@ -23,6 +26,11 @@ const Chat = () => {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(
     bookingIdFromUrl
   );
+  
+  // Return mobile version if on mobile
+  if (isMobile) {
+    return <MobileChat />;
+  }
 
   useEffect(() => {
     if (!loading && !user) {
