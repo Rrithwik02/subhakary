@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +21,9 @@ export const MobileProviders = () => {
   const { user } = useAuth();
   const { favorites, toggleFavorite } = useFavorites();
   
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || searchParams.get("service") || "");
+  const serviceParam = searchParams.get("service");
+  
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedState, setSelectedState] = useState<string>("all");
   const [selectedCity, setSelectedCity] = useState<string>("all");
@@ -38,13 +40,26 @@ export const MobileProviders = () => {
     },
   });
 
+  // Set initial category from URL param when categories are loaded
+  useEffect(() => {
+    if (serviceParam && categories.length > 0 && selectedCategory === "all") {
+      const matchedCategory = categories.find(
+        (cat) => cat.slug?.toLowerCase() === serviceParam.toLowerCase() ||
+                 cat.name.toLowerCase().includes(serviceParam.toLowerCase())
+      );
+      if (matchedCategory) {
+        setSelectedCategory(matchedCategory.id);
+      }
+    }
+  }, [serviceParam, categories, selectedCategory]);
+
   // Fetch providers
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ["approved-providers"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_providers")
-        .select(`*, category:service_categories(name, icon)`)
+        .select(`*, category:service_categories(name, icon, slug)`)
         .eq("status", "approved")
         .order("rating", { ascending: false });
       if (error) throw error;
@@ -62,6 +77,7 @@ export const MobileProviders = () => {
   const filteredProviders = useMemo(() => {
     let result = [...providers];
 
+    // Text search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -69,14 +85,17 @@ export const MobileProviders = () => {
           p.business_name.toLowerCase().includes(query) ||
           p.description?.toLowerCase().includes(query) ||
           p.city?.toLowerCase().includes(query) ||
-          p.category?.name?.toLowerCase().includes(query)
+          p.category?.name?.toLowerCase().includes(query) ||
+          p.category?.slug?.toLowerCase().includes(query)
       );
     }
 
+    // Category filter
     if (selectedCategory !== "all") {
       result = result.filter((p) => p.category_id === selectedCategory);
     }
 
+    // State filter
     if (selectedState !== "all") {
       const citiesInState = getCitiesByState(selectedState).map((c) => c.toLowerCase());
       result = result.filter((p) =>
@@ -85,6 +104,7 @@ export const MobileProviders = () => {
       );
     }
 
+    // City filter
     if (selectedCity !== "all") {
       result = result.filter((p) =>
         p.city?.toLowerCase().includes(selectedCity.toLowerCase()) ||
