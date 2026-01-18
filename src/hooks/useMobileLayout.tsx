@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 
 export const useMobileLayout = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -9,14 +10,11 @@ export const useMobileLayout = () => {
       setIsMobile(window.innerWidth < 768);
     };
 
-    // Check if running in Capacitor native app
+    // Check if running in Capacitor native app (iOS/Android)
+    // This will only be true when running as a native app, not in mobile browsers
     const checkNative = () => {
-      const isCapacitor = 
-        typeof (window as any).Capacitor !== 'undefined' || 
-        window.location.protocol === 'capacitor:' ||
-        // Check for mobile user agent as fallback for testing
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      setIsNativeApp(isCapacitor);
+      const isNativePlatform = Capacitor.isNativePlatform();
+      setIsNativeApp(isNativePlatform);
     };
 
     checkMobile();
@@ -26,5 +24,6 @@ export const useMobileLayout = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  return { isMobile, isNativeApp, showMobileLayout: isMobile };
+  // Only show mobile layout in native Capacitor apps
+  return isNativeApp;
 };
