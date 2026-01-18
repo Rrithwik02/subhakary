@@ -7,8 +7,18 @@ import { TrustSection } from "@/components/TrustSection";
 import { BlogSection } from "@/components/BlogSection";
 import { Footer } from "@/components/Footer";
 import { AIChatbot } from "@/components/AIChatbot";
+import { MobileHome } from "@/components/mobile/MobileHome";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
 
 const Index = () => {
+  const { showMobileLayout } = useMobileLayout();
+
+  // Show mobile-specific layout for mobile devices
+  if (showMobileLayout) {
+    return <MobileHome />;
+  }
+
+  // Desktop layout
   return (
     <main className="min-h-screen">
       <Navbar />
