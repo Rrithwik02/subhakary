@@ -16,6 +16,7 @@ import ProviderProfile from "./pages/ProviderProfile";
 import MyBookings from "./pages/MyBookings";
 import BookingDetails from "./pages/BookingDetails";
 import ProviderDashboard from "./pages/ProviderDashboard";
+import ProviderSettings from "./pages/ProviderSettings";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/my-bookings" element={<MyBookings />} />
               <Route path="/booking/:bookingId" element={<BookingDetails />} />
               <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+              <Route path="/provider-settings" element={<ProviderSettings />} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/favorites" element={<Favorites />} />

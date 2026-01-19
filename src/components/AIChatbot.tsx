@@ -116,21 +116,34 @@ export const AIChatbot = () => {
 
   return (
     <>
-      {/* Floating Chat Button */}
+      {/* Floating Chat Button - positioned above mobile nav */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-50"
+            className="fixed bottom-6 right-6 z-40 md:z-50 md:bottom-6"
+            style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
           >
-            <Button
-              onClick={() => setIsOpen(true)}
-              className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-            >
-              <MessageCircle className="h-6 w-6" />
-            </Button>
+            {/* On mobile, position above the floating nav */}
+            <div className="md:hidden absolute -bottom-2 right-0" style={{ bottom: '5rem' }}>
+              <Button
+                onClick={() => setIsOpen(true)}
+                className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+              >
+                <MessageCircle className="h-6 w-6" />
+              </Button>
+            </div>
+            {/* Desktop position */}
+            <div className="hidden md:block">
+              <Button
+                onClick={() => setIsOpen(true)}
+                className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+              >
+                <MessageCircle className="h-6 w-6" />
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -142,7 +155,7 @@ export const AIChatbot = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-6rem)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] md:w-[380px] max-w-[380px] h-[calc(100vh-8rem)] md:h-[600px] max-h-[calc(100vh-10rem)] md:max-h-[calc(100vh-6rem)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">

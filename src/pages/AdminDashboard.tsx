@@ -25,6 +25,7 @@ import {
   MessageSquare,
   RotateCcw,
   Layers,
+  LogOut,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -56,7 +57,7 @@ const statusColors = {
 };
 
 const AdminDashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -889,16 +890,28 @@ const AdminDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="flex items-center gap-3 mb-8">
-              <Shield className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-                  Admin Dashboard
-                </h1>
-                <p className="text-muted-foreground">
-                  Manage provider applications and platform settings
-                </p>
+            <div className="flex items-center justify-between gap-3 mb-8">
+              <div className="flex items-center gap-3">
+                <Shield className="h-8 w-8 text-primary" />
+                <div>
+                  <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+                    Admin Dashboard
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Manage provider applications and platform settings
+                  </p>
+                </div>
               </div>
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  await signOut();
+                  navigate("/");
+                }}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
 
             {/* Stats */}

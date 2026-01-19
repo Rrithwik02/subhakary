@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Camera, User, Mail, Phone, MapPin, Save, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { Camera, User, Mail, Phone, MapPin, Save, Loader2, Trash2, AlertTriangle, LogOut } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -261,12 +261,27 @@ const Profile = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
-              My Profile
-            </h1>
-            <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">
-              Manage your personal information and preferences
-            </p>
+            <div className="flex items-center justify-between mb-6 md:mb-8">
+              <div>
+                <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
+                  My Profile
+                </h1>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  Manage your personal information and preferences
+                </p>
+              </div>
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  await signOut();
+                  navigate("/");
+                }}
+                className="hidden md:flex"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
 
             <Card>
               <CardHeader className="p-4 md:p-6">
@@ -428,6 +443,23 @@ const Profile = () => {
               twoFactorEnabled={profile?.two_factor_enabled || false}
               onUpdate={() => refetch()}
             />
+
+            {/* Sign Out - Mobile */}
+            <Card className="md:hidden">
+              <CardContent className="p-4">
+                <Button 
+                  variant="outline"
+                  onClick={async () => {
+                    await signOut();
+                    navigate("/");
+                  }}
+                  className="w-full"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Danger Zone */}
             <Card className="border-destructive/50">

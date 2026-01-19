@@ -56,62 +56,86 @@ export const MobileBottomNav = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border safe-area-inset-bottom md:hidden">
-      <div className="flex items-center justify-around h-16 px-2">
-        {navItems.map((item) => {
-          const active = isActive(item.path);
-          const Icon = item.icon;
+    <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden safe-area-inset-bottom">
+      <div className="bg-[#2d4a4a] backdrop-blur-xl rounded-full shadow-lg mx-auto max-w-sm">
+        <div className="flex items-center justify-around h-14 px-3">
+          {navItems.map((item, index) => {
+            const active = isActive(item.path);
+            const Icon = item.icon;
+            const isCenter = index === 2; // Center item (Bookings)
 
-          // Skip auth-required items for non-logged users
-          if (item.requiresAuth && !user && item.path !== "/auth") {
+            // Skip auth-required items for non-logged users
+            if (item.requiresAuth && !user && item.path !== "/auth") {
+              return (
+                <Link
+                  key={item.path}
+                  to="/auth"
+                  onClick={handleNavClick}
+                  className="flex flex-col items-center justify-center flex-1 h-full touch-active"
+                >
+                  <div className="relative flex flex-col items-center">
+                    <Icon className="w-5 h-5 text-white/60" />
+                    <span className="text-[9px] mt-0.5 text-white/60 font-medium">
+                      {item.label}
+                    </span>
+                  </div>
+                </Link>
+              );
+            }
+
+            // Center button with golden highlight
+            if (isCenter) {
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={handleNavClick}
+                  className="flex flex-col items-center justify-center flex-1 h-full touch-active -mt-4"
+                >
+                  <motion.div
+                    className="relative flex items-center justify-center"
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg border-4 border-[#2d4a4a]">
+                      <Icon className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                  </motion.div>
+                </Link>
+              );
+            }
+
             return (
               <Link
                 key={item.path}
-                to="/auth"
+                to={item.path}
                 onClick={handleNavClick}
                 className="flex flex-col items-center justify-center flex-1 h-full touch-active"
               >
                 <div className="relative flex flex-col items-center">
-                  <Icon className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-[10px] mt-1 text-muted-foreground font-medium">
+                  {active && (
+                    <motion.div
+                      layoutId="activeTabMobile"
+                      className="absolute -inset-1.5 bg-white/10 rounded-lg"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <Icon 
+                    className={`w-5 h-5 relative z-10 transition-colors ${
+                      active ? "text-primary" : "text-white/70"
+                    }`} 
+                  />
+                  <span 
+                    className={`text-[9px] mt-0.5 relative z-10 font-medium transition-colors ${
+                      active ? "text-primary" : "text-white/60"
+                    }`}
+                  >
                     {item.label}
                   </span>
                 </div>
               </Link>
             );
-          }
-
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={handleNavClick}
-              className="flex flex-col items-center justify-center flex-1 h-full touch-active"
-            >
-              <div className="relative flex flex-col items-center">
-                {active && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute -top-1 left-1/2 -translate-x-1/2 w-10 h-10 bg-primary/10 rounded-full"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <Icon 
-                  className={`w-5 h-5 relative z-10 transition-colors ${
-                    active ? "text-primary" : "text-muted-foreground"
-                  }`} 
-                />
-                <span 
-                  className={`text-[10px] mt-1 relative z-10 font-medium transition-colors ${
-                    active ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
+          })}
+        </div>
       </div>
     </nav>
   );
