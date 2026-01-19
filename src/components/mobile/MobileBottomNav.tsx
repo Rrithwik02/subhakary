@@ -57,7 +57,7 @@ export const MobileBottomNav = () => {
 
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden safe-area-inset-bottom">
-      <div className="bg-[#2d4a4a] backdrop-blur-xl rounded-full shadow-lg mx-auto max-w-sm">
+      <div className="bg-brown/95 backdrop-blur-xl rounded-full shadow-lg mx-auto max-w-sm">
         <div className="flex items-center justify-around h-14 px-3">
           {navItems.map((item, index) => {
             const active = isActive(item.path);
@@ -96,7 +96,7 @@ export const MobileBottomNav = () => {
                     className="relative flex items-center justify-center"
                     whileTap={{ scale: 0.95 }}
                   >
-                    <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg border-4 border-[#2d4a4a]">
+                    <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg border-4 border-brown">
                       <Icon className="w-5 h-5 text-primary-foreground" />
                     </div>
                   </motion.div>
