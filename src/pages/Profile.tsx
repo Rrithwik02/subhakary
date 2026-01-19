@@ -15,6 +15,8 @@ import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileProfile from "@/components/mobile/MobileProfile";
 import { z } from "zod";
 
 const profileSchema = z.object({
@@ -25,6 +27,11 @@ const profileSchema = z.object({
 });
 
 const Profile = () => {
+  const isMobile = useMobileLayout();
+
+  if (isMobile) {
+    return <MobileProfile />;
+  }
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

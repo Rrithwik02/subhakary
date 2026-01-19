@@ -49,6 +49,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminProviderDetailDialog } from "@/components/AdminProviderDetailDialog";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileAdminDashboard from "@/components/mobile/MobileAdminDashboard";
 
 const statusColors = {
   pending: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
@@ -57,6 +59,11 @@ const statusColors = {
 };
 
 const AdminDashboard = () => {
+  const isMobile = useMobileLayout();
+
+  if (isMobile) {
+    return <MobileAdminDashboard />;
+  }
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
