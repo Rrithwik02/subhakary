@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Star,
   MessageCircle,
+  LogOut,
 } from "lucide-react";
 import { MobileLayout } from "./MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ const statusConfig = {
 type TabType = "pending" | "active" | "history";
 
 const MobileProviderDashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -527,15 +528,29 @@ const MobileProviderDashboard = () => {
           )}
 
           {/* Settings Link */}
-          <Button
-            variant="outline"
-            className="w-full mt-6 h-12"
-            onClick={() => navigate("/provider-dashboard")}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Full Dashboard & Settings
-            <ChevronRight className="h-4 w-4 ml-auto" />
-          </Button>
+          <div className="space-y-3 mt-6">
+            <Button
+              variant="outline"
+              className="w-full h-12"
+              onClick={() => navigate("/provider-settings")}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+              <ChevronRight className="h-4 w-4 ml-auto" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              className="w-full h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={async () => {
+                await signOut();
+                navigate("/");
+              }}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </div>
     </MobileLayout>

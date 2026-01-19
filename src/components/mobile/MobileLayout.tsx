@@ -31,7 +31,7 @@ export const MobileLayout = ({
           rightAction={rightAction}
         />
       )}
-      <main className={`${!hideNav ? 'pb-20' : ''} ${!hideHeader ? 'pt-16' : ''}`}>
+      <main className={`${!hideNav ? 'pb-24' : ''} ${!hideHeader ? 'pt-16' : ''}`}>
         {children}
       </main>
       {!hideNav && <MobileBottomNav />}
