@@ -140,7 +140,36 @@ const Providers = () => {
       const { data, error } = await supabase
         .from("service_providers")
         .select(`
-          *,
+          id,
+          business_name,
+          city,
+          secondary_city,
+          service_cities,
+          description,
+          rating,
+          total_reviews,
+          is_verified,
+          is_premium,
+          experience_years,
+          specializations,
+          languages,
+          portfolio_images,
+          portfolio_link,
+          category_id,
+          subcategory,
+          service_type,
+          pricing_info,
+          base_price,
+          requires_advance_payment,
+          advance_payment_percentage,
+          travel_charges_applicable,
+          advance_booking_days,
+          logo_url,
+          availability_status,
+          facebook_url,
+          instagram_url,
+          youtube_url,
+          website_url,
           category:service_categories(name, icon)
         `)
         .eq("status", "approved")
@@ -219,11 +248,10 @@ const Providers = () => {
       );
     }
 
-    // Area filter (search in city or address)
+    // Area filter (search in city or service_cities - address is private)
     if (selectedArea !== "all") {
       result = result.filter((p) =>
         p.city?.toLowerCase().includes(selectedArea.toLowerCase()) ||
-        p.address?.toLowerCase().includes(selectedArea.toLowerCase()) ||
         p.service_cities?.some((c: string) => c.toLowerCase().includes(selectedArea.toLowerCase()))
       );
     }

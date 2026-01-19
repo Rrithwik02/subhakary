@@ -124,10 +124,41 @@ const ProviderProfile = () => {
   const { data: provider, isLoading } = useQuery({
     queryKey: ["provider", id],
     queryFn: async () => {
+      // Fetch public provider info (excludes sensitive fields like whatsapp_number, address)
       const { data, error } = await supabase
         .from("service_providers")
         .select(`
-          *,
+          id,
+          business_name,
+          city,
+          secondary_city,
+          service_cities,
+          description,
+          rating,
+          total_reviews,
+          is_verified,
+          is_premium,
+          experience_years,
+          specializations,
+          languages,
+          portfolio_images,
+          portfolio_link,
+          category_id,
+          subcategory,
+          service_type,
+          pricing_info,
+          base_price,
+          requires_advance_payment,
+          advance_payment_percentage,
+          travel_charges_applicable,
+          advance_booking_days,
+          logo_url,
+          availability_status,
+          facebook_url,
+          instagram_url,
+          youtube_url,
+          website_url,
+          user_id,
           category:service_categories(name, icon, description)
         `)
         .eq("id", id)

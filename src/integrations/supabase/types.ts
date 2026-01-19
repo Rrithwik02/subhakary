@@ -119,6 +119,13 @@ export type Database = {
             foreignKeyName: "additional_services_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "additional_services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -333,6 +340,13 @@ export type Database = {
             foreignKeyName: "bookings_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -509,6 +523,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_connections_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
             referencedColumns: ["id"]
           },
           {
@@ -733,6 +754,13 @@ export type Database = {
             foreignKeyName: "favorites_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -779,6 +807,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inquiry_conversations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
             referencedColumns: ["id"]
           },
           {
@@ -1115,6 +1150,13 @@ export type Database = {
             foreignKeyName: "payouts_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1219,6 +1261,13 @@ export type Database = {
             foreignKeyName: "provider_documents_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_documents_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1272,6 +1321,13 @@ export type Database = {
           upi_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "provider_payment_details_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "provider_payment_details_provider_id_fkey"
             columns: ["provider_id"]
@@ -1341,6 +1397,13 @@ export type Database = {
             foreignKeyName: "quotation_requests_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotation_requests_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1401,6 +1464,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: true
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
             referencedColumns: ["id"]
           },
           {
@@ -1505,6 +1575,13 @@ export type Database = {
             foreignKeyName: "service_bundles_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_bundles_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1575,6 +1652,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "service_provider_availability_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_provider_availability_provider_id_fkey"
             columns: ["provider_id"]
@@ -1776,6 +1860,13 @@ export type Database = {
             foreignKeyName: "service_requests_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1897,6 +1988,13 @@ export type Database = {
             foreignKeyName: "support_tickets_provider_application_id_fkey"
             columns: ["provider_application_id"]
             isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_provider_application_id_fkey"
+            columns: ["provider_application_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1963,7 +2061,119 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_service_providers: {
+        Row: {
+          advance_booking_days: number | null
+          advance_payment_percentage: number | null
+          base_price: number | null
+          business_name: string | null
+          category_id: string | null
+          city: string | null
+          created_at: string | null
+          description: string | null
+          experience_years: number | null
+          facebook_url: string | null
+          id: string | null
+          instagram_url: string | null
+          is_premium: boolean | null
+          is_verified: boolean | null
+          languages: string[] | null
+          logo_url: string | null
+          portfolio_images: string[] | null
+          portfolio_link: string | null
+          pricing_info: string | null
+          rating: number | null
+          requires_advance_payment: boolean | null
+          secondary_city: string | null
+          service_cities: string[] | null
+          service_type: string | null
+          specializations: string[] | null
+          status: Database["public"]["Enums"]["provider_status"] | null
+          subcategory: string | null
+          total_reviews: number | null
+          travel_charges_applicable: boolean | null
+          updated_at: string | null
+          website_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          advance_booking_days?: number | null
+          advance_payment_percentage?: number | null
+          base_price?: number | null
+          business_name?: string | null
+          category_id?: string | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          experience_years?: number | null
+          facebook_url?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          is_premium?: boolean | null
+          is_verified?: boolean | null
+          languages?: string[] | null
+          logo_url?: string | null
+          portfolio_images?: string[] | null
+          portfolio_link?: string | null
+          pricing_info?: string | null
+          rating?: number | null
+          requires_advance_payment?: boolean | null
+          secondary_city?: string | null
+          service_cities?: string[] | null
+          service_type?: string | null
+          specializations?: string[] | null
+          status?: Database["public"]["Enums"]["provider_status"] | null
+          subcategory?: string | null
+          total_reviews?: number | null
+          travel_charges_applicable?: boolean | null
+          updated_at?: string | null
+          website_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          advance_booking_days?: number | null
+          advance_payment_percentage?: number | null
+          base_price?: number | null
+          business_name?: string | null
+          category_id?: string | null
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          experience_years?: number | null
+          facebook_url?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          is_premium?: boolean | null
+          is_verified?: boolean | null
+          languages?: string[] | null
+          logo_url?: string | null
+          portfolio_images?: string[] | null
+          portfolio_link?: string | null
+          pricing_info?: string | null
+          rating?: number | null
+          requires_advance_payment?: boolean | null
+          secondary_city?: string | null
+          service_cities?: string[] | null
+          service_type?: string | null
+          specializations?: string[] | null
+          status?: Database["public"]["Enums"]["provider_status"] | null
+          subcategory?: string | null
+          total_reviews?: number | null
+          travel_charges_applicable?: boolean | null
+          updated_at?: string | null
+          website_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_providers_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_access_chat_message: {
@@ -1972,6 +2182,13 @@ export type Database = {
       }
       can_access_otp: { Args: { p_user_id: string }; Returns: boolean }
       claim_admin_invitation: { Args: { p_token: string }; Returns: boolean }
+      get_provider_contact_info: {
+        Args: { provider_uuid: string }
+        Returns: {
+          address: string
+          whatsapp_number: string
+        }[]
+      }
       get_public_provider_info: {
         Args: { provider_uuid: string }
         Returns: {
