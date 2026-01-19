@@ -96,12 +96,51 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Rate limiting check
-  const rateLimitKey = getRateLimitKey(req);
+  // JWT verification - require authentication for AI chat
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(
+      JSON.stringify({ error: "Authentication required to use AI chat" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Validate JWT token
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Missing Supabase configuration");
+    return new Response(
+      JSON.stringify({ error: "Service configuration error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } }
+  });
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+  
+  if (claimsError || !claimsData?.claims) {
+    console.warn("Invalid JWT token:", claimsError?.message);
+    return new Response(
+      JSON.stringify({ error: "Invalid or expired authentication token" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const userId = claimsData.claims.sub;
+  console.log(`Authenticated AI chat request from user: ${userId}`);
+
+  // Rate limiting check - now includes user ID for better tracking
+  const rateLimitKey = `${userId}-${getRateLimitKey(req)}`;
   const rateLimit = checkRateLimit(rateLimitKey);
   
   if (!rateLimit.allowed) {
-    console.warn(`Rate limit exceeded for key: ${rateLimitKey.slice(0, 10)}...`);
+    console.warn(`Rate limit exceeded for user: ${userId}`);
     return new Response(
       JSON.stringify({ error: "Too many requests. Please wait a moment before trying again." }),
       {
