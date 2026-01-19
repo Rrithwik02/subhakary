@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Search, Calendar, MessageSquare, User, LayoutDashboard } from "lucide-react";
+import { Home, Search, Plus, MessageSquare, User, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,7 +38,7 @@ export const MobileBottomNav = () => {
   const navItems: NavItem[] = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Search, label: "Discover", path: "/providers" },
-    { icon: Calendar, label: "Bookings", path: "/my-bookings", requiresAuth: true },
+    { icon: Plus, label: "New Booking", path: "/providers", requiresAuth: false },
     { icon: MessageSquare, label: "Messages", path: "/chat", requiresAuth: true },
     ...(isApprovedProvider 
       ? [{ icon: LayoutDashboard, label: "Dashboard", path: "/provider-dashboard", requiresAuth: true, providerOnly: true }]
