@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Search, Plus, MessageSquare, User, LayoutDashboard } from "lucide-react";
+import { Home, Heart, Plus, MessageSquare, User, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,7 +37,7 @@ export const MobileBottomNav = () => {
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Home", path: "/" },
-    { icon: Search, label: "Discover", path: "/providers" },
+    { icon: Heart, label: "Favorites", path: "/favorites", requiresAuth: true },
     { icon: Plus, label: "New Booking", path: "/providers", requiresAuth: false },
     { icon: MessageSquare, label: "Messages", path: "/chat", requiresAuth: true },
     ...(isApprovedProvider 
@@ -62,7 +62,7 @@ export const MobileBottomNav = () => {
           {navItems.map((item, index) => {
             const active = isActive(item.path);
             const Icon = item.icon;
-            const isCenter = index === 2; // Center item (Bookings)
+            const isCenter = index === 2; // Center item (New Booking)
 
             // Skip auth-required items for non-logged users
             if (item.requiresAuth && !user && item.path !== "/auth") {

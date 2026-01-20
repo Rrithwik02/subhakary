@@ -35,6 +35,7 @@ import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import MobileProviderSettings from "@/components/mobile/MobileProviderSettings";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 
 const ProviderSettings = () => {
@@ -43,6 +44,10 @@ const ProviderSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useMobileLayout();
+
+  if (isMobile) {
+    return <MobileProviderSettings />;
+  }
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
