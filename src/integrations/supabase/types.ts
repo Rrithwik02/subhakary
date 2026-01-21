@@ -1284,41 +1284,50 @@ export type Database = {
         Row: {
           account_holder_name: string | null
           account_number: string | null
+          account_number_encrypted: string | null
           bank_name: string | null
           created_at: string | null
           id: string
           ifsc_code: string | null
+          ifsc_code_encrypted: string | null
           payment_method: string
           provider_id: string
           qr_code_url: string | null
           updated_at: string | null
           upi_id: string | null
+          upi_id_encrypted: string | null
         }
         Insert: {
           account_holder_name?: string | null
           account_number?: string | null
+          account_number_encrypted?: string | null
           bank_name?: string | null
           created_at?: string | null
           id?: string
           ifsc_code?: string | null
+          ifsc_code_encrypted?: string | null
           payment_method: string
           provider_id: string
           qr_code_url?: string | null
           updated_at?: string | null
           upi_id?: string | null
+          upi_id_encrypted?: string | null
         }
         Update: {
           account_holder_name?: string | null
           account_number?: string | null
+          account_number_encrypted?: string | null
           bank_name?: string | null
           created_at?: string | null
           id?: string
           ifsc_code?: string | null
+          ifsc_code_encrypted?: string | null
           payment_method?: string
           provider_id?: string
           qr_code_url?: string | null
           updated_at?: string | null
           upi_id?: string | null
+          upi_id_encrypted?: string | null
         }
         Relationships: [
           {
@@ -2182,11 +2191,29 @@ export type Database = {
       }
       can_access_otp: { Args: { p_user_id: string }; Returns: boolean }
       claim_admin_invitation: { Args: { p_token: string }; Returns: boolean }
+      decrypt_payment_field: { Args: { ciphertext: string }; Returns: string }
+      encrypt_payment_field: { Args: { plaintext: string }; Returns: string }
       get_provider_contact_info: {
         Args: { provider_uuid: string }
         Returns: {
           address: string
           whatsapp_number: string
+        }[]
+      }
+      get_provider_payment_details: {
+        Args: { p_provider_id: string }
+        Returns: {
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          created_at: string
+          id: string
+          ifsc_code: string
+          payment_method: string
+          provider_id: string
+          qr_code_url: string
+          updated_at: string
+          upi_id: string
         }[]
       }
       get_public_provider_info: {
