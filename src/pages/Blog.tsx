@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowRight, Search, ArrowLeft } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -9,6 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { blogPosts, blogCategories } from "@/data/blogData";
+
+// Scroll to top when page loads
+const useScrollToTop = () => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -24,6 +31,7 @@ const itemVariants = {
 };
 
 const Blog = () => {
+  useScrollToTop();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const selectedCategory = searchParams.get("category") || "";

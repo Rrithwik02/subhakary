@@ -1,4 +1,5 @@
 import { useParams, Link, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, ArrowLeft, Share2, Bookmark, User } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
@@ -12,6 +13,11 @@ import ReactMarkdown from "react-markdown";
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const post = blogPosts.find((p) => p.slug === slug);
+
+  // Scroll to top when blog post loads or slug changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [slug]);
 
   if (!post) {
     return <Navigate to="/blog" replace />;
