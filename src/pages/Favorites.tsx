@@ -10,11 +10,19 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileFavorites from "@/components/mobile/MobileFavorites";
 
 const Favorites = () => {
+  const isMobile = useMobileLayout();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { favorites, isLoading } = useFavorites();
+
+  // Return mobile version if on mobile
+  if (isMobile) {
+    return <MobileFavorites />;
+  }
 
   useEffect(() => {
     if (!loading && !user) {
