@@ -56,7 +56,7 @@ export const MobileBottomNav = () => {
   };
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden safe-area-inset-bottom">
+    <nav className="fixed bottom-4 left-4 right-4 z-50 lg:hidden safe-area-inset-bottom">
       <div className="bg-brown/95 backdrop-blur-xl rounded-full shadow-lg mx-auto max-w-sm">
         <div className="flex items-center justify-around h-14 px-3">
           {navItems.map((item, index) => {

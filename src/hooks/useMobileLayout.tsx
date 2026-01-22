@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 
-const MOBILE_BREAKPOINT = 768;
+// Treat tablets as part of the “app-like” mobile experience
+const MOBILE_BREAKPOINT = 1024;
 
 export const useMobileLayout = () => {
   const [isMobile, setIsMobile] = useState<boolean>(() => {

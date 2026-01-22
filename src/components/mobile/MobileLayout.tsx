@@ -22,7 +22,7 @@ export const MobileLayout = ({
   hideNav = false,
 }: MobileLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background md:hidden">
+    <div className="min-h-screen bg-background lg:hidden">
       {!hideHeader && (
         <MobileHeader
           title={title}
