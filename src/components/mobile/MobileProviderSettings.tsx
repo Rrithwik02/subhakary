@@ -387,6 +387,32 @@ const MobileProviderSettings = () => {
             </CardContent>
           </Card>
 
+          {/* Become a Provider CTA - shown when user is not an approved provider */}
+          {!provider && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Briefcase className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm">Become a Service Provider</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Offer your services and grow your business
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate("/become-provider")}
+                  >
+                    Apply
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Business Details */}
           {provider && (
             <Card>
