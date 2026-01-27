@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Camera, User, Mail, Phone, MapPin, Save, Loader2, Trash2, AlertTriangle, LogOut } from "lucide-react";
+import { Camera, User, Mail, Phone, MapPin, Save, Loader2, Trash2, AlertTriangle, LogOut, Briefcase, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -450,6 +450,32 @@ const Profile = () => {
               twoFactorEnabled={profile?.two_factor_enabled || false}
               onUpdate={() => refetch()}
             />
+
+            {/* Become a Provider CTA - shown when user is not a provider */}
+            {!providerProfile && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Briefcase className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold">Become a Service Provider</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Offer your services on our platform and grow your business
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => navigate("/become-provider")}
+                      className="flex-shrink-0"
+                    >
+                      Apply Now
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Sign Out - Mobile */}
             <Card className="md:hidden">
