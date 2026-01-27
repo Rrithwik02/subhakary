@@ -25,6 +25,7 @@ import {
   AlertCircle,
   LayoutDashboard,
   Briefcase,
+  ShieldCheck,
 } from "lucide-react";
 import { MobileLayout } from "./MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -142,7 +143,19 @@ const MobileProfile = () => {
     enabled: !!user,
   });
 
-  // Fetch bookings
+  // Check if user is an admin
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("has_role", {
+        _user_id: user!.id,
+        _role: "admin",
+      });
+      if (error) return false;
+      return data;
+    },
+    enabled: !!user,
+  });
   const { data: bookings = [], refetch: refetchBookings } = useQuery({
     queryKey: ["my-bookings", user?.id],
     queryFn: async () => {
@@ -465,6 +478,16 @@ const MobileProfile = () => {
             >
               {/* Quick Actions */}
               <div className="grid grid-cols-2 gap-3">
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    className="h-auto py-3 flex-col gap-1 border-green-500/30 bg-green-500/5"
+                    onClick={() => navigate("/admin")}
+                  >
+                    <ShieldCheck className="h-5 w-5 text-green-600" />
+                    <span className="text-xs text-green-600">Admin Dashboard</span>
+                  </Button>
+                )}
                 {providerProfile?.status === "approved" && (
                   <Button
                     variant="outline"

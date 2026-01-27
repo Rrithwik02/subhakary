@@ -9,7 +9,8 @@ import {
   AlertCircle,
   ChevronRight,
   X,
-  MessageSquare
+  MessageSquare,
+  ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { MobileLayout } from "@/components/mobile/MobileLayout";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +34,7 @@ import { StateCitySelect } from "@/components/StateCitySelect";
 import { PincodeLookup } from "@/components/PincodeLookup";
 import logo from "@/assets/logo.png";
 import { trackProviderApplicationSubmit } from "@/lib/analytics";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
 
 interface ServiceCategory {
   id: string;
@@ -48,6 +51,7 @@ interface ProviderApplication {
 }
 
 const BecomeProvider = () => {
+  const isMobile = useMobileLayout();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -473,6 +477,15 @@ const BecomeProvider = () => {
   };
 
   if (authLoading) {
+    if (isMobile) {
+      return (
+        <MobileLayout hideHeader>
+          <div className="flex items-center justify-center h-[60vh]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </MobileLayout>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -480,275 +493,386 @@ const BecomeProvider = () => {
     );
   }
 
+  // Status content component (shared between mobile and desktop)
+  const StatusContent = () => (
+    <motion.div
+      key={existingApplication!.status}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`glass-card rounded-2xl ${isMobile ? 'p-6' : 'p-8'} text-center`}
+    >
+      {existingApplication!.status === "pending" && (
+        <>
+          <div className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6`}>
+            <Clock className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} text-primary`} />
+          </div>
+          <h1 className={`font-display ${isMobile ? 'text-xl' : 'text-2xl'} font-semibold text-foreground mb-4`}>
+            Application Under Review
+          </h1>
+          <p className="text-muted-foreground mb-6 text-sm">
+            Your application for "{existingApplication!.business_name}" is currently being reviewed by our team. 
+            We'll notify you via email once a decision has been made.
+          </p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+            <Clock className="w-4 h-4" />
+            Pending Review
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mt-4"
+            onClick={checkExistingApplication}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? "Refreshing..." : "Refresh Status"}
+          </Button>
+        </>
+      )}
+      
+      {existingApplication!.status === "approved" && (
+        <>
+          <div className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} mx-auto rounded-full gradient-gold flex items-center justify-center mb-6`}>
+            <Check className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} text-brown-dark`} />
+          </div>
+          <h1 className={`font-display ${isMobile ? 'text-xl' : 'text-2xl'} font-semibold text-foreground mb-4`}>
+            Congratulations! 🎉
+          </h1>
+          <p className="text-muted-foreground mb-6 text-sm">
+            Your provider application has been approved! You can now access your provider dashboard 
+            to manage your services and bookings.
+          </p>
+          <Button variant="gold" className="rounded-full" onClick={() => navigate("/provider/dashboard")}>
+            Go to Dashboard
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
+        </>
+      )}
+      
+      {existingApplication!.status === "rejected" && (
+        <>
+          <div className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-6`}>
+            <AlertCircle className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} text-destructive`} />
+          </div>
+          
+          {existingApplication!.rejection_reason?.includes("User deleted their provider account") ? (
+            <>
+              <h1 className={`font-display ${isMobile ? 'text-xl' : 'text-2xl'} font-semibold text-foreground mb-4`}>
+                Provider Account Deleted
+              </h1>
+              <p className="text-muted-foreground mb-6 text-sm">
+                You previously deleted your service provider account. If you would like to register again, 
+                please contact our support team to get your account reinstated.
+              </p>
+              <Button
+                variant="gold"
+                className="w-full rounded-full"
+                onClick={openSupportChat}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Contact Support to Re-register
+              </Button>
+              <p className="text-xs text-muted-foreground mt-4">
+                Our support team will help you reactivate your provider account.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className={`font-display ${isMobile ? 'text-xl' : 'text-2xl'} font-semibold text-foreground mb-4`}>
+                Application Not Approved
+              </h1>
+              <p className="text-muted-foreground mb-4 text-sm">
+                Unfortunately, your application was not approved at this time. You can update your documents and resubmit.
+              </p>
+              {existingApplication!.rejection_reason && (
+                <div className="bg-destructive/10 rounded-lg p-4 mb-6 text-left">
+                  <p className="text-sm font-medium text-destructive mb-1">Feedback:</p>
+                  <p className="text-sm text-foreground">{existingApplication!.rejection_reason}</p>
+                </div>
+              )}
+              <div className="space-y-3">
+                <Button
+                  variant="gold"
+                  className="w-full rounded-full"
+                  onClick={() => {
+                    setIsResubmitting(true);
+                    setFormData({
+                      businessName: existingApplication!.business_name,
+                      categoryId: "",
+                      additionalCategoryIds: [],
+                      description: "",
+                      experienceYears: "",
+                      languages: [],
+                      state: "",
+                      city: "",
+                      address: "",
+                      pricingInfo: "",
+                      phone: "",
+                    });
+                    setUploadedFiles([]);
+                    setStep(1);
+                  }}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Resubmit Application
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={openSupportChat}
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Contact Support Team
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Address the feedback above and resubmit, or chat with our support team.
+              </p>
+            </>
+          )}
+        </>
+      )}
+    </motion.div>
+  );
+
+  // Support chat dialog (shared)
+  const SupportChatDialog = () => (
+    <Dialog open={supportChatOpen} onOpenChange={setSupportChatOpen}>
+      <DialogContent className="max-w-lg max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Support Chat
+          </DialogTitle>
+          <DialogDescription>
+            Chat with our support team about your application.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="flex flex-col h-[400px]">
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-3">
+              {supportMessages.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No messages yet. Start a conversation with our support team.
+                </p>
+              ) : (
+                supportMessages.map((msg, i) => (
+                  <div
+                    key={msg.id || i}
+                    className={`flex ${msg.is_admin ? "justify-start" : "justify-end"}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                        msg.is_admin
+                          ? "bg-muted text-foreground"
+                          : "bg-primary text-primary-foreground"
+                      }`}
+                    >
+                      {msg.message}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+          
+          {existingTicket?.status === 'open' ? (
+            <div className="flex gap-2 mt-4 pt-4 border-t">
+              <Input
+                placeholder="Type your message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendSupportMessage()}
+              />
+              <Button onClick={sendSupportMessage} disabled={sendingMessage || !newMessage.trim()}>
+                Send
+              </Button>
+            </div>
+          ) : existingTicket ? (
+            <p className="text-sm text-muted-foreground text-center pt-4 border-t mt-4">
+              This conversation has been closed.
+            </p>
+          ) : (
+            <div className="flex gap-2 mt-4 pt-4 border-t">
+              <Input
+                placeholder="Type your message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendSupportMessage()}
+              />
+              <Button onClick={sendSupportMessage} disabled={sendingMessage || !newMessage.trim()}>
+                Send
+              </Button>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   // Show status if application exists and not resubmitting
   if (existingApplication && !isResubmitting) {
+    if (isMobile) {
+      return (
+        <MobileLayout hideHeader>
+          {/* Mobile Header */}
+          <div className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="h-10 w-10 rounded-full bg-muted flex items-center justify-center"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="font-semibold">Application Status</h1>
+          </div>
+          
+          <div className="p-4 pb-24">
+            <StatusContent />
+          </div>
+          
+          <SupportChatDialog />
+        </MobileLayout>
+      );
+    }
+
     return (
       <>
         <Navbar />
         <div className="min-h-screen bg-background pt-24 pb-12 px-4">
           <div className="max-w-2xl mx-auto">
-            <motion.div
-              key={existingApplication.status}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-card rounded-2xl p-8 text-center"
-            >
-              {existingApplication.status === "pending" && (
-                <>
-                  <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                    <Clock className="w-10 h-10 text-primary" />
-                  </div>
-                  <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
-                    Application Under Review
-                  </h1>
-                  <p className="text-muted-foreground mb-6">
-                    Your application for "{existingApplication.business_name}" is currently being reviewed by our team. 
-                    We'll notify you via email once a decision has been made.
-                  </p>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                    <Clock className="w-4 h-4" />
-                    Pending Review
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="mt-4"
-                    onClick={checkExistingApplication}
-                    disabled={isRefreshing}
-                  >
-                    {isRefreshing ? "Refreshing..." : "Refresh Status"}
-                  </Button>
-                </>
-              )}
-              
-              {existingApplication.status === "approved" && (
-                <>
-                  <div className="w-20 h-20 mx-auto rounded-full gradient-gold flex items-center justify-center mb-6">
-                    <Check className="w-10 h-10 text-brown-dark" />
-                  </div>
-                  <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
-                    Congratulations! 🎉
-                  </h1>
-                  <p className="text-muted-foreground mb-6">
-                    Your provider application has been approved! You can now access your provider dashboard 
-                    to manage your services and bookings.
-                  </p>
-                  <Button variant="gold" className="rounded-full" onClick={() => navigate("/provider/dashboard")}>
-                    Go to Dashboard
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </>
-              )}
-              
-              {existingApplication.status === "rejected" && (
-                <>
-                  <div className="w-20 h-20 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-6">
-                    <AlertCircle className="w-10 h-10 text-destructive" />
-                  </div>
-                  
-                  {/* Check if this was a user-initiated deletion */}
-                  {existingApplication.rejection_reason?.includes("User deleted their provider account") ? (
-                    <>
-                      <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
-                        Provider Account Deleted
-                      </h1>
-                      <p className="text-muted-foreground mb-6">
-                        You previously deleted your service provider account. If you would like to register again, 
-                        please contact our support team to get your account reinstated.
-                      </p>
-                      <Button
-                        variant="gold"
-                        className="w-full rounded-full"
-                        onClick={openSupportChat}
-                      >
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Contact Support to Re-register
-                      </Button>
-                      <p className="text-xs text-muted-foreground mt-4">
-                        Our support team will help you reactivate your provider account.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
-                        Application Not Approved
-                      </h1>
-                      <p className="text-muted-foreground mb-4">
-                        Unfortunately, your application was not approved at this time. You can update your documents and resubmit.
-                      </p>
-                      {existingApplication.rejection_reason && (
-                        <div className="bg-destructive/10 rounded-lg p-4 mb-6 text-left">
-                          <p className="text-sm font-medium text-destructive mb-1">Feedback:</p>
-                          <p className="text-sm text-foreground">{existingApplication.rejection_reason}</p>
-                        </div>
-                      )}
-                      <div className="space-y-3">
-                        <Button
-                          variant="gold"
-                          className="w-full rounded-full"
-                          onClick={() => {
-                            setIsResubmitting(true);
-                            setFormData({
-                              businessName: existingApplication.business_name,
-                              categoryId: "",
-                              additionalCategoryIds: [],
-                              description: "",
-                              experienceYears: "",
-                              languages: [],
-                              state: "",
-                              city: "",
-                              address: "",
-                              pricingInfo: "",
-                              phone: "",
-                            });
-                            setUploadedFiles([]);
-                            setStep(1);
-                          }}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Resubmit Application
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={openSupportChat}
-                        >
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          Contact Support Team
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-4">
-                        Address the feedback above and resubmit, or chat with our support team.
-                      </p>
-                    </>
-                  )}
-                </>
-              )}
-            </motion.div>
+            <StatusContent />
           </div>
         </div>
-
-        {/* Support Chat Dialog */}
-        <Dialog open={supportChatOpen} onOpenChange={setSupportChatOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Support Chat
-              </DialogTitle>
-              <DialogDescription>
-                Chat with our support team about your application.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="flex flex-col h-[400px]">
-              <ScrollArea className="flex-1 pr-4">
-                <div className="space-y-3">
-                  {supportMessages.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">
-                      No messages yet. Start a conversation with our support team.
-                    </p>
-                  ) : (
-                    supportMessages.map((msg, i) => (
-                      <div
-                        key={msg.id || i}
-                        className={`flex ${msg.is_admin ? "justify-start" : "justify-end"}`}
-                      >
-                        <div
-                          className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                            msg.is_admin
-                              ? "bg-muted text-foreground"
-                              : "bg-primary text-primary-foreground"
-                          }`}
-                        >
-                          {msg.message}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-              
-              {existingTicket?.status === 'open' ? (
-                <div className="flex gap-2 mt-4 pt-4 border-t">
-                  <Input
-                    placeholder="Type your message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && sendSupportMessage()}
-                  />
-                  <Button onClick={sendSupportMessage} disabled={sendingMessage || !newMessage.trim()}>
-                    Send
-                  </Button>
-                </div>
-              ) : existingTicket ? (
-                <p className="text-sm text-muted-foreground text-center pt-4 border-t mt-4">
-                  This conversation has been closed.
-                </p>
-              ) : (
-                <div className="flex gap-2 mt-4 pt-4 border-t">
-                  <Input
-                    placeholder="Type your message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && sendSupportMessage()}
-                  />
-                  <Button onClick={sendSupportMessage} disabled={sendingMessage || !newMessage.trim()}>
-                    Send
-                  </Button>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
+        <SupportChatDialog />
         <Footer />
       </>
     );
   }
 
-  return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-background pt-24 pb-12 px-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="font-display text-3xl font-semibold text-foreground mb-2">
-              Become a Service Provider
-            </h1>
-            <p className="text-muted-foreground">
-              Join our network of trusted professionals and grow your business
-            </p>
-          </div>
+  // Terms Dialog component (shared between mobile and desktop)
+  const TermsDialog = () => (
+    <Dialog open={termsDialogOpen} onOpenChange={setTermsDialogOpen}>
+      <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>Terms of Service</DialogTitle>
+          <DialogDescription>
+            Please read our terms carefully before registering.
+          </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="h-[60vh] pr-4">
+          <div className="prose prose-sm max-w-none space-y-6">
+            <section>
+              <h3 className="font-semibold text-foreground">1. Acceptance of Terms</h3>
+              <p className="text-muted-foreground text-sm">
+                By accessing and using Subhakary's website and services, you agree to be bound by these Terms of Service.
+              </p>
+            </section>
 
-          {/* Progress Steps */}
-          <div className="flex items-center justify-center gap-4 mb-8">
+            <section>
+              <h3 className="font-semibold text-foreground">2. Service Provider Terms</h3>
+              <p className="text-muted-foreground text-sm">
+                If you register as a service provider, you additionally agree to:
+              </p>
+              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                <li>Provide accurate information about your services, qualifications, and pricing</li>
+                <li>Maintain all necessary licenses and certifications</li>
+                <li>Deliver services as described and agreed upon with customers</li>
+                <li>Respond to booking requests and inquiries in a timely manner</li>
+                <li>Comply with all applicable laws and regulations</li>
+                <li>Not engage in fraudulent or misleading practices</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-foreground">3. Document Verification</h3>
+              <p className="text-muted-foreground text-sm">
+                All documents submitted must be authentic and belong to you or your registered business. 
+                Submission of fraudulent documents will result in permanent ban from the platform.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-foreground">4. Booking and Payments</h3>
+              <p className="text-muted-foreground text-sm">
+                Payment terms are agreed upon between you and the customer. Some bookings may require advance payments. 
+                All payments are processed securely through our payment partners.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-foreground">5. Reviews and Ratings</h3>
+              <p className="text-muted-foreground text-sm">
+                Users may leave reviews and ratings for service providers. Service providers may not incentivize 
+                or manipulate reviews in any way.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-foreground">6. Termination</h3>
+              <p className="text-muted-foreground text-sm">
+                We reserve the right to suspend or terminate your account at any time for violation of these terms 
+                or for any other reason at our discretion.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-foreground">7. Contact</h3>
+              <p className="text-muted-foreground text-sm">
+                For questions about these Terms of Service, please contact us at legal@subhakary.com
+              </p>
+            </section>
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+
+  // Mobile Form View
+  if (isMobile) {
+    return (
+      <MobileLayout hideHeader>
+        {/* Mobile Header */}
+        <div className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="h-10 w-10 rounded-full bg-muted flex items-center justify-center"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="flex-1">
+            <h1 className="font-semibold">Become a Service Provider</h1>
+            <p className="text-xs text-muted-foreground">Step {step} of 3</p>
+          </div>
+        </div>
+        
+        <div className="p-4 pb-24">
+          {/* Progress Steps - Mobile */}
+          <div className="flex items-center justify-center gap-2 mb-6">
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center gap-2">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     step >= s
                       ? "gradient-gold text-brown-dark"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {step > s ? <Check className="w-5 h-5" /> : s}
+                  {step > s ? <Check className="w-4 h-4" /> : s}
                 </div>
                 {s < 3 && (
-                  <div className={`w-16 h-1 rounded ${step > s ? "bg-primary" : "bg-muted"}`} />
+                  <div className={`w-8 h-0.5 rounded ${step > s ? "bg-primary" : "bg-muted"}`} />
                 )}
               </div>
             ))}
           </div>
 
-          {/* Form Steps */}
+          {/* Form Steps - Mobile */}
           <motion.div
             key={step}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="glass-card rounded-2xl p-8"
+            className="bg-card rounded-xl border p-4"
           >
             {step === 1 && (
               <div className="space-y-6">
@@ -1165,85 +1289,468 @@ const BecomeProvider = () => {
             )}
           </motion.div>
         </div>
+        
+        <TermsDialog />
+      </MobileLayout>
+    );
+  }
+
+  // Desktop Form View
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-background pt-24 pb-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="font-display text-3xl font-semibold text-foreground mb-2">
+              Become a Service Provider
+            </h1>
+            <p className="text-muted-foreground">
+              Join our network of trusted professionals and grow your business
+            </p>
+          </div>
+
+          {/* Progress Steps */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center gap-2">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${
+                    step >= s
+                      ? "gradient-gold text-brown-dark"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {step > s ? <Check className="w-5 h-5" /> : s}
+                </div>
+                {s < 3 && (
+                  <div className={`w-16 h-1 rounded ${step > s ? "bg-primary" : "bg-muted"}`} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Form Steps */}
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="glass-card rounded-2xl p-8"
+          >
+            {step === 1 && (
+              <div className="space-y-6">
+                <h2 className="font-display text-xl font-semibold">Basic Information</h2>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="businessName">Business Name *</Label>
+                  <Input
+                    id="businessName"
+                    placeholder="e.g., Sri Lakshmi Decorations, Venkat Photography"
+                    value={formData.businessName}
+                    onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter your registered business name exactly as it appears on your documents
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Primary Service Category *</Label>
+                  <select
+                    id="category"
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
+                    value={formData.categoryId}
+                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value, additionalCategoryIds: [] })}
+                  >
+                    <option value="">Select your main category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    This will be your primary service displayed on your profile
+                  </p>
+                </div>
+
+                {formData.categoryId && (
+                  <div className="space-y-2">
+                    <Label>Additional Services (Optional)</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Select other services you can offer. You'll need to provide proof for each.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {categories
+                        .filter(cat => cat.id !== formData.categoryId)
+                        .map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              if (formData.additionalCategoryIds.includes(cat.id)) {
+                                setFormData({
+                                  ...formData,
+                                  additionalCategoryIds: formData.additionalCategoryIds.filter(id => id !== cat.id)
+                                });
+                                const newFiles = { ...additionalServiceFiles };
+                                delete newFiles[cat.id];
+                                setAdditionalServiceFiles(newFiles);
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  additionalCategoryIds: [...formData.additionalCategoryIds, cat.id]
+                                });
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                              formData.additionalCategoryIds.includes(cat.id)
+                                ? "gradient-gold text-brown-dark"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                    </div>
+                    {formData.additionalCategoryIds.length > 0 && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        ⚠️ You'll need to upload proof documents for each additional service in the next step
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="experience">Years of Experience</Label>
+                  <Input
+                    id="experience"
+                    type="number"
+                    placeholder="e.g., 5"
+                    min="0"
+                    max="50"
+                    value={formData.experienceYears}
+                    onChange={(e) => setFormData({ ...formData, experienceYears: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    How many years have you been providing this service?
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Languages Spoken</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {languageOptions.map((lang) => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => toggleLanguage(lang)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                          formData.languages.includes(lang)
+                            ? "gradient-gold text-brown-dark"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Contact Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="e.g., +91 9876543210"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This number will be used for verification and customer inquiries
+                  </p>
+                </div>
+
+                <Button
+                  variant="gold"
+                  className="w-full rounded-full"
+                  onClick={() => setStep(2)}
+                  disabled={!formData.businessName || !formData.categoryId}
+                >
+                  Continue
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-6">
+                <h2 className="font-display text-xl font-semibold">Service Details</h2>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">About Your Services *</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe your services, experience, and what makes you unique..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={4}
+                  />
+                </div>
+
+                <PincodeLookup
+                  onAddressFound={(data) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      state: data.state,
+                      city: data.city,
+                    }));
+                  }}
+                />
+
+                <StateCitySelect
+                  selectedState={formData.state}
+                  selectedCity={formData.city}
+                  onStateChange={(state) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      state,
+                      city: "",
+                    }))
+                  }
+                  onCityChange={(city) => setFormData((prev) => ({ ...prev, city }))}
+                />
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Full Address</Label>
+                  <Textarea
+                    id="address"
+                    placeholder="Your business address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    rows={2}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pricing">Pricing Information *</Label>
+                  <Textarea
+                    id="pricing"
+                    placeholder="e.g., ₹2,000 - ₹20,000 (depending on event size and requirements)"
+                    value={formData.pricingInfo}
+                    onChange={(e) => setFormData({ ...formData, pricingInfo: e.target.value })}
+                    rows={2}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Provide a price range like "₹5,000 - ₹50,000" or describe your packages
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button variant="outline" className="flex-1 rounded-full" onClick={() => setStep(1)}>
+                    Back
+                  </Button>
+                  <Button
+                    variant="gold"
+                    className="flex-1 rounded-full"
+                    onClick={() => setStep(3)}
+                    disabled={!formData.description || !formData.city}
+                  >
+                    Continue
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-6">
+                {isDocumentRequired ? (
+                  <>
+                    <h2 className="font-display text-xl font-semibold">Upload Business Proof Documents</h2>
+                    
+                    <div className="p-4 rounded-lg border bg-muted/20">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-medium">
+                          Primary: {categories.find(c => c.id === formData.categoryId)?.name}
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">Required</span>
+                      </div>
+                      
+                      <div className="bg-muted/50 rounded-lg p-3 mb-3">
+                        <p className="text-xs text-muted-foreground">
+                          Upload GST Certificate, Shop Act License, Trade License, or Business Registration
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                          ⚠️ Business name must match "{formData.businessName}"
+                        </p>
+                      </div>
+
+                      <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                        <input
+                          type="file"
+                          id="documents"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          disabled={uploadedFiles.length >= 1}
+                        />
+                        <label htmlFor="documents" className={`cursor-pointer ${uploadedFiles.length >= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                          <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium text-foreground">
+                            {uploadedFiles.length >= 1 ? 'Document uploaded' : 'Click to upload'}
+                          </p>
+                        </label>
+                      </div>
+
+                      {uploadedFiles.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {uploadedFiles.map((file, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-2 bg-background rounded"
+                            >
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-primary" />
+                                <span className="text-sm truncate max-w-[180px]">{file.name}</span>
+                              </div>
+                              <button onClick={() => removeFile(index)} className="text-muted-foreground hover:text-destructive">
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {formData.additionalCategoryIds.length > 0 && (
+                      <>
+                        <h3 className="font-medium text-lg">Additional Services Proof</h3>
+                        <p className="text-sm text-muted-foreground -mt-4">
+                          Upload portfolio images, equipment invoices, or certificates for each additional service
+                        </p>
+                        
+                        {formData.additionalCategoryIds.map((catId) => {
+                          const category = categories.find(c => c.id === catId);
+                          const files = additionalServiceFiles[catId] || [];
+                          
+                          return (
+                            <div key={catId} className="p-4 rounded-lg border bg-muted/20">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-medium">{category?.name}</span>
+                                <span className="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-600">Required</span>
+                              </div>
+                              
+                              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                                <input
+                                  type="file"
+                                  id={`additional-${catId}`}
+                                  accept=".pdf,.jpg,.jpeg,.png"
+                                  onChange={(e) => {
+                                    const newFiles = e.target.files;
+                                    if (newFiles) {
+                                      setAdditionalServiceFiles(prev => ({
+                                        ...prev,
+                                        [catId]: [...(prev[catId] || []), ...Array.from(newFiles)]
+                                      }));
+                                    }
+                                  }}
+                                  className="hidden"
+                                  multiple
+                                />
+                                <label htmlFor={`additional-${catId}`} className="cursor-pointer">
+                                  <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                                  <p className="text-sm font-medium text-foreground">Click to upload proof</p>
+                                  <p className="text-xs text-muted-foreground">Portfolio, invoices, or certificates</p>
+                                </label>
+                              </div>
+
+                              {files.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                  {files.map((file, index) => (
+                                    <div key={index} className="flex items-center justify-between p-2 bg-background rounded">
+                                      <div className="flex items-center gap-2">
+                                        <FileText className="w-4 h-4 text-primary" />
+                                        <span className="text-sm truncate max-w-[180px]">{file.name}</span>
+                                      </div>
+                                      <button 
+                                        onClick={() => {
+                                          setAdditionalServiceFiles(prev => ({
+                                            ...prev,
+                                            [catId]: prev[catId]?.filter((_, i) => i !== index) || []
+                                          }));
+                                        }}
+                                        className="text-muted-foreground hover:text-destructive"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h2 className="font-display text-xl font-semibold">Review & Submit</h2>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        ✅ <strong>No document required</strong> for Priests/Poojaris. Our team will verify your application through a phone call.
+                      </p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                      <p className="text-sm font-medium text-foreground">Application Summary:</p>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><strong>Business:</strong> {formData.businessName}</li>
+                        <li><strong>Location:</strong> {formData.city}, {formData.state}</li>
+                        <li><strong>Experience:</strong> {formData.experienceYears || "Not specified"} years</li>
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                <div className="flex gap-4">
+                  <Button variant="outline" className="flex-1 rounded-full" onClick={() => setStep(2)}>
+                    Back
+                  </Button>
+                  <Button
+                    variant="gold"
+                    className="flex-1 rounded-full"
+                    onClick={handleSubmit}
+                    disabled={
+                      loading || 
+                      (isDocumentRequired && uploadedFiles.length === 0) ||
+                      formData.additionalCategoryIds.some(catId => !additionalServiceFiles[catId] || additionalServiceFiles[catId].length === 0)
+                    }
+                  >
+                    {loading ? "Submitting..." : "Submit Application"}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  By submitting, you agree to our{" "}
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => setTermsDialogOpen(true)}
+                  >
+                    Terms of Service
+                  </button>{" "}
+                  and Privacy Policy.
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </div>
       </div>
 
-      {/* Terms of Service Dialog */}
-      <Dialog open={termsDialogOpen} onOpenChange={setTermsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>Terms of Service</DialogTitle>
-            <DialogDescription>
-              Please read our terms carefully before registering.
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="h-[60vh] pr-4">
-            <div className="prose prose-sm max-w-none space-y-6">
-              <section>
-                <h3 className="font-semibold text-foreground">1. Acceptance of Terms</h3>
-                <p className="text-muted-foreground text-sm">
-                  By accessing and using Subhakary's website and services, you agree to be bound by these Terms of Service.
-                </p>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-foreground">2. Service Provider Terms</h3>
-                <p className="text-muted-foreground text-sm">
-                  If you register as a service provider, you additionally agree to:
-                </p>
-                <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                  <li>Provide accurate information about your services, qualifications, and pricing</li>
-                  <li>Maintain all necessary licenses and certifications</li>
-                  <li>Deliver services as described and agreed upon with customers</li>
-                  <li>Respond to booking requests and inquiries in a timely manner</li>
-                  <li>Comply with all applicable laws and regulations</li>
-                  <li>Not engage in fraudulent or misleading practices</li>
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-foreground">3. Document Verification</h3>
-                <p className="text-muted-foreground text-sm">
-                  All documents submitted must be authentic and belong to you or your registered business. 
-                  Submission of fraudulent documents will result in permanent ban from the platform.
-                </p>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-foreground">4. Booking and Payments</h3>
-                <p className="text-muted-foreground text-sm">
-                  Payment terms are agreed upon between you and the customer. Some bookings may require advance payments. 
-                  All payments are processed securely through our payment partners.
-                </p>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-foreground">5. Reviews and Ratings</h3>
-                <p className="text-muted-foreground text-sm">
-                  Users may leave reviews and ratings for service providers. Service providers may not incentivize 
-                  or manipulate reviews in any way.
-                </p>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-foreground">6. Termination</h3>
-                <p className="text-muted-foreground text-sm">
-                  We reserve the right to suspend or terminate your account at any time for violation of these terms 
-                  or for any other reason at our discretion.
-                </p>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-foreground">7. Contact</h3>
-                <p className="text-muted-foreground text-sm">
-                  For questions about these Terms of Service, please contact us at legal@subhakary.com
-                </p>
-              </section>
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
-
+      <TermsDialog />
       <Footer />
     </>
   );
