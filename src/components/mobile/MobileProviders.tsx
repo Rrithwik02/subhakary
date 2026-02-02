@@ -53,12 +53,12 @@ export const MobileProviders = () => {
     }
   }, [serviceParam, categories, selectedCategory]);
 
-  // Fetch providers
+  // Fetch providers using public_service_providers view for anonymous access
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ["approved-providers"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("service_providers")
+        .from("public_service_providers")
         .select(`*, category:service_categories(name, icon, slug)`)
         .eq("status", "approved")
         .order("rating", { ascending: false });

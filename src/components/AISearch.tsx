@@ -69,8 +69,9 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
   };
 
   const fetchProviders = async (service: string | null, location: string | null) => {
+    // Use public_service_providers view for anonymous access
     let queryBuilder = supabase
-      .from('service_providers')
+      .from('public_service_providers')
       .select('id, business_name, service_type, city, rating, total_reviews, base_price')
       .eq('status', 'approved')
       .order('rating', { ascending: false })
