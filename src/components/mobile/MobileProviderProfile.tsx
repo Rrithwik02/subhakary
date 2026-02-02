@@ -53,12 +53,12 @@ const MobileProviderProfile = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showFullGallery, setShowFullGallery] = useState(false);
 
-  // Fetch provider details
+  // Fetch provider details using public_service_providers view for anonymous access
   const { data: provider, isLoading } = useQuery({
     queryKey: ["provider", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("service_providers")
+        .from("public_service_providers")
         .select(`
           *,
           category:service_categories(name, icon, description)
@@ -304,7 +304,7 @@ const MobileProviderProfile = () => {
                   <Badge variant="secondary" className="text-xs">
                     {provider.category?.name}
                   </Badge>
-                  <AvailabilityStatusBadge status={provider.availability_status as any} />
+                  <AvailabilityStatusBadge status={(provider as any).availability_status || 'offline'} />
                 </div>
               </div>
               {provider.logo_url && (

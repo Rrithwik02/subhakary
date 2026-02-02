@@ -133,12 +133,12 @@ const Providers = () => {
     },
   });
 
-  // Fetch approved providers
+  // Fetch approved providers using public_service_providers view for anonymous access
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ["approved-providers"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("service_providers")
+        .from("public_service_providers")
         .select(`
           id,
           business_name,
@@ -165,7 +165,6 @@ const Providers = () => {
           travel_charges_applicable,
           advance_booking_days,
           logo_url,
-          availability_status,
           facebook_url,
           instagram_url,
           youtube_url,

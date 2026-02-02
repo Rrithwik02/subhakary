@@ -120,13 +120,13 @@ const ProviderProfile = () => {
     }
   }, [searchParams]);
 
-  // Fetch provider details
+  // Fetch provider details using public_service_providers view for anonymous access
   const { data: provider, isLoading } = useQuery({
     queryKey: ["provider", id],
     queryFn: async () => {
       // Fetch public provider info (excludes sensitive fields like whatsapp_number, address)
       const { data, error } = await supabase
-        .from("service_providers")
+        .from("public_service_providers")
         .select(`
           id,
           business_name,
@@ -153,12 +153,10 @@ const ProviderProfile = () => {
           travel_charges_applicable,
           advance_booking_days,
           logo_url,
-          availability_status,
           facebook_url,
           instagram_url,
           youtube_url,
           website_url,
-          user_id,
           category:service_categories(name, icon, description)
         `)
         .eq("id", id)
@@ -423,7 +421,7 @@ const ProviderProfile = () => {
                             {service.category?.name || service.service_type}
                           </Badge>
                         ))}
-                        <AvailabilityStatusBadge status={provider.availability_status as 'online' | 'offline' | 'busy'} />
+                        <AvailabilityStatusBadge status={(provider as any).availability_status as 'online' | 'offline' | 'busy' || 'offline'} />
                       </div>
                       
                       <div className="flex flex-wrap items-center gap-2">
@@ -508,7 +506,7 @@ const ProviderProfile = () => {
                           </span>
                         )}
                         <AvailabilityStatusBadge 
-                          status={provider.availability_status as 'online' | 'offline' | 'busy'} 
+                          status={(provider as any).availability_status as 'online' | 'offline' | 'busy' || 'offline'} 
                           size="sm"
                         />
                       </div>
