@@ -47,18 +47,18 @@ export const MobileHome = () => {
         {/* Featured Banner */}
         <MobileFeaturedBanner />
 
+        {/* Service Categories Grid */}
+        <MobileServiceGrid />
+
         {/* Become a Provider CTA - Only for logged-in non-providers */}
         {showBecomeProviderCTA && (
           <div className="px-4 py-2">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-secondary to-accent p-4 border border-border"
+              transition={{ delay: 0.3 }}
+              className="rounded-2xl bg-background p-4 border-2 border-primary"
             >
-              {/* Decorative element */}
-              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-primary/10 rounded-xl">
                   <Briefcase className="w-5 h-5 text-primary" />
@@ -85,9 +85,6 @@ export const MobileHome = () => {
             </motion.div>
           </div>
         )}
-
-        {/* Service Categories Grid */}
-        <MobileServiceGrid />
 
         {/* Blog/Inspiration Section */}
         <MobileBlogSection />
