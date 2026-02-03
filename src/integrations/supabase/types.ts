@@ -139,6 +139,7 @@ export type Database = {
           id: string
           invited_by: string | null
           token: string
+          token_hash: string | null
           used_at: string | null
         }
         Insert: {
@@ -148,6 +149,7 @@ export type Database = {
           id?: string
           invited_by?: string | null
           token?: string
+          token_hash?: string | null
           used_at?: string | null
         }
         Update: {
@@ -157,6 +159,7 @@ export type Database = {
           id?: string
           invited_by?: string | null
           token?: string
+          token_hash?: string | null
           used_at?: string | null
         }
         Relationships: []
@@ -2191,6 +2194,7 @@ export type Database = {
       }
       can_access_otp: { Args: { p_user_id: string }; Returns: boolean }
       claim_admin_invitation: { Args: { p_token: string }; Returns: boolean }
+      cleanup_expired_admin_invitations: { Args: never; Returns: number }
       decrypt_payment_field: { Args: { ciphertext: string }; Returns: string }
       encrypt_payment_field: { Args: { plaintext: string }; Returns: string }
       get_provider_contact_info: {
@@ -2214,6 +2218,13 @@ export type Database = {
           qr_code_url: string
           updated_at: string
           upi_id: string
+        }[]
+      }
+      get_provider_profile_name: {
+        Args: { p_profile_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
         }[]
       }
       get_public_provider_info: {
@@ -2246,6 +2257,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_admin_token: { Args: { raw_token: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "provider" | "user"
