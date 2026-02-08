@@ -62,12 +62,16 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
       if (error) throw error;
       if (!bookings || bookings.length === 0) return [];
 
-      // Get customer profiles
-      const userIds = [...new Set(bookings.map(b => b.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, user_id, full_name")
-        .in("user_id", userIds);
+      // Use SECURITY DEFINER function to get customer profiles
+      const bookingIds = bookings.map(b => b.id);
+      const { data: customerInfo } = await supabase
+        .rpc('get_booking_customer_chat_info', { booking_ids: bookingIds });
+
+      const profiles = customerInfo?.map((c: any) => ({
+        id: c.customer_profile_id,
+        user_id: c.customer_user_id,
+        full_name: c.customer_name
+      })) || [];
 
       // Get last message and unread count for each booking
       const conversationsWithDetails = await Promise.all(

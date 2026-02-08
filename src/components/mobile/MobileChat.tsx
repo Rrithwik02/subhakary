@@ -97,13 +97,16 @@ const MobileChat = () => {
           .order("created_at", { ascending: false });
 
         if (data) {
-          const customerIds = data.map(b => b.user_id);
-          const { data: customerProfiles } = await supabase
-            .from("profiles")
-            .select("user_id, full_name, profile_image")
-            .in("user_id", customerIds);
+          // Use SECURITY DEFINER function to get customer info
+          const bookingIds = data.map(b => b.id);
+          const { data: customerInfo } = await supabase
+            .rpc('get_booking_customer_chat_info', { booking_ids: bookingIds });
 
-          const profileMap = new Map(customerProfiles?.map(p => [p.user_id, p]) || []);
+          const profileMap = new Map(customerInfo?.map((p: any) => [p.customer_user_id, {
+            user_id: p.customer_user_id,
+            full_name: p.customer_name,
+            profile_image: p.customer_profile_image
+          }]) || []);
 
           providerBookings = data.map((b) => ({
             ...b,
