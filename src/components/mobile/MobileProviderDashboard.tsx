@@ -26,6 +26,9 @@ import {
   Package,
   Briefcase,
   UserCircle,
+  CreditCard,
+  IndianRupee,
+  Pencil,
 } from "lucide-react";
 import { MobileLayout } from "./MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -56,6 +59,8 @@ import { useToast } from "@/hooks/use-toast";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { PaymentHistorySection } from "@/components/PaymentHistorySection";
+import { EditPaymentDialog } from "@/components/EditPaymentDialog";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600", icon: AlertCircle },
@@ -75,7 +80,7 @@ const DAYS_OF_WEEK = [
   { value: 6, label: "Saturday" },
 ];
 
-type TabType = "pending" | "active" | "calendar" | "inquiries" | "messages" | "history" | "profile";
+type TabType = "pending" | "active" | "calendar" | "inquiries" | "messages" | "payments" | "history" | "profile";
 
 const MobileProviderDashboard = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -98,6 +103,14 @@ const MobileProviderDashboard = () => {
   // Delete provider dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState("");
+  
+  // Edit payment dialog
+  const [editPaymentDialog, setEditPaymentDialog] = useState<{
+    id: string;
+    amount: number;
+    payment_description: string | null;
+    booking_id: string;
+  } | null>(null);
 
   // Fetch provider profile
   const { data: provider, refetch: refetchProvider } = useQuery({
@@ -140,9 +153,23 @@ const MobileProviderDashboard = () => {
 
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
 
+      // Fetch pending payments for these bookings
+      const bookingIds = bookingsData.map(b => b.id);
+      const { data: paymentsData } = await supabase
+        .from("payments")
+        .select("id, booking_id, amount, status, is_provider_requested, payment_description")
+        .in("booking_id", bookingIds)
+        .eq("status", "pending")
+        .eq("is_provider_requested", true);
+
+      const pendingPaymentsByBookingId = new Map(
+        paymentsData?.map(p => [p.booking_id, p]) || []
+      );
+
       return bookingsData.map((booking) => ({
         ...booking,
         customer: profileMap.get(booking.user_id) || null,
+        pendingPayment: pendingPaymentsByBookingId.get(booking.id),
       }));
     },
     enabled: !!provider?.id,
@@ -492,6 +519,7 @@ const MobileProviderDashboard = () => {
     { key: "calendar" as TabType, label: "Calendar", icon: CalendarDays },
     { key: "inquiries" as TabType, label: "Inquiries", icon: MessageSquare },
     { key: "messages" as TabType, label: "Messages", icon: MessageCircle },
+    { key: "payments" as TabType, label: "Payments", icon: CreditCard },
     { key: "history" as TabType, label: `History(${pastBookings.length})` },
     { key: "profile" as TabType, label: "Profile", icon: Settings },
   ];
@@ -623,25 +651,44 @@ const MobileProviderDashboard = () => {
 
           {/* Active Booking Actions */}
           {booking.status === "accepted" && (
-            <div className="flex gap-2 mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 h-9"
-                onClick={() => navigate(`/chat?booking=${booking.id}`)}
-              >
-                <MessageCircle className="h-3.5 w-3.5 mr-1" />
-                Chat
-              </Button>
-              {!booking.completion_confirmed_by_provider && (
+            <div className="flex flex-col gap-2 mt-3">
+              <div className="flex gap-2">
                 <Button
+                  variant="outline"
                   size="sm"
                   className="flex-1 h-9"
-                  onClick={() => navigate(`/provider-dashboard?complete=${booking.id}`)}
+                  onClick={() => navigate(`/chat?booking=${booking.id}`)}
                 >
-                  Mark Complete
+                  <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                  Chat
                 </Button>
-              )}
+                {!booking.completion_confirmed_by_provider && (
+                  <Button
+                    size="sm"
+                    className="flex-1 h-9"
+                    onClick={() => navigate(`/provider-dashboard?complete=${booking.id}`)}
+                  >
+                    Mark Complete
+                  </Button>
+                )}
+              </div>
+              {/* Payment request/edit buttons */}
+              {booking.pendingPayment ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9"
+                  onClick={() => setEditPaymentDialog({
+                    id: booking.pendingPayment.id,
+                    amount: booking.pendingPayment.amount,
+                    payment_description: booking.pendingPayment.payment_description,
+                    booking_id: booking.id,
+                  })}
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                  Edit ₹{booking.pendingPayment.amount?.toLocaleString()} Request
+                </Button>
+              ) : null}
             </div>
           )}
         </div>
@@ -880,6 +927,18 @@ const MobileProviderDashboard = () => {
               <Button onClick={() => navigate("/chat")}>
                 Open Messages
               </Button>
+            </div>
+          ) : activeTab === "payments" ? (
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CreditCard className="h-5 w-5 text-primary" />
+                    <h3 className="font-semibold text-sm">Payment History</h3>
+                  </div>
+                  <PaymentHistorySection providerId={provider.id} />
+                </CardContent>
+              </Card>
             </div>
           ) : activeTab === "profile" ? (
             <div className="space-y-4">
@@ -1180,6 +1239,14 @@ const MobileProviderDashboard = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Payment Dialog */}
+        <EditPaymentDialog
+          payment={editPaymentDialog}
+          open={!!editPaymentDialog}
+          onOpenChange={(open) => !open && setEditPaymentDialog(null)}
+          onSuccess={() => refetch()}
+        />
       </div>
     </MobileLayout>
   );
