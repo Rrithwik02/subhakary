@@ -1,141 +1,211 @@
 
-# Payment Page Fixes Plan
 
-## Issues Identified
+## Enhanced SEO Keywords Implementation Plan
 
-### 1. Branding Issue: "Saathi" should be "Subhakary"
-**Location**: `src/pages/Checkout.tsx`, line 143
-**Current**: `name: "Saathi"` is displayed in the Razorpay payment modal
-**Fix**: Change to `name: "Subhakary"`
+### Current State Analysis
 
-### 2. Payment Button Not Persisting After Customer Navigates Away
-**Root Cause**: The query correctly fetches pending payments, but the mobile `MobileMyBookings.tsx` lacks a realtime subscription to refresh when payments are added/modified by providers.
+The project has a good SEO foundation with:
+- `src/data/seoData.ts` containing basic keywords for each service (5 keywords per service)
+- `index.html` with meta tags and JSON-LD structured data
+- `src/components/SEOHead.tsx` dynamically setting meta tags per page
+- Service pages (`ServiceCategory.tsx`, `ServiceLocation.tsx`) using these keywords
 
-**Technical Details**:
-- Desktop `MyBookings.tsx` has a realtime subscription on the `bookings` table (lines 156-179), which triggers `refetch()` when bookings change
-- However, neither desktop nor mobile subscribes to changes on the `payments` table
-- When a provider edits the payment amount or the customer navigates away without paying, the UI doesn't refresh to show the current payment state
+**Gap Identified**: The current keywords are limited (only 5 per service) and miss many high-value search terms that users actually search for.
 
-**Fix**: 
-- Add realtime subscription to the `payments` table in both `MyBookings.tsx` and `MobileMyBookings.tsx`
-- This ensures the "Pay Now" button reflects the latest payment data
+---
 
-### 3. Updated Amount Not Reflected on Customer's Payment Page
-**Root Cause**: When a provider edits a payment using `EditPaymentDialog.tsx`, the amount is updated in the database. However, the `Checkout.tsx` page uses React Query with a fixed query key based on `paymentId`.
+### Proposed Enhanced Keywords for Each Service
 
-**Current Behavior**: 
-- The checkout page fetches payment details once
-- If the provider updates the amount while the customer is viewing, it won't auto-refresh
-- If customer navigates back to My Bookings and returns to Checkout, they see the updated amount (query cache invalidated)
+Below are the comprehensive keyword lists I will add for each service:
 
-**Fix**:
-- Add realtime subscription in `Checkout.tsx` to listen for payment updates
-- When the payment record changes, refetch the payment data to display the updated amount
+---
 
-## Implementation Changes
+#### 1. Poojari / Priest Services
+**Current**: poojari, pandit, priest, pujari, purohit
 
-| File | Change |
-|------|--------|
-| `src/pages/Checkout.tsx` | 1. Change "Saathi" to "Subhakary" (line 143) <br> 2. Add realtime subscription to refetch on payment updates |
-| `src/pages/MyBookings.tsx` | Add realtime subscription for `payments` table to refresh when provider creates/edits payment requests |
-| `src/components/mobile/MobileMyBookings.tsx` | Add realtime subscription for `payments` table (currently has no subscriptions at all) |
+**Enhanced Keywords**:
+- poojari near me, pandit near me, priest near me, pujari near me, purohit near me
+- hindu priest for wedding, pooja pandit booking, griha pravesh pandit
+- satyanarayan puja pandit, wedding pandit, housewarming priest
+- vedic pandit, brahmin pandit near me, puja services near me
+- navagraha puja pandit, ganesh puja priest, lakshmi puja pandit
+- homam pandit, havan pandit, yagya services, temple priest booking
+- online pandit booking, pandit for death rituals, shraddh pandit
+- naming ceremony pandit, annaprashan pandit, mundan ceremony priest
 
-## Technical Implementation
+---
 
-### Checkout.tsx - Realtime Payment Updates
-```typescript
-// Subscribe to payment updates
-useEffect(() => {
-  if (!paymentId) return;
+#### 2. Photographer Services
+**Current**: photographer, wedding photographer, event photographer, photography
 
-  const channel = supabase
-    .channel(`checkout-payment-${paymentId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "UPDATE",
-        schema: "public",
-        table: "payments",
-        filter: `id=eq.${paymentId}`,
-      },
-      () => {
-        // Refetch payment to get updated amount
-        refetch();
-      }
-    )
-    .subscribe();
+**Enhanced Keywords**:
+- photographer near me, wedding photographer near me, event photographer near me
+- candid wedding photographer, pre-wedding photoshoot, engagement photographer
+- bridal photography, couple photoshoot, maternity photographer near me
+- baby photography near me, birthday party photographer, corporate event photographer
+- product photographer, portfolio photographer, outdoor photoshoot
+- cinematic wedding photography, traditional wedding photography
+- drone photography, aerial photography wedding, photo studio near me
+- professional photographer booking, best wedding photographer
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [paymentId, refetch]);
+---
+
+#### 3. Videographer Services
+**Current**: videographer, wedding videographer, cinematographer, video coverage, event videography
+
+**Enhanced Keywords**:
+- videographer near me, wedding videographer near me, cinematographer near me
+- wedding video shooting, cinematic wedding film, drone videography
+- pre-wedding video, engagement video shoot, reception video coverage
+- live streaming wedding, wedding teaser video, highlight video
+- event videographer, corporate video production, documentary wedding
+- same day edit video, wedding short film, videography packages
+- 4K wedding video, professional video coverage
+
+---
+
+#### 4. Makeup Artist Services
+**Current**: makeup artist, bridal makeup, makeup, beautician, beauty artist
+
+**Enhanced Keywords**:
+- makeup artist near me, bridal makeup near me, wedding makeup artist near me
+- HD bridal makeup, airbrush bridal makeup, party makeup artist
+- groom makeup, engagement makeup, reception makeup artist
+- south indian bridal makeup, north indian bridal makeup, muslim bridal makeup
+- mehendi function makeup, sangeet makeup, haldi makeup artist
+- celebrity makeup artist, professional makeup services, freelance makeup artist
+- waterproof bridal makeup, natural bridal makeup, dramatic bridal look
+- makeup trial, destination wedding makeup, family makeup packages
+
+---
+
+#### 5. Mehandi Artist Services
+**Current**: mehandi artist, mehndi, henna artist, mehendi, henna
+
+**Enhanced Keywords**:
+- mehandi artist near me, mehndi designer near me, henna artist near me
+- bridal mehandi near me, wedding mehndi artist, dulhan mehandi
+- arabic mehandi design, indian mehandi design, rajasthani mehandi
+- indo-western mehandi, modern mehandi patterns, traditional henna designs
+- leg mehandi, full hand bridal mehandi, mehndi for guests
+- professional mehandi artist, mehndi artist for wedding, mehandi function artist
+- intricate bridal mehndi, peacock mehandi design, floral mehandi
+- baby shower mehandi, engagement mehandi, mehendi artist booking
+
+---
+
+#### 6. Mangala Vadyam / Traditional Music
+**Current**: mangala vadyam, nadaswaram, traditional music, shehnai, wedding music
+
+**Enhanced Keywords**:
+- mangala vadyam near me, nadaswaram near me, shehnai near me
+- nadaswaram player for wedding, shehnai player booking, wedding band near me
+- traditional wedding music, south indian wedding music, baraat band
+- dhol player near me, wedding dhol, punjabi dhol booking
+- live band for wedding, orchestra for wedding, sangeet night band
+- fusion music wedding, classical music wedding, instrumental wedding music
+- melam artists, thavil player, chenda melam
+- muhurtham music, auspicious music services
+
+---
+
+#### 7. Decoration Services
+**Current**: decorator, decoration, wedding decorator, event decorator, flower decoration
+
+**Enhanced Keywords**:
+- decorator near me, wedding decorator near me, event decorator near me
+- mandap decoration, wedding stage decoration, reception stage design
+- flower decoration for wedding, floral arrangement services, rose petal decoration
+- balloon decoration, birthday party decoration, baby shower decoration
+- haldi decoration, mehendi decoration, sangeet decoration theme
+- outdoor wedding decoration, destination wedding decor, tent house decoration
+- theme party decoration, anniversary decoration, naming ceremony decoration
+- entrance decoration, car decoration wedding, backdrop decoration
+
+---
+
+#### 8. Catering Services
+**Current**: caterer, catering, wedding catering, event catering, food service
+
+**Enhanced Keywords**:
+- caterer near me, catering services near me, wedding caterer near me
+- south indian catering, north indian catering, multi-cuisine catering
+- vegetarian catering, pure veg caterers, non-veg catering services
+- outdoor catering, live counter catering, buffet catering
+- birthday party catering, corporate event catering, house party catering
+- brahmin catering, iyer catering, andhra catering, telugu catering
+- rajasthani catering, gujarati catering, punjabi catering
+- bulk food order, party food delivery, catering packages wedding
+
+---
+
+#### 9. Function Halls / Venues
+**Current**: function hall, banquet hall, wedding venue, event venue, marriage hall
+
+**Enhanced Keywords**:
+- function hall near me, banquet hall near me, wedding venue near me
+- marriage hall near me, convention center, kalyana mandapam
+- party hall near me, event space booking, reception venue
+- ac banquet hall, outdoor wedding venue, garden wedding venue
+- farmhouse for wedding, resort wedding venue, budget function hall
+- small party hall, corporate event venue, conference hall
+- engagement hall, birthday party venue, baby shower venue
+- rooftop venue, terrace party hall, poolside wedding venue
+
+---
+
+#### 10. Event Managers / Wedding Planners
+**Current**: event manager, wedding planner, event planner, coordinator, event management
+
+**Enhanced Keywords**:
+- event manager near me, wedding planner near me, event planner near me
+- destination wedding planner, wedding coordinator, day-of coordinator
+- complete wedding planning, budget wedding planner, luxury wedding planner
+- corporate event manager, birthday party organizer, baby shower planner
+- sangeet organizer, mehendi function planner, haldi ceremony planner
+- reception event manager, engagement party planner, anniversary event planner
+- vendor coordination services, wedding timeline planning, event decoration coordinator
+- themed wedding planner, traditional wedding coordinator, modern wedding planner
+
+---
+
+### Implementation Details
+
+| File | Changes |
+|------|---------|
+| `src/data/seoData.ts` | Expand `keywords` array for each service from 5 to 20+ targeted keywords including "near me" variations, event-specific terms, and regional variations |
+| `src/pages/Services.tsx` | Update `searchTerms` array with expanded keywords and implement proper SEOHead component usage |
+| `index.html` | Update meta keywords tag to include comprehensive service keywords |
+| `src/components/SEOHead.tsx` | Ensure keywords meta tag is properly being set (already implemented) |
+
+---
+
+### Technical Implementation
+
+```text
+seoData.ts Structure Update
++----------------------------------+
+|  ServiceSEO Interface            |
+|  - slug: string                  |
+|  - name: string                  |
+|  - pluralName: string            |
+|  - keywords: string[] (expanded) |
+|  - longTailKeywords: string[]    | <-- NEW: "near me" variations
+|  - eventKeywords: string[]       | <-- NEW: ceremony-specific terms
+|  - regionalKeywords: string[]    | <-- NEW: regional variations
+|  - description: string           |
+|  - filter: string                |
++----------------------------------+
 ```
 
-### MyBookings.tsx - Add Payments Subscription
-```typescript
-// Add to existing useEffect or create new one
-const paymentsChannel = supabase
-  .channel("my-bookings-payments")
-  .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "payments",
-    },
-    () => {
-      refetch();
-    }
-  )
-  .subscribe();
-```
+---
 
-### MobileMyBookings.tsx - Add Realtime Subscriptions
-```typescript
-// Add new useEffect for realtime
-useEffect(() => {
-  if (!user) return;
+### Summary
 
-  const bookingsChannel = supabase
-    .channel("mobile-my-bookings")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "bookings",
-        filter: `user_id=eq.${user.id}`,
-      },
-      () => {
-        refetch();
-      }
-    )
-    .subscribe();
+This update will:
+1. Expand keyword coverage from ~50 total keywords to 200+ targeted search terms
+2. Add "near me" variations for local SEO
+3. Include event-specific keywords (wedding, engagement, reception, etc.)
+4. Add regional and cultural variations
+5. Improve search visibility across all service categories
 
-  const paymentsChannel = supabase
-    .channel("mobile-my-bookings-payments")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "payments",
-      },
-      () => {
-        refetch();
-      }
-    )
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(bookingsChannel);
-    supabase.removeChannel(paymentsChannel);
-  };
-}, [user, refetch]);
-```
-
-## Summary
-1. Brand name fix: "Saathi" to "Subhakary" in Razorpay modal
-2. Mobile My Bookings: Add realtime subscriptions for bookings and payments tables
-3. Desktop My Bookings: Add realtime subscription for payments table
-4. Checkout page: Add realtime subscription to reflect provider's amount changes instantly
