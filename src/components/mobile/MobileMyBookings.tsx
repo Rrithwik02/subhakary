@@ -254,9 +254,17 @@ const MobileMyBookings = () => {
 
         <div className="px-4 pt-4 pb-24">
           {/* Header */}
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold">My Bookings</h1>
-            <p className="text-sm text-muted-foreground">Track your service requests</p>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h1 className="text-2xl font-bold">My Bookings</h1>
+              <p className="text-sm text-muted-foreground">Track your service requests</p>
+            </div>
+            <Link to="/payment-history">
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                <CreditCard className="h-3.5 w-3.5" />
+                Payments
+              </Button>
+            </Link>
           </div>
 
           {/* Filter Tabs */}

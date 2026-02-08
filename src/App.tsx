@@ -36,6 +36,7 @@ import Notifications from "./pages/Notifications";
 import Compare from "./pages/Compare";
 import Install from "./pages/Install";
 import Checkout from "./pages/Checkout";
+import PaymentHistory from "./pages/PaymentHistory";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="/compare" element={<Compare />} />
               <Route path="/install" element={<Install />} />
               <Route path="/checkout/:paymentId" element={<Checkout />} />
+              <Route path="/payment-history" element={<PaymentHistory />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CompareBar />

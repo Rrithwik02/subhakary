@@ -236,12 +236,23 @@ const MyBookings = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
-              My Bookings
-            </h1>
-            <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">
-              Track and manage your service booking requests
-            </p>
+            <div className="flex items-start justify-between gap-4 mb-6 md:mb-8">
+              <div>
+                <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
+                  My Bookings
+                </h1>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  Track and manage your service booking requests
+                </p>
+              </div>
+              <Link to="/payment-history">
+                <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                  <IndianRupee className="h-4 w-4" />
+                  <span className="hidden sm:inline">Payment History</span>
+                  <span className="sm:hidden">Payments</span>
+                </Button>
+              </Link>
+            </div>
 
             {isLoading ? (
               <div className="space-y-3 md:space-y-4">
