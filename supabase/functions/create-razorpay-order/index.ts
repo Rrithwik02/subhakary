@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         amount: Math.round(amount * 100), // Convert to paise
         currency,
-        receipt: `payment_${paymentId}`,
+        receipt: `pay_${paymentId.substring(0, 35)}`, // Max 40 chars for Razorpay
         notes: {
           payment_id: paymentId,
           user_id: userId,
