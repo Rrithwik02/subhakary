@@ -1,56 +1,141 @@
 
+# Payment Page Fixes Plan
 
-# Payment System Fixes and Enhancements - COMPLETED ✅
+## Issues Identified
 
-## Problem Summary
+### 1. Branding Issue: "Saathi" should be "Subhakary"
+**Location**: `src/pages/Checkout.tsx`, line 143
+**Current**: `name: "Saathi"` is displayed in the Razorpay payment modal
+**Fix**: Change to `name: "Subhakary"`
 
-You're seeing an RLS (Row-Level Security) error when requesting payment from a customer because the database lacks permission policies for providers to create payment records. Additionally, mobile customers can't see the "Pay Now" button, and there's no payment history view.
+### 2. Payment Button Not Persisting After Customer Navigates Away
+**Root Cause**: The query correctly fetches pending payments, but the mobile `MobileMyBookings.tsx` lacks a realtime subscription to refresh when payments are added/modified by providers.
 
-## Implementation Status: COMPLETE
+**Technical Details**:
+- Desktop `MyBookings.tsx` has a realtime subscription on the `bookings` table (lines 156-179), which triggers `refetch()` when bookings change
+- However, neither desktop nor mobile subscribes to changes on the `payments` table
+- When a provider edits the payment amount or the customer navigates away without paying, the UI doesn't refresh to show the current payment state
 
-### 1. ✅ Fix RLS Error - Database Migration
+**Fix**: 
+- Add realtime subscription to the `payments` table in both `MyBookings.tsx` and `MobileMyBookings.tsx`
+- This ensures the "Pay Now" button reflects the latest payment data
 
-**Completed**: Added RLS policies for:
-- Providers can INSERT payment records for their bookings
-- Providers can UPDATE their pending payment requests (for editing)
-- Providers can DELETE pending payment requests (for canceling)
-- Users can UPDATE payments (for status changes during checkout)
+### 3. Updated Amount Not Reflected on Customer's Payment Page
+**Root Cause**: When a provider edits a payment using `EditPaymentDialog.tsx`, the amount is updated in the database. However, the `Checkout.tsx` page uses React Query with a fixed query key based on `paymentId`.
 
-### 2. ✅ Add Payment History Section
+**Current Behavior**: 
+- The checkout page fetches payment details once
+- If the provider updates the amount while the customer is viewing, it won't auto-refresh
+- If customer navigates back to My Bookings and returns to Checkout, they see the updated amount (query cache invalidated)
 
-**Completed**:
-- Created `PaymentHistorySection` component for reusable payment history display
-- Added "Payments" tab in the provider dashboard (desktop and mobile)
-- Shows all payments with status (pending, completed, failed), amount, customer name, date
+**Fix**:
+- Add realtime subscription in `Checkout.tsx` to listen for payment updates
+- When the payment record changes, refetch the payment data to display the updated amount
 
-### 3. ✅ Add Mobile "Pay Now" Button
+## Implementation Changes
 
-**Completed**:
-- Updated `MobileMyBookings.tsx` to fetch pending payments in the query
-- Added "Pay Now" button with CreditCard icon and animated styling
-- Button navigates to `/checkout/:paymentId`
+| File | Change |
+|------|--------|
+| `src/pages/Checkout.tsx` | 1. Change "Saathi" to "Subhakary" (line 143) <br> 2. Add realtime subscription to refetch on payment updates |
+| `src/pages/MyBookings.tsx` | Add realtime subscription for `payments` table to refresh when provider creates/edits payment requests |
+| `src/components/mobile/MobileMyBookings.tsx` | Add realtime subscription for `payments` table (currently has no subscriptions at all) |
 
-### 4. ✅ Allow Providers to Edit/Cancel Payment Requests
+## Technical Implementation
 
-**Completed**:
-- Created `EditPaymentDialog` component for editing/canceling payments
-- Added "Edit" button for pending payment requests (replaces "Payment Requested" badge)
-- Edit dialog allows modifying amount and description
-- Cancel confirmation dialog with proper cleanup
+### Checkout.tsx - Realtime Payment Updates
+```typescript
+// Subscribe to payment updates
+useEffect(() => {
+  if (!paymentId) return;
 
-## Files Modified
+  const channel = supabase
+    .channel(`checkout-payment-${paymentId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "payments",
+        filter: `id=eq.${paymentId}`,
+      },
+      () => {
+        // Refetch payment to get updated amount
+        refetch();
+      }
+    )
+    .subscribe();
 
-| File | Changes |
-|------|---------|
-| `src/components/mobile/MobileMyBookings.tsx` | Added pending payment query, Pay Now button |
-| `src/pages/ProviderDashboard.tsx` | Added Payments tab, edit/cancel dialogs |
-| `src/components/mobile/MobileProviderDashboard.tsx` | Added Payments tab, edit/cancel UI |
-| `src/components/PaymentHistorySection.tsx` | NEW - Reusable payment history component |
-| `src/components/EditPaymentDialog.tsx` | NEW - Edit/cancel payment dialog |
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [paymentId, refetch]);
+```
 
-## Summary of Deliverables
+### MyBookings.tsx - Add Payments Subscription
+```typescript
+// Add to existing useEffect or create new one
+const paymentsChannel = supabase
+  .channel("my-bookings-payments")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "payments",
+    },
+    () => {
+      refetch();
+    }
+  )
+  .subscribe();
+```
 
-1. ✅ Database migration to fix RLS policies (critical fix)
-2. ✅ Mobile Pay Now button for customers
-3. ✅ Payment history section for providers
-4. ✅ Edit/Cancel payment request functionality for providers
+### MobileMyBookings.tsx - Add Realtime Subscriptions
+```typescript
+// Add new useEffect for realtime
+useEffect(() => {
+  if (!user) return;
+
+  const bookingsChannel = supabase
+    .channel("mobile-my-bookings")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "bookings",
+        filter: `user_id=eq.${user.id}`,
+      },
+      () => {
+        refetch();
+      }
+    )
+    .subscribe();
+
+  const paymentsChannel = supabase
+    .channel("mobile-my-bookings-payments")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "payments",
+      },
+      () => {
+        refetch();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(bookingsChannel);
+    supabase.removeChannel(paymentsChannel);
+  };
+}, [user, refetch]);
+```
+
+## Summary
+1. Brand name fix: "Saathi" to "Subhakary" in Razorpay modal
+2. Mobile My Bookings: Add realtime subscriptions for bookings and payments tables
+3. Desktop My Bookings: Add realtime subscription for payments table
+4. Checkout page: Add realtime subscription to reflect provider's amount changes instantly
