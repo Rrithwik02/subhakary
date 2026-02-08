@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import {
@@ -16,6 +16,7 @@ import {
   Bell,
   ChevronRight,
   Loader2,
+  CreditCard,
 } from "lucide-react";
 import { MobileLayout } from "./MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,6 @@ const MobileMyBookings = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const [filter, setFilter] = useState<FilterType>("all");
@@ -107,10 +107,23 @@ const MobileMyBookings = () => {
         .in("booking_id", bookingIds);
       
       const reviewedBookingIds = new Set(reviewsData?.map(r => r.booking_id) || []);
+
+      // Fetch pending payments for these bookings
+      const { data: paymentsData } = await supabase
+        .from("payments")
+        .select("id, booking_id, amount, status, is_provider_requested")
+        .in("booking_id", bookingIds)
+        .eq("status", "pending")
+        .eq("is_provider_requested", true);
+
+      const pendingPaymentsByBookingId = new Map(
+        paymentsData?.map(p => [p.booking_id, p]) || []
+      );
       
       return bookingsData.map(booking => ({
         ...booking,
         hasReview: reviewedBookingIds.has(booking.id),
+        pendingPayment: pendingPaymentsByBookingId.get(booking.id),
       }));
     },
     enabled: !!user,
@@ -314,6 +327,23 @@ const MobileMyBookings = () => {
                       </div>
 
                       {/* Action Buttons */}
+                      {/* Pending payment - Pay Now button */}
+                      {booking.pendingPayment && (
+                        <Link 
+                          to={`/checkout/${booking.pendingPayment.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="block mt-3"
+                        >
+                          <Button
+                            size="sm"
+                            className="w-full h-9 gradient-gold text-primary-foreground animate-pulse"
+                          >
+                            <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                            Pay ₹{booking.pendingPayment.amount?.toLocaleString()}
+                          </Button>
+                        </Link>
+                      )}
+
                       {(booking.status === "accepted" && booking.completion_confirmed_by_provider && !booking.completion_confirmed_by_customer) && (
                         <Button
                           size="sm"

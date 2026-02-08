@@ -19,6 +19,8 @@ import {
   AlertTriangle,
   Circle,
   IndianRupee,
+  CreditCard,
+  Pencil,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -60,6 +62,8 @@ import BookingCalendar from "@/components/BookingCalendar";
 import { CompletionDetailsForm } from "@/components/CompletionDetailsForm";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { AdditionalServicesManager } from "@/components/AdditionalServicesManager";
+import { PaymentHistorySection } from "@/components/PaymentHistorySection";
+import { EditPaymentDialog } from "@/components/EditPaymentDialog";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600" },
@@ -93,6 +97,12 @@ const ProviderDashboard = () => {
   const [paymentRequestDialog, setPaymentRequestDialog] = useState<{
     bookingId: string;
     customerName: string;
+  } | null>(null);
+  const [editPaymentDialog, setEditPaymentDialog] = useState<{
+    id: string;
+    amount: number;
+    payment_description: string | null;
+    booking_id: string;
   } | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentDescription, setPaymentDescription] = useState("");
@@ -166,6 +176,18 @@ const ProviderDashboard = () => {
         completionRows?.map((r) => [r.booking_id, r]) || []
       );
 
+      // Fetch pending payments for these bookings
+      const { data: paymentsData } = await supabase
+        .from("payments")
+        .select("id, booking_id, amount, status, is_provider_requested, payment_description")
+        .in("booking_id", bookingIds)
+        .eq("status", "pending")
+        .eq("is_provider_requested", true);
+
+      const pendingPaymentsByBookingId = new Map(
+        paymentsData?.map(p => [p.booking_id, p]) || []
+      );
+
       return bookingsData.map((booking) => {
         const completion = completionMap.get(booking.id) || null;
         const customerVerified = !!completion?.customer_verified_at;
@@ -183,6 +205,7 @@ const ProviderDashboard = () => {
           customer: profileMap.get(booking.user_id) || null,
           completion,
           ui_status,
+          pendingPayment: pendingPaymentsByBookingId.get(booking.id),
         };
       });
     },
@@ -556,8 +579,8 @@ const ProviderDashboard = () => {
 
               {showActions && booking.status === "accepted" && booking.ui_status !== "completed" && (
                 <div className="flex flex-col gap-2">
-                  {/* Request Payment Button */}
-                  {!booking.provider_payment_requested && (
+                  {/* Request Payment Button - only show if no pending payment */}
+                  {!booking.pendingPayment && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -571,10 +594,24 @@ const ProviderDashboard = () => {
                       Request Payment
                     </Button>
                   )}
-                  {booking.provider_payment_requested && (
-                    <Badge variant="secondary" className="text-xs">
-                      Payment Requested
-                    </Badge>
+                  {/* Edit/Cancel Payment buttons if payment is pending */}
+                  {booking.pendingPayment && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditPaymentDialog({
+                          id: booking.pendingPayment.id,
+                          amount: booking.pendingPayment.amount,
+                          payment_description: booking.pendingPayment.payment_description,
+                          booking_id: booking.id,
+                        })}
+                        disabled={isProcessing}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Edit ₹{booking.pendingPayment.amount?.toLocaleString()}
+                      </Button>
+                    </div>
                   )}
                   <Button
                     size="sm"
@@ -705,6 +742,10 @@ const ProviderDashboard = () => {
                   <MessageCircle className="h-3 w-3 hidden sm:block" />
                   Messages
                 </TabsTrigger>
+                <TabsTrigger value="payments" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <CreditCard className="h-3 w-3 hidden sm:block" />
+                  Payments
+                </TabsTrigger>
                 <TabsTrigger value="history" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                   History ({pastBookings.length})
                 </TabsTrigger>
@@ -796,6 +837,20 @@ const ProviderDashboard = () => {
                   providerId={provider.id} 
                   providerProfileId={providerProfile?.id || ""} 
                 />
+              </TabsContent>
+
+              <TabsContent value="payments" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-display flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Payment History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PaymentHistorySection providerId={provider.id} />
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="history" className="mt-6">
@@ -998,6 +1053,14 @@ const ProviderDashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Payment Dialog */}
+      <EditPaymentDialog
+        payment={editPaymentDialog}
+        open={!!editPaymentDialog}
+        onOpenChange={(open) => !open && setEditPaymentDialog(null)}
+        onSuccess={() => refetch()}
+      />
 
       <Footer />
     </div>
