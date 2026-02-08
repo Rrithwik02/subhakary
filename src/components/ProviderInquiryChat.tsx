@@ -52,15 +52,19 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
 
       if (error) throw error;
 
-      // Fetch customer details and last messages for each conversation
+      // Use SECURITY DEFINER function to fetch customer details
+      const convoIds = (convos || []).map(c => c.id);
+      const { data: customerInfoList } = await supabase
+        .rpc('get_inquiry_customer_info', { conversation_ids: convoIds });
+
+      const customerInfoMap = new Map(
+        customerInfoList?.map((c: any) => [c.conversation_id, c]) || []
+      );
+
+      // Fetch last messages for each conversation
       const enrichedConvos: InquiryConversation[] = await Promise.all(
         (convos || []).map(async (convo) => {
-          // Get customer profile
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name, email, profile_image")
-            .eq("user_id", convo.user_id)
-            .maybeSingle();
+          const customerInfo = customerInfoMap.get(convo.id);
 
           // Get last message
           const { data: lastMsg } = await supabase
@@ -85,9 +89,9 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
             status: convo.status,
             created_at: convo.created_at,
             booking_id: convo.booking_id,
-            customerName: profile?.full_name || "Customer",
-            customerEmail: profile?.email || "",
-            customerAvatar: profile?.profile_image,
+            customerName: customerInfo?.customer_name || "Customer",
+            customerEmail: customerInfo?.customer_email || "",
+            customerAvatar: customerInfo?.customer_profile_image,
             lastMessage: lastMsg?.message,
             lastMessageTime: lastMsg?.created_at,
             unreadCount: count || 0,

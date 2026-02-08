@@ -2197,6 +2197,16 @@ export type Database = {
       cleanup_expired_admin_invitations: { Args: never; Returns: number }
       decrypt_payment_field: { Args: { ciphertext: string }; Returns: string }
       encrypt_payment_field: { Args: { plaintext: string }; Returns: string }
+      get_booking_customer_chat_info: {
+        Args: { booking_ids: string[] }
+        Returns: {
+          booking_id: string
+          customer_name: string
+          customer_profile_id: string
+          customer_profile_image: string
+          customer_user_id: string
+        }[]
+      }
       get_booking_customer_info: {
         Args: { booking_ids: string[] }
         Returns: {
@@ -2204,6 +2214,23 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
+        }[]
+      }
+      get_booking_participant_profile_ids: {
+        Args: { p_booking_id: string }
+        Returns: {
+          customer_profile_id: string
+          provider_profile_id: string
+        }[]
+      }
+      get_inquiry_customer_info: {
+        Args: { conversation_ids: string[] }
+        Returns: {
+          conversation_id: string
+          customer_email: string
+          customer_name: string
+          customer_profile_image: string
+          customer_user_id: string
         }[]
       }
       get_provider_contact_info: {

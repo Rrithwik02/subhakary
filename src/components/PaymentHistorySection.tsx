@@ -102,19 +102,17 @@ export const PaymentHistorySection = ({
       const { data, error } = await query.limit(compact ? 5 : 50);
       if (error) throw error;
 
-      // Get customer names for provider view
+      // Get customer names for provider view using SECURITY DEFINER function
       if (providerId && data && data.length > 0) {
-        const userIds = [...new Set(data.map(p => p.booking?.user_id).filter(Boolean))];
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, full_name")
-          .in("user_id", userIds as string[]);
+        const bookingIds = [...new Set(data.map(p => p.booking_id).filter(Boolean))];
+        const { data: customerInfo } = await supabase
+          .rpc('get_booking_customer_info', { booking_ids: bookingIds });
 
-        const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+        const profileMap = new Map(customerInfo?.map((c: any) => [c.booking_id, c.customer_name]) || []);
 
         return data.map(payment => ({
           ...payment,
-          customerName: profileMap.get(payment.booking?.user_id) || "Customer",
+          customerName: profileMap.get(payment.booking_id) || "Customer",
         }));
       }
 
