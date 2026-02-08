@@ -57,8 +57,8 @@ const Checkout = () => {
     };
   }, []);
 
-  // Fetch payment details
-  const { data: payment, isLoading } = useQuery({
+  // Get refetch from query
+  const queryResult = useQuery({
     queryKey: ["checkout-payment", paymentId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -88,6 +88,34 @@ const Checkout = () => {
     },
     enabled: !!paymentId && !!user,
   });
+
+  const { data: payment, isLoading, refetch } = queryResult;
+
+  // Subscribe to realtime payment updates
+  useEffect(() => {
+    if (!paymentId) return;
+
+    const channel = supabase
+      .channel(`checkout-payment-${paymentId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "payments",
+          filter: `id=eq.${paymentId}`,
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [paymentId, refetch]);
+
 
   const handlePayment = async () => {
     if (!payment || !user) return;
@@ -140,7 +168,7 @@ const Checkout = () => {
         key: RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "Saathi",
+        name: "Subhakary",
         description: `Payment for ${payment.booking?.provider?.business_name}`,
         order_id: orderData.orderId,
         handler: async (response: {

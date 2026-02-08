@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -128,6 +128,47 @@ const MobileMyBookings = () => {
     },
     enabled: !!user,
   });
+
+  // Subscribe to realtime updates for bookings and payments
+  useEffect(() => {
+    if (!user) return;
+
+    const bookingsChannel = supabase
+      .channel("mobile-my-bookings")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookings",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    const paymentsChannel = supabase
+      .channel("mobile-my-bookings-payments")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "payments",
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingsChannel);
+      supabase.removeChannel(paymentsChannel);
+    };
+  }, [user, refetch]);
 
   const { isPulling, isRefreshing, pullDistance, pullProgress, handleTouchStart, handleTouchMove, handleTouchEnd } = usePullToRefresh({
     onRefresh: async () => {
