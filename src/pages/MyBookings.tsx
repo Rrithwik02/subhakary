@@ -153,11 +153,11 @@ const MyBookings = () => {
     enabled: !!user,
   });
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates for bookings and payments
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
+    const bookingsChannel = supabase
       .channel("my-bookings")
       .on(
         "postgres_changes",
@@ -173,8 +173,24 @@ const MyBookings = () => {
       )
       .subscribe();
 
+    const paymentsChannel = supabase
+      .channel("my-bookings-payments")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "payments",
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(bookingsChannel);
+      supabase.removeChannel(paymentsChannel);
     };
   }, [user, refetch]);
 
