@@ -35,6 +35,7 @@ import NotFound from "./pages/NotFound";
 import Notifications from "./pages/Notifications";
 import Compare from "./pages/Compare";
 import Install from "./pages/Install";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/compare" element={<Compare />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/checkout/:paymentId" element={<Checkout />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CompareBar />

@@ -18,6 +18,7 @@ import {
   Trash2,
   AlertTriangle,
   Circle,
+  IndianRupee,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -25,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -87,6 +90,12 @@ const ProviderDashboard = () => {
   } | null>(null);
   const [deleteProviderDialogOpen, setDeleteProviderDialogOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [paymentRequestDialog, setPaymentRequestDialog] = useState<{
+    bookingId: string;
+    customerName: string;
+  } | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentDescription, setPaymentDescription] = useState("");
 
   // Fetch provider profile
   const { data: provider } = useQuery({
@@ -332,6 +341,62 @@ const ProviderDashboard = () => {
     }
   };
 
+  const handleRequestPayment = async () => {
+    if (!paymentRequestDialog || !paymentAmount) return;
+
+    setIsProcessing(true);
+    try {
+      const amount = parseFloat(paymentAmount);
+      if (isNaN(amount) || amount <= 0) {
+        toast({
+          title: "Invalid amount",
+          description: "Please enter a valid amount.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create a payment request
+      const { error } = await supabase
+        .from("payments")
+        .insert({
+          booking_id: paymentRequestDialog.bookingId,
+          amount,
+          payment_type: "advance",
+          is_provider_requested: true,
+          provider_requested_amount: amount,
+          payment_description: paymentDescription || "Advance payment requested by provider",
+          status: "pending",
+        });
+
+      if (error) throw error;
+
+      // Update booking to mark payment as requested
+      await supabase
+        .from("bookings")
+        .update({ provider_payment_requested: true })
+        .eq("id", paymentRequestDialog.bookingId);
+
+      toast({
+        title: "Payment requested",
+        description: `Payment request of ₹${amount.toLocaleString()} sent to ${paymentRequestDialog.customerName}.`,
+      });
+      
+      setPaymentRequestDialog(null);
+      setPaymentAmount("");
+      setPaymentDescription("");
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create payment request",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "online":
@@ -490,18 +555,40 @@ const ProviderDashboard = () => {
               )}
 
               {showActions && booking.status === "accepted" && booking.ui_status !== "completed" && (
-                <Button
-                  size="sm"
-                  onClick={() => handleOpenCompletionForm(
-                    booking.id, 
-                    booking.customer?.full_name || "Customer"
+                <div className="flex flex-col gap-2">
+                  {/* Request Payment Button */}
+                  {!booking.provider_payment_requested && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPaymentRequestDialog({
+                        bookingId: booking.id,
+                        customerName: booking.customer?.full_name || "Customer",
+                      })}
+                      disabled={isProcessing}
+                    >
+                      <IndianRupee className="h-4 w-4 mr-1" />
+                      Request Payment
+                    </Button>
                   )}
-                  disabled={isProcessing || booking.completion_confirmed_by_provider}
-                >
-                  {booking.completion_confirmed_by_provider 
-                    ? "Awaiting Customer Confirmation" 
-                    : "Mark Completed"}
-                </Button>
+                  {booking.provider_payment_requested && (
+                    <Badge variant="secondary" className="text-xs">
+                      Payment Requested
+                    </Badge>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => handleOpenCompletionForm(
+                      booking.id, 
+                      booking.customer?.full_name || "Customer"
+                    )}
+                    disabled={isProcessing || booking.completion_confirmed_by_provider}
+                  >
+                    {booking.completion_confirmed_by_provider 
+                      ? "Awaiting Customer Confirmation" 
+                      : "Mark Completed"}
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -861,6 +948,56 @@ const ProviderDashboard = () => {
         isProvider={true}
         willDeleteProvider={false}
       />
+
+      {/* Payment Request Dialog */}
+      <Dialog open={!!paymentRequestDialog} onOpenChange={(open) => !open && setPaymentRequestDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <IndianRupee className="h-5 w-5" />
+              Request Payment
+            </DialogTitle>
+            <DialogDescription>
+              Request an advance payment from {paymentRequestDialog?.customerName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="payment-amount">Amount (₹)</Label>
+              <Input
+                id="payment-amount"
+                type="number"
+                placeholder="Enter amount"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                min="1"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="payment-description">Description (optional)</Label>
+              <Textarea
+                id="payment-description"
+                placeholder="e.g., Advance booking fee, Material costs..."
+                value={paymentDescription}
+                onChange={(e) => setPaymentDescription(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentRequestDialog(null)}>
+              Cancel
+            </Button>
+            <Button
+              className="gradient-gold text-primary-foreground"
+              onClick={handleRequestPayment}
+              disabled={isProcessing || !paymentAmount}
+            >
+              {isProcessing ? "Sending..." : `Request ₹${paymentAmount || "0"}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

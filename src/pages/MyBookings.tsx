@@ -15,6 +15,8 @@ import {
   Star,
   MessageCircle,
   Bell,
+  CreditCard,
+  IndianRupee,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -128,11 +130,24 @@ const MyBookings = () => {
       const conversationsByBookingId = new Map(
         conversationsData?.map(c => [c.booking_id, c]) || []
       );
+
+      // Fetch pending payments for these bookings
+      const { data: paymentsData } = await supabase
+        .from("payments")
+        .select("id, booking_id, amount, status, is_provider_requested")
+        .in("booking_id", bookingIds)
+        .eq("status", "pending")
+        .eq("is_provider_requested", true);
+
+      const pendingPaymentsByBookingId = new Map(
+        paymentsData?.map(p => [p.booking_id, p]) || []
+      );
       
       return bookingsData.map(booking => ({
         ...booking,
         hasReview: reviewedBookingIds.has(booking.id),
         inquiryConversation: conversationsByBookingId.get(booking.id),
+        pendingPayment: pendingPaymentsByBookingId.get(booking.id),
       }));
     },
     enabled: !!user,
@@ -317,6 +332,22 @@ const MyBookings = () => {
 
                             {/* Action buttons - mobile optimized */}
                             <div className="flex items-center gap-2 flex-wrap pl-0 md:pl-14">
+                              {/* Pending payment request - Pay Now button */}
+                              {booking.pendingPayment && (
+                                <Link 
+                                  to={`/checkout/${booking.pendingPayment.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 sm:flex-none"
+                                >
+                                  <Button
+                                    size="sm"
+                                    className="w-full sm:w-auto h-9 gradient-gold text-primary-foreground touch-manipulation animate-pulse"
+                                  >
+                                    <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                                    Pay ₹{booking.pendingPayment.amount?.toLocaleString()}
+                                  </Button>
+                                </Link>
+                              )}
                               {/* Completion confirmation alert */}
                               {booking.status === "accepted" && booking.completion_confirmed_by_provider && !booking.completion_confirmed_by_customer && (
                                 <Button
