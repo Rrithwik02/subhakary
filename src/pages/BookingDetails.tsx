@@ -24,6 +24,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ConversationHistory } from "@/components/ConversationHistory";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileBookingDetails from "@/components/mobile/MobileBookingDetails";
 
 const statusConfig = {
   pending: {
@@ -54,6 +56,18 @@ const statusConfig = {
 };
 
 const BookingDetails = () => {
+  const isMobile = useMobileLayout();
+  
+  // Render mobile version immediately without running desktop hooks
+  if (isMobile) {
+    return <MobileBookingDetails />;
+  }
+  
+  // Desktop version - this is a stable conditional since isMobile won't change mid-render
+  return <DesktopBookingDetails />;
+};
+
+const DesktopBookingDetails = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();

@@ -156,50 +156,23 @@ export const ChatWindow = ({
         status: 'sending'
       }]);
 
-      // Get the booking details
-      const { data: booking } = await supabase
-        .from("bookings")
-        .select(`
-          user_id,
-          provider:service_providers!bookings_provider_id_fkey(
-            user_id
-          )
-        `)
-        .eq("id", bookingId)
-        .single();
+      // Use the secure RPC function to get participant profile IDs
+      const { data: participantData, error: rpcError } = await supabase
+        .rpc('get_booking_participant_profile_ids', { p_booking_id: bookingId });
 
-      if (!booking) {
+      if (rpcError || !participantData || participantData.length === 0) {
         setPendingMessages(prev => 
           prev.map(p => p.id === tempId ? { ...p, status: 'failed' } : p)
         );
-        throw new Error("Booking not found");
+        throw new Error("Could not verify booking participants");
       }
 
-      // Determine receiver based on who is sending
-      let receiverId: string | null = null;
-      const providerUserId = (booking.provider as any)?.user_id;
-      
-      if (user?.id === booking.user_id) {
-        // Current user is the customer, receiver is provider
-        if (providerUserId) {
-          const { data: providerProfile } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("user_id", providerUserId)
-            .maybeSingle();
-          receiverId = providerProfile?.id || null;
-        }
-      } else if (user?.id === providerUserId) {
-        // Current user is the provider, get customer profile
-        if (booking.user_id) {
-          const { data: customerProfile } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("user_id", booking.user_id)
-            .maybeSingle();
-          receiverId = customerProfile?.id || null;
-        }
-      }
+      const participantIds = participantData[0];
+
+      // Determine receiver based on current user's profile
+      const receiverId = currentProfile.id === participantIds.customer_profile_id
+        ? participantIds.provider_profile_id
+        : participantIds.customer_profile_id;
 
       if (!receiverId) {
         setPendingMessages(prev => 
@@ -212,7 +185,7 @@ export const ChatWindow = ({
         booking_id: bookingId,
         sender_id: currentProfile.id,
         receiver_id: receiverId,
-        message: text.trim(),
+        message: trimmedMessage,
         delivery_status: 'sent',
       });
 

@@ -187,39 +187,32 @@ const MobileChat = () => {
 
     setIsSending(true);
     try {
-      const receiverId = selectedBookingData?.isProvider
-        ? selectedBookingData?.user_id
-        : selectedBookingData?.provider?.user_id;
+      // Use the secure RPC function to get participant profile IDs
+      const { data: participantData, error: rpcError } = await supabase
+        .rpc('get_booking_participant_profile_ids', { p_booking_id: selectedBooking });
+
+      if (rpcError || !participantData || participantData.length === 0) {
+        console.error("Failed to get participant IDs:", rpcError);
+        toast({
+          title: "Cannot send message",
+          description: "Could not verify booking participants. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const participantIds = participantData[0];
+      
+      // Determine sender and receiver based on current user's profile
+      const senderId = profile.id;
+      const receiverId = senderId === participantIds.customer_profile_id
+        ? participantIds.provider_profile_id
+        : participantIds.customer_profile_id;
 
       if (!receiverId) {
         toast({
           title: "Cannot send message",
-          description: "Could not find recipient. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data: receiverProfile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", receiverId)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error("Failed to find receiver profile:", profileError);
-        toast({
-          title: "Failed to send message",
-          description: "Could not find recipient profile. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!receiverProfile) {
-        toast({
-          title: "Cannot send message",
-          description: "Recipient profile not found.",
+          description: "Recipient not found for this booking.",
           variant: "destructive",
         });
         return;
@@ -227,8 +220,8 @@ const MobileChat = () => {
 
       const { error } = await supabase.from("chat_messages").insert({
         booking_id: selectedBooking,
-        sender_id: profile.id,
-        receiver_id: receiverProfile.id,
+        sender_id: senderId,
+        receiver_id: receiverId,
         message: newMessage.trim(),
         delivery_status: 'sent',
       });
