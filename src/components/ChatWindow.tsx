@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface ChatWindowProps {
@@ -33,6 +34,7 @@ export const ChatWindow = ({
   isCompleted = false,
 }: ChatWindowProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
@@ -229,6 +231,13 @@ export const ChatWindow = ({
     onSuccess: () => {
       setMessage("");
       queryClient.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to send message",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
     },
   });
 

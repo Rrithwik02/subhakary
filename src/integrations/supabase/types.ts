@@ -2197,6 +2197,15 @@ export type Database = {
       cleanup_expired_admin_invitations: { Args: never; Returns: number }
       decrypt_payment_field: { Args: { ciphertext: string }; Returns: string }
       encrypt_payment_field: { Args: { plaintext: string }; Returns: string }
+      get_booking_customer_info: {
+        Args: { booking_ids: string[] }
+        Returns: {
+          booking_id: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+        }[]
+      }
       get_provider_contact_info: {
         Args: { provider_uuid: string }
         Returns: {
