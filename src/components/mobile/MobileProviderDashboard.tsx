@@ -145,16 +145,25 @@ const MobileProviderDashboard = () => {
 
       if (!bookingsData || bookingsData.length === 0) return [];
 
-      const userIds = [...new Set(bookingsData.map((b) => b.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email, phone")
-        .in("user_id", userIds);
+      // Use secure function to get customer info
+      const bookingIds = bookingsData.map(b => b.id);
+      const { data: customerInfo, error: customerError } = await supabase
+        .rpc('get_booking_customer_info', { booking_ids: bookingIds });
 
-      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+      if (customerError) {
+        console.error("Failed to fetch customer info:", customerError);
+      }
+
+      const customerMap = new Map(
+        customerInfo?.map((c: any) => [c.booking_id, {
+          user_id: bookingsData.find(b => b.id === c.booking_id)?.user_id,
+          full_name: c.customer_name,
+          email: c.customer_email,
+          phone: c.customer_phone,
+        }]) || []
+      );
 
       // Fetch pending payments for these bookings
-      const bookingIds = bookingsData.map(b => b.id);
       const { data: paymentsData } = await supabase
         .from("payments")
         .select("id, booking_id, amount, status, is_provider_requested, payment_description")
@@ -168,7 +177,7 @@ const MobileProviderDashboard = () => {
 
       return bookingsData.map((booking) => ({
         ...booking,
-        customer: profileMap.get(booking.user_id) || null,
+        customer: customerMap.get(booking.id) || null,
         pendingPayment: pendingPaymentsByBookingId.get(booking.id),
       }));
     },

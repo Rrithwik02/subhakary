@@ -154,19 +154,28 @@ const ProviderDashboard = () => {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      // Fetch customer profiles for bookings
+      // Fetch customer profiles for bookings using secure function
       if (!bookingsData || bookingsData.length === 0) return [];
 
-      const userIds = [...new Set(bookingsData.map((b) => b.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email")
-        .in("user_id", userIds);
+      const bookingIds = bookingsData.map((b) => b.id);
+      
+      // Use secure function to get customer info
+      const { data: customerInfo, error: customerError } = await supabase
+        .rpc('get_booking_customer_info', { booking_ids: bookingIds });
 
-      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+      if (customerError) {
+        console.error("Failed to fetch customer info:", customerError);
+      }
+
+      const customerMap = new Map(
+        customerInfo?.map((c: any) => [c.booking_id, {
+          user_id: bookingsData.find(b => b.id === c.booking_id)?.user_id,
+          full_name: c.customer_name,
+          email: c.customer_email,
+        }]) || []
+      );
 
       // Fetch customer verification timestamps (so UI reflects confirmation)
-      const bookingIds = bookingsData.map((b) => b.id);
       const { data: completionRows } = await supabase
         .from("booking_completion_details")
         .select("booking_id, customer_verified_at")
@@ -202,7 +211,7 @@ const ProviderDashboard = () => {
 
         return {
           ...booking,
-          customer: profileMap.get(booking.user_id) || null,
+          customer: customerMap.get(booking.id) || null,
           completion,
           ui_status,
           pendingPayment: pendingPaymentsByBookingId.get(booking.id),

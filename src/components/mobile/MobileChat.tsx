@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 const MobileChat = () => {
@@ -28,6 +29,7 @@ const MobileChat = () => {
   const [searchParams] = useSearchParams();
   const bookingIdFromUrl = searchParams.get("booking");
   const { user, loading } = useAuth();
+  const { toast } = useToast();
   const [selectedBooking, setSelectedBooking] = useState<string | null>(bookingIdFromUrl);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -186,26 +188,67 @@ const MobileChat = () => {
         ? selectedBookingData?.user_id
         : selectedBookingData?.provider?.user_id;
 
-      const { data: receiverProfile } = await supabase
+      if (!receiverId) {
+        toast({
+          title: "Cannot send message",
+          description: "Could not find recipient. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: receiverProfile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
         .eq("user_id", receiverId)
         .maybeSingle();
 
-      if (!receiverProfile) throw new Error("Receiver not found");
+      if (profileError) {
+        console.error("Failed to find receiver profile:", profileError);
+        toast({
+          title: "Failed to send message",
+          description: "Could not find recipient profile. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!receiverProfile) {
+        toast({
+          title: "Cannot send message",
+          description: "Recipient profile not found.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { error } = await supabase.from("chat_messages").insert({
         booking_id: selectedBooking,
         sender_id: profile.id,
         receiver_id: receiverProfile.id,
         message: newMessage.trim(),
+        delivery_status: 'sent',
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to insert message:", error);
+        toast({
+          title: "Failed to send message",
+          description: error.message || "Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setNewMessage("");
       refetchMessages();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to send message:", error);
+      toast({
+        title: "Failed to send message",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSending(false);
     }
