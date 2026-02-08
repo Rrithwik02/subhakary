@@ -21,6 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileCheckout from "@/components/mobile/MobileCheckout";
 
 // Razorpay type declaration
 declare global {
@@ -32,6 +34,18 @@ declare global {
 const RAZORPAY_KEY_ID = "rzp_live_SDbr4C1LPJDdcY";
 
 const Checkout = () => {
+  const isMobile = useMobileLayout();
+  
+  // Render mobile version immediately without running desktop hooks
+  if (isMobile) {
+    return <MobileCheckout />;
+  }
+  
+  // Desktop version - this is a stable conditional since isMobile won't change mid-render
+  return <DesktopCheckout />;
+};
+
+const DesktopCheckout = () => {
   const { paymentId } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
