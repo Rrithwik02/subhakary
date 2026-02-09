@@ -1,59 +1,46 @@
 
-# Fix Plan: Chat Error and Mobile UI Consistency
 
-## ✅ COMPLETED
+# AI-Powered Mobile Search
 
-All issues have been addressed.
+## What This Does
+When a customer types something like "Ganesh pooja in Vizag" in the mobile search bar, instead of just navigating to the providers page with a text filter, the app will:
 
-### Issue 1: "Cannot send message - Recipient profile not found" Error ✅
+1. Use AI to understand the intent and extract the service type + location
+2. Search the database for matching providers (e.g., Poojari/Priest providers in Visakhapatnam)
+3. Show matching providers inline with an AI suggestion, right below the search bar
+4. Let users tap on a provider to view their profile, or "View All" to see filtered results
 
-**Root Cause**: After recent security hardening, the `profiles` table is now restricted so users can only view their own profile. The `MobileChat.tsx` component (and `ChatWindow.tsx`) tried to directly query the `profiles` table to get the receiver's profile ID when sending a message, which failed due to RLS restrictions.
+## How It Works
 
-**Solution Applied**: Replaced direct `profiles` table queries with the existing `get_booking_participant_profile_ids` RPC function in both:
-- `src/components/mobile/MobileChat.tsx`
-- `src/components/ChatWindow.tsx`
+The search experience will show results in an expandable panel below the search bar on the home screen itself -- no page navigation needed for quick discovery.
 
-### Issue 2: Booking Details Page Shows Website UI on Mobile ✅
+- **Logged-in users**: Get full AI-powered suggestions + database provider results
+- **Not logged-in users**: Get database provider results only (AI chat requires authentication)
 
-**Solution Applied**: 
-- Created `src/components/mobile/MobileBookingDetails.tsx` with native app styling
-- Updated `src/pages/BookingDetails.tsx` to use `useMobileLayout` hook and render mobile version
+## Technical Plan
 
-**Features implemented:**
-- MobileLayout wrapper with native header
-- Back button navigation
-- Provider info card with logo, name, category
-- Status badge
-- Booking details (date, time, location)
-- Chat button for accepted bookings
-- **Payment button** for bookings with pending payment requests
-- Verification button when provider confirms completion
-- Review button for completed bookings
+### Step 1: Upgrade MobileAISearch Component
 
-### Issue 3: Checkout Page Shows Website UI on Mobile ✅
+**File: `src/components/mobile/MobileAISearch.tsx`**
 
-**Solution Applied**:
-- Created `src/components/mobile/MobileCheckout.tsx` with native app styling  
-- Updated `src/pages/Checkout.tsx` to use `useMobileLayout` hook and render mobile version
+Rewrite to include:
+- Same `extractSearchParams` logic from the desktop `AISearch.tsx` (maps natural language to service types and locations)
+- Database query against `public_service_providers` view to find matching providers
+- If user is logged in, also stream an AI suggestion from the `ai-chat` edge function
+- Results panel showing:
+  - AI suggestion bubble (for logged-in users)
+  - List of top 3-5 matching providers with name, rating, city
+  - "View All Providers" button linking to the full providers page
+- Close/dismiss button to hide results
+- Loading state with animated dots
 
-**Features implemented:**
-- MobileLayout wrapper with native header
-- Provider and booking summary
-- Payment amount display
-- Secure payment via Razorpay
-- Success state with navigation back to bookings
-- Fixed bottom action bar for pay button
+### Step 2: No Backend Changes Needed
 
----
+The existing `ai-chat` edge function with `type: "search"` already supports this use case. The `public_service_providers` view is publicly accessible for anonymous provider lookups.
 
-## Files Modified
+### What Changes
+- **Modified**: `src/components/mobile/MobileAISearch.tsx` -- complete upgrade from simple search bar to AI-powered search with inline results
 
-1. `src/components/mobile/MobileChat.tsx` - Fixed profile lookup using RPC
-2. `src/components/ChatWindow.tsx` - Fixed profile lookup using RPC
-3. `src/pages/BookingDetails.tsx` - Added mobile layout detection
-4. `src/pages/Checkout.tsx` - Added mobile layout detection
+### No Other Files Affected
+The component is self-contained and already used in `MobileHome.tsx`.
 
-## Files Created
-
-1. `src/components/mobile/MobileBookingDetails.tsx` - Mobile booking details UI
-2. `src/components/mobile/MobileCheckout.tsx` - Mobile checkout UI
