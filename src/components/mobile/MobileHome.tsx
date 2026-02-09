@@ -4,7 +4,7 @@ import { MobileTrustIndicators } from "@/components/mobile/MobileTrustIndicators
 import { MobileFeaturedBanner } from "@/components/mobile/MobileFeaturedBanner";
 import { MobileServiceGrid } from "@/components/mobile/MobileServiceGrid";
 import { MobileBlogSection } from "@/components/mobile/MobileBlogSection";
-import { AIChatbot } from "@/components/AIChatbot";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,8 +93,6 @@ export const MobileHome = () => {
         <div className="h-4" />
       </div>
 
-      {/* AI Chatbot */}
-      <AIChatbot />
     </MobileLayout>
   );
 };
