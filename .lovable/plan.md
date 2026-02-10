@@ -1,68 +1,53 @@
 
-# Enhanced AI Search -- Category-Based Provider Matching
+# Dynamic "Trending Services" Chips on Mobile Search
 
 ## What Changes
 
-The current search fails because it queries `service_type` which is always empty in the database. All providers are actually categorized by `category_id`. This fix makes the search work correctly by:
+Replace the current **hardcoded** quick chips ("Catering", "Nadaswaram", "Weddings") below the mobile AI search bar with **dynamically loaded chips** showing the most-booked service categories from the past few weeks.
 
-1. Matching service keywords (like "poojari", "photographer", "catering") to the correct database category
-2. Normalizing location aliases (like "vizag" to "Visakhapatnam")
-3. Also searching provider `description` and `subcategory` fields for additional keyword matches
-4. Keeping the AI suggestion for logged-in users to provide helpful context
+## How It Works
 
-## How Search Will Work
-
-Example: User types **"poojari for ganesh pooja in vizag"**
-
-1. Extract service keyword: "poojari" -- maps to category ID `7feb9e4f-...` (Poojari / Priest)
-2. Extract location: "vizag" -- normalized to "Visakhapatnam"
-3. Extract extra keywords: "ganesh", "pooja" -- used to search `description` field
-4. Query database: filter by `category_id` + `city` matching "Visakhapatnam"
-5. Show matching providers sorted by rating
-
-## Files Changed
-
-### 1. `src/components/mobile/MobileAISearch.tsx`
-- Add category ID mapping (service keyword to UUID)
-- Add location alias map (vizag to Visakhapatnam, etc.)
-- Replace `service_type` query with `category_id` filter
-- Add `description`/`subcategory` keyword matching
-- Extract remaining keywords from query for fuzzy matching
-
-### 2. `src/components/AISearch.tsx` (desktop)
-- Same category ID mapping and location alias improvements
-- Same database query fix using `category_id` instead of `service_type`
-
-### 3. No backend changes needed
-The edge function and database are fine as-is. The problem is purely in how the frontend queries the database.
+1. On page load, query the `bookings` table joined with `service_providers` and `service_categories` to count bookings per category over the last 4 weeks
+2. Sort by count descending, take the top 3-5 results
+3. Display those as the quick-action chips with appropriate emoji mapping
+4. Fall back to the current static chips if the query returns no data (e.g., no bookings yet)
 
 ## Technical Details
 
-### Service Keyword to Category ID Map
-```text
-poojari/priest/pandit/pujari  -> 7feb9e4f-372c-4430-94b4-7576c3508372
-photography/photographer      -> aa827d7d-aaca-45ba-9420-44453f5a7f58
-videography/videographer       -> 4e209cfa-ab2a-4f10-b0b5-9533fb63621a
-makeup                         -> a68ebe7c-1a7f-4e26-aceb-d1dfff0de5bf
-mehandi/mehndi/henna           -> aea07102-32ce-4a40-ae32-116acd5b1dfd
-decoration/decorator           -> f3ea05d0-c8a7-40bc-8b61-b3bbdc86d5b4
-catering/caterer               -> 564b322b-7d44-422c-a9fd-bdcc11f9dc14
-function hall/venue/hall       -> 912180c4-037c-4741-999c-d97744f5811b
-event manager/wedding planner  -> 65131497-ef92-4971-94a5-ce747ec42fe2
-mangala vadyam/nadaswaram      -> 69eed3d0-bdc4-4822-a3d8-18298ee27beb
-```
+### New Query (runs via `useQuery` in `MobileAISearch.tsx`)
 
-### Location Alias Map
-```text
-vizag          -> Visakhapatnam
-hyd            -> Hyderabad
-blr/bengaluru  -> Bangalore
-```
+Fetches trending categories by joining bookings with providers and categories, counting bookings created in the last 4 weeks, and ordering by popularity.
 
-### Updated Query Logic
-```text
-Old (broken):  .or(`service_type.ilike.%poojari%`)  -- service_type is always NULL
-New (correct): .eq('category_id', '7feb9e4f-...')    -- matches the actual category
+Since RLS on `bookings` restricts access to own bookings, we will use a **database function** (security definer) that returns aggregated counts without exposing individual booking data.
 
-Plus optional: .or(`description.ilike.%ganesh%,subcategory.ilike.%ganesh%`)
-```
+### New Database Function
+
+A `get_trending_service_categories()` function that:
+- Joins `bookings`, `service_providers`, and `service_categories`
+- Filters to bookings from the last 4 weeks
+- Groups by category and returns name, slug, and count
+- Runs as `SECURITY DEFINER` so it can read across all bookings
+- Returns only aggregated, non-sensitive data (category name + count)
+
+### Emoji Mapping
+
+A static map from category slug to emoji:
+- poojari: "🙏"
+- photography: "📸"
+- videography: "🎥"
+- makeup: "💄"
+- mehandi: "🎨"
+- decoration: "🎊"
+- catering: "🍽️"
+- function-halls: "🏛️"
+- event-managers: "📋"
+- mangala-vadyam: "🎵"
+
+### Fallback
+
+If the query returns fewer than 3 results (e.g., new platform with few bookings), pad with hardcoded defaults so the UI never looks empty.
+
+### Files Changed
+
+1. **New migration** -- Create `get_trending_service_categories()` database function
+2. **`src/components/mobile/MobileAISearch.tsx`** -- Replace static `quickChips` array with a `useQuery` call to the new function, add emoji mapping, add fallback logic
