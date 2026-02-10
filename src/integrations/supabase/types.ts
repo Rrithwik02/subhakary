@@ -2286,6 +2286,14 @@ export type Database = {
           total_reviews: number
         }[]
       }
+      get_trending_service_categories: {
+        Args: never
+        Returns: {
+          booking_count: number
+          name: string
+          slug: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
