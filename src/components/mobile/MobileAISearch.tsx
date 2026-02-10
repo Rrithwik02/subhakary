@@ -4,75 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Sparkles, Star, MapPin, ArrowRight, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/searchUtils";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
-
-interface Provider {
-  id: string;
-  business_name: string;
-  service_type: string | null;
-  city: string | null;
-  rating: number | null;
-  total_reviews: number | null;
-  base_price: number | null;
-}
-
-const extractSearchParams = (searchQuery: string): { service: string | null; location: string | null } => {
-  const q = searchQuery.toLowerCase();
-
-  const services = [
-    'priest', 'poojari', 'pandit', 'photography', 'photographer', 'videography', 'videographer',
-    'makeup', 'mehandi', 'mehndi', 'henna', 'decoration', 'decorator', 'catering', 'caterer',
-    'function hall', 'event manager', 'mangala vadyam', 'nadaswaram', 'vayudyam',
-    'puja', 'pooja', 'wedding', 'haldi', 'sangeet', 'reception',
-  ];
-
-  const locations = [
-    'hyderabad', 'secunderabad', 'madhapur', 'gachibowli', 'hitech city', 'kondapur', 'kukatpally',
-    'ameerpet', 'dilsukhnagar', 'lb nagar', 'ecil', 'uppal', 'miyapur', 'bangalore', 'bengaluru',
-    'chennai', 'mumbai', 'delhi', 'kolkata', 'pune', 'ahmedabad', 'vijayawada', 'visakhapatnam',
-    'vizag', 'tirupati', 'warangal', 'guntur', 'nellore', 'kakinada', 'rajahmundry',
-  ];
-
-  let foundService: string | null = null;
-  let foundLocation: string | null = null;
-
-  for (const s of services) {
-    if (q.includes(s)) { foundService = s; break; }
-  }
-  for (const l of locations) {
-    if (q.includes(l)) { foundLocation = l; break; }
-  }
-
-  return { service: foundService, location: foundLocation };
-};
-
-const fetchProviders = async (service: string | null, location: string | null): Promise<Provider[]> => {
-  let qb = supabase
-    .from('public_service_providers')
-    .select('id, business_name, service_type, city, rating, total_reviews, base_price')
-    .eq('status', 'approved')
-    .order('rating', { ascending: false })
-    .limit(5);
-
-  if (location) {
-    qb = qb.or(`city.ilike.%${location}%,service_cities.cs.{${location}}`);
-  }
-  if (service) {
-    qb = qb.or(`service_type.ilike.%${service}%,business_name.ilike.%${service}%`);
-  }
-
-  const { data, error } = await qb;
-  if (error) { console.error('Error fetching providers:', error); return []; }
-  return data || [];
-};
 
 export const MobileAISearch = () => {
   const [query, setQuery] = useState("");
   const [suggestion, setSuggestion] = useState("");
-  const [providers, setProviders] = useState<Provider[]>([]);
+  const [providers, setProviders] = useState<SearchProvider[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const navigate = useNavigate();
@@ -87,20 +27,18 @@ export const MobileAISearch = () => {
   ];
   const [placeholderIndex] = useState(0);
 
-  const handleSearch = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!query.trim()) return;
+  const doSearch = async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
 
     setIsLoading(true);
     setShowResults(true);
     setSuggestion("");
     setProviders([]);
 
-    const { service, location } = extractSearchParams(query);
+    const params = extractSearchParams(searchQuery);
 
     try {
-      // Always fetch providers (works for all users)
-      const providersPromise = fetchProviders(service, location);
+      const providersPromise = fetchProviders(params);
 
       // Stream AI suggestion only for logged-in users
       if (user) {
@@ -112,7 +50,7 @@ export const MobileAISearch = () => {
               Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
             },
             body: JSON.stringify({
-              messages: [{ role: "user", content: `I'm looking for: ${query}. Give me a brief suggestion on what service category and type of provider would be best for my needs. Keep it to 2-3 sentences.` }],
+              messages: [{ role: "user", content: `I'm looking for: ${searchQuery}. Give me a brief suggestion on what service category and type of provider would be best for my needs. Keep it to 2-3 sentences.` }],
               type: "search",
             }),
           });
@@ -152,6 +90,11 @@ export const MobileAISearch = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    doSearch(query);
   };
 
   const quickChips = [
@@ -200,16 +143,7 @@ export const MobileAISearch = () => {
               transition={{ delay: index * 0.1 }}
               onClick={() => {
                 setQuery(chip.label);
-                // Trigger search with chip
-                setIsLoading(true);
-                setShowResults(true);
-                setSuggestion("");
-                setProviders([]);
-                const { service, location } = extractSearchParams(chip.label);
-                fetchProviders(service, location).then(p => {
-                  setProviders(p);
-                  setIsLoading(false);
-                });
+                doSearch(chip.label);
               }}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-colors touch-active ${
                 index === 0

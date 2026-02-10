@@ -4,19 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Sparkles, Loader2, Star, MapPin, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/searchUtils";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
-
-interface Provider {
-  id: string;
-  business_name: string;
-  service_type: string | null;
-  city: string | null;
-  rating: number | null;
-  total_reviews: number | null;
-  base_price: number | null;
-}
 
 interface AISearchProps {
   onSearch?: (query: string) => void;
@@ -26,75 +16,9 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [suggestion, setSuggestion] = useState("");
-  const [providers, setProviders] = useState<Provider[]>([]);
+  const [providers, setProviders] = useState<SearchProvider[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
-
-  const extractSearchParams = (searchQuery: string): { service: string | null; location: string | null } => {
-    const query = searchQuery.toLowerCase();
-    
-    // Common service types
-    const services = [
-      'priest', 'poojari', 'pandit', 'photography', 'photographer', 'videography', 'videographer',
-      'makeup', 'mehandi', 'mehndi', 'henna', 'decoration', 'decorator', 'catering', 'caterer',
-      'function hall', 'event manager', 'mangala vadyam', 'vayudyam'
-    ];
-    
-    // Common cities/areas in India
-    const locations = [
-      'hyderabad', 'secunderabad', 'madhapur', 'gachibowli', 'hitech city', 'kondapur', 'kukatpally',
-      'ameerpet', 'dilsukhnagar', 'lb nagar', 'ecil', 'uppal', 'miyapur', 'bangalore', 'bengaluru',
-      'chennai', 'mumbai', 'delhi', 'kolkata', 'pune', 'ahmedabad', 'vijayawada', 'visakhapatnam',
-      'vizag', 'tirupati', 'warangal', 'guntur', 'nellore', 'kakinada', 'rajahmundry'
-    ];
-    
-    let foundService: string | null = null;
-    let foundLocation: string | null = null;
-    
-    for (const service of services) {
-      if (query.includes(service)) {
-        foundService = service;
-        break;
-      }
-    }
-    
-    for (const location of locations) {
-      if (query.includes(location)) {
-        foundLocation = location;
-        break;
-      }
-    }
-    
-    return { service: foundService, location: foundLocation };
-  };
-
-  const fetchProviders = async (service: string | null, location: string | null) => {
-    // Use public_service_providers view for anonymous access
-    let queryBuilder = supabase
-      .from('public_service_providers')
-      .select('id, business_name, service_type, city, rating, total_reviews, base_price')
-      .eq('status', 'approved')
-      .order('rating', { ascending: false })
-      .limit(5);
-
-    if (location) {
-      // Search in city or service_cities array
-      queryBuilder = queryBuilder.or(`city.ilike.%${location}%,service_cities.cs.{${location}}`);
-    }
-
-    if (service) {
-      queryBuilder = queryBuilder.or(`service_type.ilike.%${service}%,business_name.ilike.%${service}%`);
-    }
-
-    const { data, error } = await queryBuilder;
-
-    if (error) {
-      console.error('Error fetching providers:', error);
-      return [];
-    }
-
-    return data || [];
-  };
 
   const getAISuggestion = async () => {
     if (!query.trim()) return;
@@ -104,11 +28,10 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
     setSuggestion("");
     setProviders([]);
 
-    const { service, location } = extractSearchParams(query);
+    const params = extractSearchParams(query);
 
     try {
-      // Fetch providers in parallel with AI suggestion
-      const providersPromise = fetchProviders(service, location);
+      const providersPromise = fetchProviders(params);
 
       const response = await fetch(CHAT_URL, {
         method: "POST",
@@ -153,7 +76,6 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
         }
       }
 
-      // Wait for providers
       const fetchedProviders = await providersPromise;
       setProviders(fetchedProviders);
     } catch (error) {
@@ -187,7 +109,7 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Describe what you're looking for... (e.g., 'priest for house warming in Hyderabad')"
+              placeholder="Describe what you're looking for... (e.g., 'poojari for house warming in Hyderabad')"
               className="pl-12 pr-4 py-6 text-base rounded-xl border-2 focus:border-primary"
             />
           </div>
