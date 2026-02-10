@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Search, Sparkles, Loader2, Star, MapPin, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/searchUtils";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
@@ -14,6 +16,7 @@ interface AISearchProps {
 
 export const AISearch = ({ onSearch }: AISearchProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [suggestion, setSuggestion] = useState("");
   const [providers, setProviders] = useState<SearchProvider[]>([]);
@@ -33,46 +36,58 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
     try {
       const providersPromise = fetchProviders(params);
 
-      const response = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: `I'm looking for: ${query}. Give me a brief suggestion on what service category and type of provider would be best for my needs. Keep it to 2-3 sentences.` }],
-          type: "search"
-        }),
-      });
+      // Only call AI for logged-in users
+      if (user) {
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const accessToken = sessionData?.session?.access_token;
 
-      if (!response.ok) throw new Error("Failed to get AI suggestion");
+          if (accessToken) {
+            const response = await fetch(CHAT_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                messages: [{ role: "user", content: `I'm looking for: ${query}. Give me a brief suggestion on what service category and type of provider would be best for my needs. Keep it to 2-3 sentences.` }],
+                type: "search"
+              }),
+            });
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let content = "";
+            if (response.ok) {
+              const reader = response.body?.getReader();
+              const decoder = new TextDecoder();
+              let content = "";
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+              if (reader) {
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n");
+                  const chunk = decoder.decode(value, { stream: true });
+                  const lines = chunk.split("\n");
 
-          for (const line of lines) {
-            if (line.startsWith("data: ") && line !== "data: [DONE]") {
-              try {
-                const json = JSON.parse(line.slice(6));
-                const delta = json.choices?.[0]?.delta?.content;
-                if (delta) {
-                  content += delta;
-                  setSuggestion(content);
+                  for (const line of lines) {
+                    if (line.startsWith("data: ") && line !== "data: [DONE]") {
+                      try {
+                        const json = JSON.parse(line.slice(6));
+                        const delta = json.choices?.[0]?.delta?.content;
+                        if (delta) {
+                          content += delta;
+                          setSuggestion(content);
+                        }
+                      } catch {
+                        // Skip invalid JSON
+                      }
+                    }
+                  }
                 }
-              } catch {
-                // Skip invalid JSON
               }
             }
           }
+        } catch (err) {
+          console.error("AI suggestion error:", err);
         }
       }
 
