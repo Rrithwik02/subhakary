@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Sparkles, Star, MapPin, ArrowRight, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,25 @@ import { extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
+const EMOJI_MAP: Record<string, string> = {
+  poojari: "🙏",
+  photography: "📸",
+  videography: "🎥",
+  makeup: "💄",
+  mehandi: "🎨",
+  decoration: "🎊",
+  catering: "🍽️",
+  "function-halls": "🏛️",
+  "event-managers": "📋",
+  "mangala-vadyam": "🎵",
+};
+
+const DEFAULT_CHIPS = [
+  { label: "Catering", emoji: "🍽️" },
+  { label: "Photography", emoji: "📸" },
+  { label: "Decoration", emoji: "🎊" },
+];
+
 export const MobileAISearch = () => {
   const [query, setQuery] = useState("");
   const [suggestion, setSuggestion] = useState("");
@@ -18,6 +38,24 @@ export const MobileAISearch = () => {
   const [showResults, setShowResults] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const { data: trendingChips } = useQuery({
+    queryKey: ["trending-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_trending_service_categories");
+      if (error) throw error;
+      return (data as { name: string; slug: string; booking_count: number }[]).map((c) => ({
+        label: c.name,
+        emoji: EMOJI_MAP[c.slug] || "✨",
+      }));
+    },
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const quickChips =
+    trendingChips && trendingChips.length >= 3
+      ? trendingChips.slice(0, 5)
+      : [...(trendingChips || []), ...DEFAULT_CHIPS].slice(0, 5);
 
   const placeholderExamples = [
     "Find Poojari for Ganesh Puja",
@@ -103,11 +141,7 @@ export const MobileAISearch = () => {
     doSearch(query);
   };
 
-  const quickChips = [
-    { label: "Catering", emoji: "🍽️" },
-    { label: "Nadaswaram", emoji: "🎵" },
-    { label: "Weddings", emoji: "💒" },
-  ];
+  // quickChips defined above via useQuery + fallback
 
   return (
     <div className="px-4 py-3">
