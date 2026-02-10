@@ -5,6 +5,7 @@ import { Search, Sparkles, Star, MapPin, ArrowRight, X, Loader2 } from "lucide-r
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/searchUtils";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
@@ -43,17 +44,21 @@ export const MobileAISearch = () => {
       // Stream AI suggestion only for logged-in users
       if (user) {
         try {
-          const response = await fetch(CHAT_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({
-              messages: [{ role: "user", content: `I'm looking for: ${searchQuery}. Give me a brief suggestion on what service category and type of provider would be best for my needs. Keep it to 2-3 sentences.` }],
-              type: "search",
-            }),
-          });
+          const { data: sessionData } = await supabase.auth.getSession();
+          const accessToken = sessionData?.session?.access_token;
+
+          if (accessToken) {
+            const response = await fetch(CHAT_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                messages: [{ role: "user", content: `I'm looking for: ${searchQuery}. Give me a brief suggestion on what service category and type of provider would be best for my needs. Keep it to 2-3 sentences.` }],
+                type: "search",
+              }),
+            });
 
           if (response.ok) {
             const reader = response.body?.getReader();
@@ -77,6 +82,7 @@ export const MobileAISearch = () => {
                 }
               }
             }
+          }
           }
         } catch (err) {
           console.error("AI suggestion error:", err);
