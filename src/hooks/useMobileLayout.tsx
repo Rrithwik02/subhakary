@@ -49,11 +49,11 @@ export const useMobileLayout = () => {
     };
   }, []);
 
-  // Show mobile layout for:
+  // Show mobile layout ONLY for:
   // 1. Native Capacitor apps (iOS/Android)
   // 2. Installed PWAs running in standalone mode
-  // 3. Mobile browser views (width < 768px)
-  return isNativeApp || isPWA || isMobile;
+  // Website in mobile browsers will use the responsive desktop layout
+  return isNativeApp || isPWA;
 };
 
 // Export additional utilities for more granular control
