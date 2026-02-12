@@ -1,25 +1,24 @@
 
 
-# Update PWA Home Screen Icon to Colored Logo
+# Use Different Logos for Navbar and Footer
 
-## Problem
-The PWA app icon displayed on the mobile home screen still uses the old icon (`pwa-icon-192.png` / `pwa-icon-512.png`). You want it to use the colored flame logo instead.
+## Overview
+Use the brown logo (Logo-Brown.png) in the top navigation bar and the white logo (Logo-_white.png) in the bottom footer. Other pages (Auth, BecomeProvider, MobileHeader) will continue using the current colored logo.
 
 ## Changes Required
 
-### 1. Replace PWA icon files
-- Copy `public/favicon.png` (the colored logo) to replace:
-  - `public/pwa-icon-192.png`
-  - `public/pwa-icon-512.png`
-  - `public/pwa-icon-maskable-192.png`
-  - `public/pwa-icon-maskable-512.png`
+### 1. Add new logo assets
+- Copy `user-uploads://Logo-Brown.png` to `src/assets/logo-brown.png`
+- Copy `user-uploads://Logo-_white.png` to `src/assets/logo-white.png`
 
-All four files will use the same colored logo image. The browser handles scaling to the appropriate size. The `manifest.json` already references these filenames, so no manifest changes are needed.
+### 2. Update Navbar.tsx
+- Change the import from `import logo from "@/assets/logo.png"` to `import logo from "@/assets/logo-brown.png"`
+- No other changes needed -- existing `h-10 w-auto` class handles scaling
 
-### 2. No other changes needed
-- `manifest.json` already points to these file paths
-- `index.html` apple-touch-icon already references `pwa-icon-192.png`
-- After replacing the files, users who reinstall or update the PWA will see the new colored icon on their home screen
+### 3. Update Footer.tsx
+- Change the import from `import logo from "@/assets/logo.png"` to `import logo from "@/assets/logo-white.png"`
+- No other changes needed -- existing `h-14 w-auto` class handles scaling, and the white logo will look great on the dark footer background
 
-## Note
-Existing installed PWAs may cache the old icon. Users may need to remove and re-add the app to their home screen to see the updated icon.
+### 4. No changes to other files
+- `MobileHeader.tsx`, `Auth.tsx`, and `BecomeProvider.tsx` will continue using the current `@/assets/logo.png` (colored version)
+
