@@ -1,38 +1,34 @@
 
 
-# Separate Website and App Layouts
+# Update Logos: Favicon and Website/App Logo
 
-## Problem
-The `useMobileLayout` hook currently returns `true` for three scenarios:
-1. Capacitor native apps
-2. Installed PWAs (standalone mode)
-3. **Mobile browser windows** (width below 1024px)
+## Overview
+Replace the current logos with the two new uploaded images across the entire project.
 
-This means visiting the website on a phone shows the app-style UI (bottom nav, mobile header, etc.) instead of the regular website layout (Navbar, Footer, etc.).
-
-## Solution
-Modify `useMobileLayout` so it only returns `true` for native apps and installed PWAs -- not for mobile browsers. The website will then always render the desktop/responsive layout regardless of screen size.
+## Image Assignment
+- **Image 1 (Logo.png - colored flame)**: Used as the browser favicon and for Google search appearance
+- **Image 2 (Logo-B-W.png - black & white flame)**: Used as the website and app logo everywhere
 
 ## Changes Required
 
-### 1. Update `src/hooks/useMobileLayout.tsx`
-- Remove the screen-width check from the final return
-- Change from: `return isNativeApp || isPWA || isMobile`
-- Change to: `return isNativeApp || isPWA`
-- The `isMobile` state and resize listener can remain for use by other hooks if needed, but won't drive layout switching
+### 1. Copy uploaded files into the project
+- Copy `user-uploads://Logo.png` to `public/favicon.png` (replacing current favicon)
+- Copy `user-uploads://Logo-B-W.png` to `src/assets/logo.png` (replacing the current website logo)
 
-### 2. Verify desktop components are responsive
-The existing desktop layout (Navbar, HeroSection, Footer, etc.) already uses Tailwind responsive classes, so they should work on smaller screens. However, some components may have `lg:hidden` or `hidden lg:block` classes that were added assuming mobile browser users would never see them. A quick audit of key pages will be done during implementation to ensure nothing breaks.
+### 2. Update `index.html` favicon references
+- Change `<link rel="icon" href="/pwa-icon-192.png">` to `<link rel="icon" href="/favicon.png">`
+- Update the JSON-LD `"logo"` field from `"https://subhakary.com/favicon.png"` -- this will now correctly point to the new favicon
 
-## What This Means
-- **Website in any browser** (desktop, tablet, phone): Shows the standard website with Navbar, Footer, and AIChatbot -- the same layout on all screen sizes
-- **Capacitor native app**: Continues showing MobileLayout with bottom nav, mobile header, etc.
-- **Installed PWA**: Continues showing MobileLayout with bottom nav, mobile header, etc.
+No other code changes needed since all 5 files that use the website logo already import from `@/assets/logo.png`:
+- `src/components/Navbar.tsx`
+- `src/components/Footer.tsx`
+- `src/components/mobile/MobileHeader.tsx`
+- `src/pages/Auth.tsx`
+- `src/pages/BecomeProvider.tsx`
 
-## Technical Details
+### Technical Notes
+- The favicon in `index.html` line 60 currently points to `/pwa-icon-192.png` -- will be updated to `/favicon.png`
+- The apple-touch-icon references will remain as `/pwa-icon-192.png` and `/pwa-icon-512.png` since those are PWA-specific icons
+- The logo import path `@/assets/logo.png` stays the same; only the file contents change
+- Logo sizing in components (e.g., `h-10`, `h-8`) will scale the new image automatically
 
-Only one file needs to change:
-
-**`src/hooks/useMobileLayout.tsx`** -- Update the return statement to: `return isNativeApp || isPWA`
-
-All 16 page files that consume `useMobileLayout()` will automatically get the correct behavior without any changes, since the hook itself drives the decision.
