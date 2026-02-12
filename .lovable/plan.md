@@ -1,34 +1,25 @@
 
 
-# Update Logos: Favicon and Website/App Logo
+# Update PWA Home Screen Icon to Colored Logo
 
-## Overview
-Replace the current logos with the two new uploaded images across the entire project.
-
-## Image Assignment
-- **Image 1 (Logo.png - colored flame)**: Used as the browser favicon and for Google search appearance
-- **Image 2 (Logo-B-W.png - black & white flame)**: Used as the website and app logo everywhere
+## Problem
+The PWA app icon displayed on the mobile home screen still uses the old icon (`pwa-icon-192.png` / `pwa-icon-512.png`). You want it to use the colored flame logo instead.
 
 ## Changes Required
 
-### 1. Copy uploaded files into the project
-- Copy `user-uploads://Logo.png` to `public/favicon.png` (replacing current favicon)
-- Copy `user-uploads://Logo-B-W.png` to `src/assets/logo.png` (replacing the current website logo)
+### 1. Replace PWA icon files
+- Copy `public/favicon.png` (the colored logo) to replace:
+  - `public/pwa-icon-192.png`
+  - `public/pwa-icon-512.png`
+  - `public/pwa-icon-maskable-192.png`
+  - `public/pwa-icon-maskable-512.png`
 
-### 2. Update `index.html` favicon references
-- Change `<link rel="icon" href="/pwa-icon-192.png">` to `<link rel="icon" href="/favicon.png">`
-- Update the JSON-LD `"logo"` field from `"https://subhakary.com/favicon.png"` -- this will now correctly point to the new favicon
+All four files will use the same colored logo image. The browser handles scaling to the appropriate size. The `manifest.json` already references these filenames, so no manifest changes are needed.
 
-No other code changes needed since all 5 files that use the website logo already import from `@/assets/logo.png`:
-- `src/components/Navbar.tsx`
-- `src/components/Footer.tsx`
-- `src/components/mobile/MobileHeader.tsx`
-- `src/pages/Auth.tsx`
-- `src/pages/BecomeProvider.tsx`
+### 2. No other changes needed
+- `manifest.json` already points to these file paths
+- `index.html` apple-touch-icon already references `pwa-icon-192.png`
+- After replacing the files, users who reinstall or update the PWA will see the new colored icon on their home screen
 
-### Technical Notes
-- The favicon in `index.html` line 60 currently points to `/pwa-icon-192.png` -- will be updated to `/favicon.png`
-- The apple-touch-icon references will remain as `/pwa-icon-192.png` and `/pwa-icon-512.png` since those are PWA-specific icons
-- The logo import path `@/assets/logo.png` stays the same; only the file contents change
-- Logo sizing in components (e.g., `h-10`, `h-8`) will scale the new image automatically
-
+## Note
+Existing installed PWAs may cache the old icon. Users may need to remove and re-add the app to their home screen to see the updated icon.
