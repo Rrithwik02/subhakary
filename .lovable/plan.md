@@ -1,31 +1,38 @@
 
-# Fix: Desktop AI Chatbot 401 Authentication Error
+
+# Separate Website and App Layouts
 
 ## Problem
-The desktop AI chatbot (`AIChatbot.tsx`) sends the static **anon key** as the Bearer token when calling the `ai-chat` edge function. The edge function requires a valid **user JWT token**, so it returns a 401 "Invalid or expired authentication token" error.
+The `useMobileLayout` hook currently returns `true` for three scenarios:
+1. Capacitor native apps
+2. Installed PWAs (standalone mode)
+3. **Mobile browser windows** (width below 1024px)
 
-This is the same bug that was previously fixed in `AISearch.tsx` and `MobileAISearch.tsx` but was missed in the chatbot component.
+This means visiting the website on a phone shows the app-style UI (bottom nav, mobile header, etc.) instead of the regular website layout (Navbar, Footer, etc.).
 
 ## Solution
+Modify `useMobileLayout` so it only returns `true` for native apps and installed PWAs -- not for mobile browsers. The website will then always render the desktop/responsive layout regardless of screen size.
 
-Update `src/components/AIChatbot.tsx` to:
+## Changes Required
 
-1. Import `supabase` client and retrieve the user's session token via `supabase.auth.getSession()`
-2. Use the actual `access_token` in the Authorization header instead of the anon key
-3. If the user is not logged in, show a message asking them to sign in instead of making the API call
+### 1. Update `src/hooks/useMobileLayout.tsx`
+- Remove the screen-width check from the final return
+- Change from: `return isNativeApp || isPWA || isMobile`
+- Change to: `return isNativeApp || isPWA`
+- The `isMobile` state and resize listener can remain for use by other hooks if needed, but won't drive layout switching
+
+### 2. Verify desktop components are responsive
+The existing desktop layout (Navbar, HeroSection, Footer, etc.) already uses Tailwind responsive classes, so they should work on smaller screens. However, some components may have `lg:hidden` or `hidden lg:block` classes that were added assuming mobile browser users would never see them. A quick audit of key pages will be done during implementation to ensure nothing breaks.
+
+## What This Means
+- **Website in any browser** (desktop, tablet, phone): Shows the standard website with Navbar, Footer, and AIChatbot -- the same layout on all screen sizes
+- **Capacitor native app**: Continues showing MobileLayout with bottom nav, mobile header, etc.
+- **Installed PWA**: Continues showing MobileLayout with bottom nav, mobile header, etc.
 
 ## Technical Details
 
-**File: `src/components/AIChatbot.tsx`**
+Only one file needs to change:
 
-- Add import: `import { supabase } from "@/integrations/supabase/client"`
-- In `sendMessage()`, before the fetch call, get the session token:
-  ```typescript
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData?.session?.access_token;
-  if (!accessToken) {
-    // Show "please sign in" message
-    return;
-  }
-  ```
-- Replace the Authorization header from `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` to `Bearer ${accessToken}`
+**`src/hooks/useMobileLayout.tsx`** -- Update the return statement to: `return isNativeApp || isPWA`
+
+All 16 page files that consume `useMobileLayout()` will automatically get the correct behavior without any changes, since the hook itself drives the decision.
