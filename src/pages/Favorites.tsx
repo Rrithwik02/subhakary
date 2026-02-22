@@ -109,7 +109,7 @@ const Favorites = () => {
                   >
                     <Card 
                       className="hover-lift cursor-pointer group active:scale-[0.98] touch-manipulation transition-transform"
-                      onClick={() => navigate(`/provider/${favorite.provider_id}`)}
+                      onClick={() => navigate(`/provider/${favorite.provider?.url_slug || favorite.provider_id}`)}
                     >
                       <CardContent className="p-3 md:p-5">
                         <div className="flex justify-between items-start mb-2 md:mb-3">

@@ -192,7 +192,7 @@ const Compare = () => {
                       <Button
                         size="sm"
                         className="w-full gradient-gold text-primary-foreground"
-                        onClick={() => navigate(`/provider/${provider.id}`)}
+                        onClick={() => navigate(`/provider/${(provider as any).url_slug || provider.id}`)}
                       >
                         View Profile
                       </Button>
