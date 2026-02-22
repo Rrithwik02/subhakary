@@ -1,85 +1,64 @@
 
 
-# SEO-Friendly Provider URLs + Anonymous Provider Browsing
+# Fix White Screen Issue in Mobile App
 
-## Overview
-Two issues to fix:
-1. Provider profile URLs currently use UUIDs (e.g., `/provider/abc-123-def`). They should use the business name as a slug (e.g., `/provider/sharma-pooja-services`) for better SEO and sharing.
-2. Non-logged-in users cannot see providers because the database blocks anonymous access. They should be able to browse and view providers freely, but booking should require login.
+## Problem
+Multiple pages crash with a white screen on the Subhakary mobile app because they violate **React's Rules of Hooks**. React requires that hooks (useState, useEffect, useQuery, etc.) are called in the exact same order on every render. Currently, 10 pages have an early `return` for mobile before their hooks, which means when `isMobile` changes from `true` to `false` (or vice versa), React sees a different number of hooks and crashes.
 
----
+## Solution
+Apply the same pattern already used in `Checkout.tsx` and `BookingDetails.tsx`: extract the desktop code into a separate `Desktop___` component, so the main component only has the `useMobileLayout()` hook and a simple conditional return. This way hooks are never called conditionally.
 
-## Changes
+## Pages to Fix (10 files)
 
-### 1. Add `url_slug` column to `service_providers` table
+Each file will be restructured from:
+```text
+const PageName = () => {
+  const isMobile = useMobileLayout();
+  // maybe some hooks here...
+  if (isMobile) return <MobileVersion />;
+  // more hooks here (VIOLATION!)
+  return <DesktopJSX />;
+};
+```
 
-- Add a new `url_slug` text column (unique, not null with a default derived from the id)
-- Create a trigger that auto-generates the slug from `business_name` on INSERT/UPDATE
-- Backfill existing providers with slugs generated from their business names
-- Add the `url_slug` column to the `public_service_providers` view
+To:
+```text
+const PageName = () => {
+  const isMobile = useMobileLayout();
+  if (isMobile) return <MobileVersion />;
+  return <DesktopPageName />;
+};
 
-### 2. Fix anonymous access to the `public_service_providers` view
+const DesktopPageName = () => {
+  // ALL hooks and desktop logic here
+  return <DesktopJSX />;
+};
+```
 
-The view currently inherits the base table's RLS, which requires authentication. To fix this:
-- Drop and recreate the `public_service_providers` view using `SECURITY INVOKER = false` (effectively `SECURITY DEFINER` behavior for views) so it runs with the view owner's permissions
-- Alternatively, create an RPC function with `SECURITY DEFINER` that returns public provider data, accessible to the `anon` role
-- The preferred approach: grant SELECT on the view to the `anon` role and ensure the view bypasses RLS by making it owned by a privileged role
+### Files affected:
+1. `src/pages/Providers.tsx` -- extract `DesktopProviders`
+2. `src/pages/Favorites.tsx` -- extract `DesktopFavorites`
+3. `src/pages/Chat.tsx` -- extract `DesktopChat`
+4. `src/pages/MyBookings.tsx` -- extract `DesktopMyBookings`
+5. `src/pages/ProviderProfile.tsx` -- extract `DesktopProviderProfile`
+6. `src/pages/ProviderDashboard.tsx` -- extract `DesktopProviderDashboard`
+7. `src/pages/Profile.tsx` -- extract `DesktopProfile`
+8. `src/pages/ProviderSettings.tsx` -- extract `DesktopProviderSettings`
+9. `src/pages/AdminDashboard.tsx` -- extract `DesktopAdminDashboard`
+10. `src/pages/Notifications.tsx` -- extract `DesktopNotifications`
 
-### 3. Update route configuration
-
-- Add a new route: `/provider/:slug` (keep the UUID route as a fallback for backward compatibility)
-- Update `ProviderProfile.tsx` and `MobileProviderProfile.tsx` to detect whether the param is a UUID or slug and query accordingly
-- If a UUID URL is accessed, redirect to the slug-based URL for SEO
-
-### 4. Update all provider links across the app
-
-Update every place that generates a `/provider/...` link to use the slug instead of UUID:
-- `src/pages/Providers.tsx` (desktop provider cards)
-- `src/components/mobile/MobileProviders.tsx` (mobile provider cards)
-- `src/pages/Favorites.tsx` and `src/components/mobile/MobileFavorites.tsx`
-- `src/pages/Compare.tsx`
-- `src/pages/ServiceLocation.tsx`
-- `src/components/mobile/MobileBookingDetails.tsx` (review link)
-- Share URL generation in `ProviderProfile.tsx` and `MobileProviderProfile.tsx`
-
-### 5. Update provider queries to include slug
-
-- All queries fetching provider lists need to include `url_slug` in the select
-- Provider profile queries need to support lookup by slug
-
----
+## What stays the same
+- No visual changes at all
+- No database changes
+- Mobile components remain untouched
+- Two pages already using this pattern (`Checkout.tsx`, `BookingDetails.tsx`) need no changes
+- `PaymentHistory.tsx` already has hooks before the early return, so it is fine
 
 ## Technical Details
 
-### Database Migration SQL (summary)
-
-```text
-1. ALTER TABLE service_providers ADD COLUMN url_slug text UNIQUE;
-2. CREATE FUNCTION generate_provider_slug(name text, provider_id uuid) 
-   -- generates "business-name" from "Business Name", appends short id suffix if duplicate
-3. CREATE TRIGGER auto_generate_slug BEFORE INSERT OR UPDATE ON service_providers
-4. UPDATE existing providers with generated slugs
-5. ALTER TABLE service_providers ALTER COLUMN url_slug SET NOT NULL
-6. Recreate public_service_providers view to include url_slug
-7. Grant anon access: CREATE OR REPLACE VIEW with SECURITY DEFINER ownership
-```
-
-### Route Changes
-
-```text
-Current:  /provider/:id  (UUID only)
-New:      /provider/:slug (slug-based, with UUID fallback + redirect)
-```
-
-### Provider Profile Query Logic
-
-```text
-- If param matches UUID format -> query by id, then redirect to slug URL
-- If param is a slug -> query by url_slug
-- This ensures old shared links still work while new links are SEO-friendly
-```
-
-### Anonymous Access Strategy
-
-The `public_service_providers` view will be recreated so anonymous (non-logged-in) users can query it. Booking, favoriting, and chat actions will continue to require authentication -- those checks already exist in the UI code (redirecting to `/auth` when no user).
+For each file, the refactor involves:
+- Wrapping everything after the `if (isMobile)` check into a new `Desktop___` component within the same file
+- Moving all `useState`, `useEffect`, `useQuery`, `useNavigate`, `useAuth`, `useToast`, etc. calls into the new desktop component
+- The parent component keeps only `useMobileLayout()` and the conditional return
+- The `export default` stays on the original component name so routes are unaffected
 
