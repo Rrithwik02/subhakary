@@ -92,7 +92,7 @@ export const MobileFavorites = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() => navigate(`/provider/${favorite.provider_id}`)}
+                    onClick={() => navigate(`/provider/${favorite.provider?.url_slug || favorite.provider_id}`)}
                     className="bg-card rounded-xl border border-border/50 p-3 active:scale-[0.98] transition-transform touch-active"
                   >
                     <div className="flex items-center gap-3">

@@ -322,7 +322,7 @@ export const MobileProviders = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() => navigate(`/provider/${provider.id}`)}
+                    onClick={() => navigate(`/provider/${provider.url_slug || provider.id}`)}
                     className="bg-card rounded-2xl overflow-hidden border border-border/50 touch-active"
                   >
                     {/* Image */}

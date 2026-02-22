@@ -1721,6 +1721,7 @@ export type Database = {
           total_reviews: number | null
           travel_charges_applicable: boolean | null
           updated_at: string
+          url_slug: string
           user_id: string
           verification_document_url: string | null
           website_url: string | null
@@ -1767,6 +1768,7 @@ export type Database = {
           total_reviews?: number | null
           travel_charges_applicable?: boolean | null
           updated_at?: string
+          url_slug: string
           user_id: string
           verification_document_url?: string | null
           website_url?: string | null
@@ -1813,6 +1815,7 @@ export type Database = {
           total_reviews?: number | null
           travel_charges_applicable?: boolean | null
           updated_at?: string
+          url_slug?: string
           user_id?: string
           verification_document_url?: string | null
           website_url?: string | null
@@ -2077,6 +2080,7 @@ export type Database = {
         Row: {
           advance_booking_days: number | null
           advance_payment_percentage: number | null
+          availability_status: string | null
           base_price: number | null
           business_name: string | null
           category_id: string | null
@@ -2105,12 +2109,14 @@ export type Database = {
           total_reviews: number | null
           travel_charges_applicable: boolean | null
           updated_at: string | null
+          url_slug: string | null
           website_url: string | null
           youtube_url: string | null
         }
         Insert: {
           advance_booking_days?: number | null
           advance_payment_percentage?: number | null
+          availability_status?: string | null
           base_price?: number | null
           business_name?: string | null
           category_id?: string | null
@@ -2139,12 +2145,14 @@ export type Database = {
           total_reviews?: number | null
           travel_charges_applicable?: boolean | null
           updated_at?: string | null
+          url_slug?: string | null
           website_url?: string | null
           youtube_url?: string | null
         }
         Update: {
           advance_booking_days?: number | null
           advance_payment_percentage?: number | null
+          availability_status?: string | null
           base_price?: number | null
           business_name?: string | null
           category_id?: string | null
@@ -2173,6 +2181,7 @@ export type Database = {
           total_reviews?: number | null
           travel_charges_applicable?: boolean | null
           updated_at?: string | null
+          url_slug?: string | null
           website_url?: string | null
           youtube_url?: string | null
         }
@@ -2197,6 +2206,10 @@ export type Database = {
       cleanup_expired_admin_invitations: { Args: never; Returns: number }
       decrypt_payment_field: { Args: { ciphertext: string }; Returns: string }
       encrypt_payment_field: { Args: { plaintext: string }; Returns: string }
+      generate_provider_slug: {
+        Args: { p_id: string; p_name: string }
+        Returns: string
+      }
       get_booking_customer_chat_info: {
         Args: { booking_ids: string[] }
         Returns: {

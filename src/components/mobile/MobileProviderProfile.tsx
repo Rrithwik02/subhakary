@@ -35,8 +35,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/integrations/supabase/client";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const MobileProviderProfile = () => {
-  const { id } = useParams();
+  const { id: paramValue } = useParams();
+  const isUUID = paramValue ? UUID_REGEX.test(paramValue) : false;
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -55,42 +58,57 @@ const MobileProviderProfile = () => {
 
   // Fetch provider details using public_service_providers view for anonymous access
   const { data: provider, isLoading } = useQuery({
-    queryKey: ["provider", id],
+    queryKey: ["provider", paramValue],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("public_service_providers")
         .select(`
           *,
           category:service_categories(name, icon, description)
         `)
-        .eq("id", id)
-        .eq("status", "approved")
-        .maybeSingle();
+        .eq("status", "approved");
+
+      if (isUUID) {
+        query = query.eq("id", paramValue);
+      } else {
+        query = query.eq("url_slug", paramValue);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
+
+      // Redirect UUID URLs to slug URLs for SEO
+      if (data && isUUID && data.url_slug) {
+        navigate(`/provider/${data.url_slug}`, { replace: true });
+      }
+
       return data;
     },
-    enabled: !!id,
+    enabled: !!paramValue,
   });
+
+  const providerId = provider?.id;
 
   // Fetch reviews
   const { data: reviews = [] } = useQuery({
-    queryKey: ["provider-reviews", id],
+    queryKey: ["provider-reviews", providerId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reviews")
         .select("*, booking:bookings(user_id)")
-        .eq("provider_id", id)
+        .eq("provider_id", providerId!)
         .eq("status", "approved")
         .order("created_at", { ascending: false })
         .limit(5);
       if (error) throw error;
       return data || [];
     },
-    enabled: !!id,
+    enabled: !!providerId,
   });
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/provider/${id}`;
+    const slug = provider?.url_slug || paramValue;
+    const shareUrl = `${window.location.origin}/provider/${slug}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -133,7 +151,7 @@ const MobileProviderProfile = () => {
     try {
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
-        provider_id: id,
+        provider_id: providerId,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -169,7 +187,7 @@ const MobileProviderProfile = () => {
       navigate("/auth");
       return;
     }
-    navigate(`/inquiry/${id}`);
+    navigate(`/inquiry/${providerId}`);
   };
 
   if (isLoading) {

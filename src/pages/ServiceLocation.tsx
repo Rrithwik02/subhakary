@@ -202,7 +202,7 @@ const ServiceLocation = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => navigate(`/provider/${provider.id}`)}
+                        onClick={() => navigate(`/provider/${provider.url_slug || provider.id}`)}
                       >
                         View Profile
                       </Button>

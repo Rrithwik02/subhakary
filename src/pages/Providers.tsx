@@ -169,6 +169,7 @@ const Providers = () => {
           instagram_url,
           youtube_url,
           website_url,
+          url_slug,
           category:service_categories(name, icon)
         `)
         .eq("status", "approved")
@@ -708,7 +709,7 @@ const Providers = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Link to={`/provider/${provider.id}${selectedDate ? `?date=${selectedDate}` : ''}`}>
+                  <Link to={`/provider/${provider.url_slug || provider.id}${selectedDate ? `?date=${selectedDate}` : ''}`}>
                     <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden group">
                       <CardContent className="p-4 md:p-6">
                         {/* Header with Avatar, Name and Verification Badge */}
@@ -850,7 +851,7 @@ const Providers = () => {
                             <ShareButton
                               title={provider.business_name}
                               text={`Check out ${provider.business_name} on our platform!`}
-                              url={`/provider/${provider.id}`}
+                              url={`/provider/${provider.url_slug || provider.id}`}
                             />
                             <CompareButton provider={provider} variant="icon" />
                           </div>

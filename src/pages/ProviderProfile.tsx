@@ -48,9 +48,11 @@ import { trackProviderView, trackProviderContact, trackBookingRequest } from "@/
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileProviderProfile from "@/components/mobile/MobileProviderProfile";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const ProviderProfile = () => {
   const isMobile = useMobileLayout();
-  const { id } = useParams();
+  const { id: paramValue } = useParams();
   
   // Return mobile version if on mobile
   if (isMobile) {
@@ -70,8 +72,11 @@ const ProviderProfile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const isUUID = paramValue ? UUID_REGEX.test(paramValue) : false;
+
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/provider/${id}`;
+    const slug = provider?.url_slug || paramValue;
+    const shareUrl = `${window.location.origin}/provider/${slug}`;
     
     // Try native share first (mobile)
     if (navigator.share) {
@@ -122,10 +127,9 @@ const ProviderProfile = () => {
 
   // Fetch provider details using public_service_providers view for anonymous access
   const { data: provider, isLoading } = useQuery({
-    queryKey: ["provider", id],
+    queryKey: ["provider", paramValue],
     queryFn: async () => {
-      // Fetch public provider info (excludes sensitive fields like whatsapp_number, address)
-      const { data, error } = await supabase
+      let query = supabase
         .from("public_service_providers")
         .select(`
           id,
@@ -157,11 +161,18 @@ const ProviderProfile = () => {
           instagram_url,
           youtube_url,
           website_url,
+          url_slug,
           category:service_categories(name, icon, description)
         `)
-        .eq("id", id)
-        .eq("status", "approved")
-        .maybeSingle();
+        .eq("status", "approved");
+
+      if (isUUID) {
+        query = query.eq("id", paramValue);
+      } else {
+        query = query.eq("url_slug", paramValue);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
       
       // Track provider view when data is loaded
@@ -172,16 +183,23 @@ const ProviderProfile = () => {
           category: data.category?.name,
           city: data.city || undefined,
         });
+
+        // Redirect UUID URLs to slug URLs for SEO
+        if (isUUID && data.url_slug) {
+          navigate(`/provider/${data.url_slug}`, { replace: true });
+        }
       }
       
       return data;
     },
-    enabled: !!id,
+    enabled: !!paramValue,
   });
+
+  const providerId = provider?.id;
 
   // Fetch verified additional services for this provider
   const { data: verifiedServices = [] } = useQuery({
-    queryKey: ["provider-verified-services", id],
+    queryKey: ["provider-verified-services", providerId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("additional_services")
@@ -190,30 +208,30 @@ const ProviderProfile = () => {
           service_type,
           category:service_categories(name, icon)
         `)
-        .eq("provider_id", id)
+        .eq("provider_id", providerId!)
         .eq("verification_status", "verified");
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!id,
+    enabled: !!providerId,
   });
 
   // Fetch blocked dates for this provider
   const { data: blockedDates = [] } = useQuery({
-    queryKey: ["provider-blocked-dates-public", id],
+    queryKey: ["provider-blocked-dates-public", providerId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_provider_availability")
         .select("specific_date")
-        .eq("provider_id", id)
+        .eq("provider_id", providerId!)
         .eq("is_blocked", true)
         .not("specific_date", "is", null);
 
       if (error) throw error;
       return (data || []).map((b) => new Date(b.specific_date!));
     },
-    enabled: !!id,
+    enabled: !!providerId,
   });
 
   // Check if a date is blocked
@@ -261,7 +279,7 @@ const ProviderProfile = () => {
     try {
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
-        provider_id: id,
+        provider_id: providerId,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -275,7 +293,7 @@ const ProviderProfile = () => {
 
       // Track successful booking request
       trackBookingRequest({
-        providerId: id!,
+        providerId: providerId!,
         providerName: provider?.business_name || '',
         totalDays,
         serviceDate: format(bookingDate, "yyyy-MM-dd"),
