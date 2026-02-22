@@ -61,15 +61,14 @@ const statusConfig = {
 
 const MyBookings = () => {
   const isMobile = useMobileLayout();
+  if (isMobile) return <MobileMyBookings />;
+  return <DesktopMyBookings />;
+};
+
+const DesktopMyBookings = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Return mobile version if on mobile
-  if (isMobile) {
-    return <MobileMyBookings />;
-  }
-  
   const [reviewBooking, setReviewBooking] = useState<{
     id: string;
     providerId: string;

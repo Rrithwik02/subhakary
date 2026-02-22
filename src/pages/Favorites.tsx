@@ -15,14 +15,14 @@ import MobileFavorites from "@/components/mobile/MobileFavorites";
 
 const Favorites = () => {
   const isMobile = useMobileLayout();
+  if (isMobile) return <MobileFavorites />;
+  return <DesktopFavorites />;
+};
+
+const DesktopFavorites = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { favorites, isLoading } = useFavorites();
-
-  // Return mobile version if on mobile
-  if (isMobile) {
-    return <MobileFavorites />;
-  }
 
   useEffect(() => {
     if (!loading && !user) {

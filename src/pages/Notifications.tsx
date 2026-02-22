@@ -14,6 +14,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileNotifications from "@/components/mobile/MobileNotifications";
+
 const notificationIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   booking: Calendar,
   message: MessageSquare,
@@ -24,14 +25,15 @@ const notificationIcons: Record<string, React.ComponentType<{ className?: string
 };
 
 const Notifications = () => {
+  const isMobile = useMobileLayout();
+  if (isMobile) return <MobileNotifications />;
+  return <DesktopNotifications />;
+};
+
+const DesktopNotifications = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const isMobile = useMobileLayout();
-
-  if (isMobile) {
-    return <MobileNotifications />;
-  }
 
   // Get user's profile
   const { data: profile } = useQuery({

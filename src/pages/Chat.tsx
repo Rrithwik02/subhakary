@@ -19,6 +19,11 @@ import MobileChat from "@/components/mobile/MobileChat";
 
 const Chat = () => {
   const isMobile = useMobileLayout();
+  if (isMobile) return <MobileChat />;
+  return <DesktopChat />;
+};
+
+const DesktopChat = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const bookingIdFromUrl = searchParams.get("booking");
@@ -26,11 +31,6 @@ const Chat = () => {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(
     bookingIdFromUrl
   );
-  
-  // Return mobile version if on mobile
-  if (isMobile) {
-    return <MobileChat />;
-  }
 
   useEffect(() => {
     if (!loading && !user) {

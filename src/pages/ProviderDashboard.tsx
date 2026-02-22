@@ -75,15 +75,14 @@ const statusConfig = {
 
 const ProviderDashboard = () => {
   const isMobile = useMobileLayout();
+  if (isMobile) return <MobileProviderDashboard />;
+  return <DesktopProviderDashboard />;
+};
+
+const DesktopProviderDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Return mobile version if on mobile
-  if (isMobile) {
-    return <MobileProviderDashboard />;
-  }
-
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
