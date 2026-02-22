@@ -28,10 +28,11 @@ const profileSchema = z.object({
 
 const Profile = () => {
   const isMobile = useMobileLayout();
+  if (isMobile) return <MobileProfile />;
+  return <DesktopProfile />;
+};
 
-  if (isMobile) {
-    return <MobileProfile />;
-  }
+const DesktopProfile = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

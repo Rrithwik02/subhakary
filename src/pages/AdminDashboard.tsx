@@ -60,10 +60,11 @@ const statusColors = {
 
 const AdminDashboard = () => {
   const isMobile = useMobileLayout();
+  if (isMobile) return <MobileAdminDashboard />;
+  return <DesktopAdminDashboard />;
+};
 
-  if (isMobile) {
-    return <MobileAdminDashboard />;
-  }
+const DesktopAdminDashboard = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

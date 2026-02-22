@@ -39,16 +39,16 @@ import MobileProviderSettings from "@/components/mobile/MobileProviderSettings";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 
 const ProviderSettings = () => {
+  const isMobile = useMobileLayout();
+  if (isMobile) return <MobileProviderSettings />;
+  return <DesktopProviderSettings />;
+};
+
+const DesktopProviderSettings = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isMobile = useMobileLayout();
-
-  if (isMobile) {
-    return <MobileProviderSettings />;
-  }
-
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);

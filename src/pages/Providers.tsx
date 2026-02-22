@@ -49,13 +49,13 @@ const CITY_AREAS: Record<string, string[]> = {
 
 const Providers = () => {
   const isMobile = useMobileLayout();
+  if (isMobile) return <MobileProviders />;
+  return <DesktopProviders />;
+};
+
+const DesktopProviders = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
-  // Return mobile version if on mobile
-  if (isMobile) {
-    return <MobileProviders />;
-  }
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");

@@ -52,12 +52,12 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 const ProviderProfile = () => {
   const isMobile = useMobileLayout();
+  if (isMobile) return <MobileProviderProfile />;
+  return <DesktopProviderProfile />;
+};
+
+const DesktopProviderProfile = () => {
   const { id: paramValue } = useParams();
-  
-  // Return mobile version if on mobile
-  if (isMobile) {
-    return <MobileProviderProfile />;
-  }
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
