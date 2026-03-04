@@ -15,23 +15,39 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Supabase appends #access_token=...&type=recovery to the URL
-    const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
-      setIsRecovery(true);
-    }
-
-    // Also listen for the PASSWORD_RECOVERY event
+    // Listen for PASSWORD_RECOVERY event (fires when Supabase processes recovery token)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
+        setChecking(false);
       }
     });
+
+    // Also check hash and existing session as fallback
+    const checkRecovery = async () => {
+      const hash = window.location.hash;
+      if (hash.includes("type=recovery")) {
+        setIsRecovery(true);
+        setChecking(false);
+        return;
+      }
+
+      // Check if user has an active session (recovery token was already exchanged)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // User landed here with a valid session — likely from a recovery link
+        setIsRecovery(true);
+      }
+      setChecking(false);
+    };
+
+    checkRecovery();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -63,6 +79,14 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!isRecovery) {
     return (
