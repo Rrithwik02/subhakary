@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Loader2,
   IndianRupee,
+  Clock,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -24,24 +25,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileCheckout from "@/components/mobile/MobileCheckout";
 
-// Razorpay type declaration
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
-const RAZORPAY_KEY_ID = "rzp_live_SDbr4C1LPJDdcY";
-
 const Checkout = () => {
   const isMobile = useMobileLayout();
   
-  // Render mobile version immediately without running desktop hooks
   if (isMobile) {
     return <MobileCheckout />;
   }
   
-  // Desktop version - this is a stable conditional since isMobile won't change mid-render
   return <DesktopCheckout />;
 };
 
@@ -50,8 +40,6 @@ const DesktopCheckout = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -59,20 +47,7 @@ const DesktopCheckout = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Load Razorpay script
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  // Get refetch from query
-  const queryResult = useQuery({
+  const { data: payment, isLoading, refetch } = useQuery({
     queryKey: ["checkout-payment", paymentId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -103,8 +78,6 @@ const DesktopCheckout = () => {
     enabled: !!paymentId && !!user,
   });
 
-  const { data: payment, isLoading, refetch } = queryResult;
-
   // Subscribe to realtime payment updates
   useEffect(() => {
     if (!paymentId) return;
@@ -129,145 +102,6 @@ const DesktopCheckout = () => {
       supabase.removeChannel(channel);
     };
   }, [paymentId, refetch]);
-
-
-  const handlePayment = async () => {
-    if (!payment || !user) return;
-
-    setIsProcessing(true);
-
-    try {
-      // Get the session for authorization
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Session expired",
-          description: "Please log in again.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      // Create Razorpay order via edge function
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-razorpay-order`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            paymentId: payment.id,
-            amount: payment.amount,
-            currency: "INR",
-            notes: {
-              booking_id: payment.booking?.id,
-              provider_name: payment.booking?.provider?.business_name,
-            },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create order");
-      }
-
-      const orderData = await response.json();
-
-      // Configure Razorpay options
-      const options = {
-        key: RAZORPAY_KEY_ID,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Subhakary",
-        description: `Payment for ${payment.booking?.provider?.business_name}`,
-        order_id: orderData.orderId,
-        handler: async (response: {
-          razorpay_order_id: string;
-          razorpay_payment_id: string;
-          razorpay_signature: string;
-        }) => {
-          // Verify payment via edge function
-          try {
-            const verifyResponse = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-razorpay-payment`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  paymentId: payment.id,
-                }),
-              }
-            );
-
-            const verifyData = await verifyResponse.json();
-
-            if (verifyData.success) {
-              setPaymentSuccess(true);
-              toast({
-                title: "Payment successful!",
-                description: "Your payment has been processed successfully.",
-              });
-            } else {
-              toast({
-                title: "Payment verification failed",
-                description: verifyData.error || "Please contact support.",
-                variant: "destructive",
-              });
-            }
-          } catch (error) {
-            console.error("Payment verification error:", error);
-            toast({
-              title: "Verification error",
-              description: "Payment may have succeeded. Please check your bookings.",
-              variant: "destructive",
-            });
-          }
-        },
-        prefill: {
-          email: user.email,
-        },
-        theme: {
-          color: "#C4A962",
-        },
-        modal: {
-          ondismiss: () => {
-            setIsProcessing(false);
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", (response: any) => {
-        console.error("Payment failed:", response.error);
-        toast({
-          title: "Payment failed",
-          description: response.error.description || "Please try again.",
-          variant: "destructive",
-        });
-        setIsProcessing(false);
-      });
-
-      razorpay.open();
-    } catch (error: any) {
-      console.error("Payment error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to initiate payment.",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-    }
-  };
 
   if (authLoading || isLoading) {
     return (
@@ -307,7 +141,6 @@ const DesktopCheckout = () => {
     );
   }
 
-  // Check if user owns this payment
   if (payment.booking?.user_id !== user?.id) {
     return (
       <div className="min-h-screen bg-background">
@@ -330,8 +163,7 @@ const DesktopCheckout = () => {
     );
   }
 
-  // Payment already completed
-  if (payment.status === "completed" || paymentSuccess) {
+  if (payment.status === "completed") {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -387,7 +219,6 @@ const DesktopCheckout = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Provider Info */}
                 <div className="flex items-center gap-4 p-4 bg-secondary/10 rounded-lg">
                   <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">
                     {payment.booking?.provider?.category?.icon || "🙏"}
@@ -402,7 +233,6 @@ const DesktopCheckout = () => {
                   </div>
                 </div>
 
-                {/* Booking Details */}
                 <div className="grid grid-cols-2 gap-4 py-4 border-y">
                   <div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -421,7 +251,6 @@ const DesktopCheckout = () => {
                   </div>
                 </div>
 
-                {/* Amount */}
                 <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg">
                   <div>
                     <p className="text-sm text-muted-foreground">Amount to Pay</p>
@@ -443,41 +272,27 @@ const DesktopCheckout = () => {
               </CardContent>
             </Card>
 
-            {/* Security Notice */}
+            {/* Online Payment Coming Soon */}
             <Card className="border-primary/20">
-              <CardContent className="p-4 flex items-start gap-3">
-                <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-sm">Secure Payment</p>
-                  <p className="text-xs text-muted-foreground">
-                    Your payment is processed securely via Razorpay. We don't store your card details.
-                  </p>
+              <CardContent className="p-6 text-center space-y-3">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <Clock className="h-6 w-6 text-primary" />
                 </div>
+                <h3 className="font-semibold">Online Payment Coming Soon</h3>
+                <p className="text-sm text-muted-foreground">
+                  Online payment gateway is being set up. Please coordinate with your provider for payment details.
+                </p>
               </CardContent>
             </Card>
 
-            {/* Pay Button */}
             <Button
-              className="w-full h-14 text-lg gradient-gold"
-              onClick={handlePayment}
-              disabled={isProcessing}
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate("/my-bookings")}
             >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="mr-2 h-5 w-5" />
-                  Pay ₹{payment.amount.toLocaleString()}
-                </>
-              )}
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to My Bookings
             </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              By proceeding, you agree to our Terms of Service and Privacy Policy.
-            </p>
           </motion.div>
         </div>
       </section>
