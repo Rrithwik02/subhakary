@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -6,11 +6,11 @@ import { format } from "date-fns";
 import {
   Calendar,
   CreditCard,
-  Shield,
   CheckCircle2,
   AlertCircle,
-  Loader2,
   IndianRupee,
+  Clock,
+  ArrowLeft,
 } from "lucide-react";
 import { MobileLayout } from "./MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -19,45 +19,18 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-// Razorpay type declaration
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
-const RAZORPAY_KEY_ID = "rzp_live_SDbr4C1LPJDdcY";
 
 const MobileCheckout = () => {
   const { paymentId } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
-
-  // Load Razorpay script
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
-  }, []);
 
   const { data: payment, isLoading, refetch } = useQuery({
     queryKey: ["checkout-payment", paymentId],
@@ -115,141 +88,6 @@ const MobileCheckout = () => {
     };
   }, [paymentId, refetch]);
 
-  const handlePayment = async () => {
-    if (!payment || !user) return;
-
-    setIsProcessing(true);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Session expired",
-          description: "Please log in again.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      // Create Razorpay order via edge function
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-razorpay-order`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            paymentId: payment.id,
-            amount: payment.amount,
-            currency: "INR",
-            notes: {
-              booking_id: payment.booking?.id,
-              provider_name: payment.booking?.provider?.business_name,
-            },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create order");
-      }
-
-      const orderData = await response.json();
-
-      const options = {
-        key: RAZORPAY_KEY_ID,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Subhakary",
-        description: `Payment for ${payment.booking?.provider?.business_name}`,
-        order_id: orderData.orderId,
-        handler: async (response: {
-          razorpay_order_id: string;
-          razorpay_payment_id: string;
-          razorpay_signature: string;
-        }) => {
-          try {
-            const verifyResponse = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-razorpay-payment`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  paymentId: payment.id,
-                }),
-              }
-            );
-
-            const verifyData = await verifyResponse.json();
-
-            if (verifyData.success) {
-              setPaymentSuccess(true);
-              toast({
-                title: "Payment successful!",
-                description: "Your payment has been processed.",
-              });
-            } else {
-              toast({
-                title: "Payment verification failed",
-                description: verifyData.error || "Please contact support.",
-                variant: "destructive",
-              });
-            }
-          } catch (error) {
-            console.error("Payment verification error:", error);
-            toast({
-              title: "Verification error",
-              description: "Payment may have succeeded. Please check your bookings.",
-              variant: "destructive",
-            });
-          }
-        },
-        prefill: {
-          email: user.email,
-        },
-        theme: {
-          color: "#C4A962",
-        },
-        modal: {
-          ondismiss: () => {
-            setIsProcessing(false);
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", (response: any) => {
-        console.error("Payment failed:", response.error);
-        toast({
-          title: "Payment failed",
-          description: response.error.description || "Please try again.",
-          variant: "destructive",
-        });
-        setIsProcessing(false);
-      });
-
-      razorpay.open();
-    } catch (error: any) {
-      console.error("Payment error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to initiate payment.",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-    }
-  };
-
   if (authLoading || isLoading) {
     return (
       <MobileLayout title="Checkout" showBackButton>
@@ -279,7 +117,6 @@ const MobileCheckout = () => {
     );
   }
 
-  // Check if user owns this payment
   if (payment.booking?.user_id !== user?.id) {
     return (
       <MobileLayout title="Checkout" showBackButton>
@@ -297,8 +134,7 @@ const MobileCheckout = () => {
     );
   }
 
-  // Payment success state
-  if (payment.status === "completed" || paymentSuccess) {
+  if (payment.status === "completed") {
     return (
       <MobileLayout title="Payment Complete" showBackButton={false}>
         <div className="flex flex-col items-center justify-center p-8 text-center min-h-[60vh]">
@@ -402,48 +238,33 @@ const MobileCheckout = () => {
           </Card>
         </motion.div>
 
-        {/* Security Notice */}
+        {/* Online Payment Coming Soon */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
           <Card className="border-primary/20">
-            <CardContent className="p-4 flex items-start gap-3">
-              <Shield className="h-5 w-5 text-primary flex-shrink-0" />
-              <div>
-                <p className="font-medium text-sm">Secure Payment</p>
-                <p className="text-xs text-muted-foreground">
-                  Your payment is processed securely via Razorpay.
-                </p>
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <Clock className="h-6 w-6 text-primary" />
               </div>
+              <h3 className="font-semibold">Online Payment Coming Soon</h3>
+              <p className="text-sm text-muted-foreground">
+                Online payment gateway is being set up. Please coordinate with your provider for payment details.
+              </p>
             </CardContent>
           </Card>
         </motion.div>
-      </div>
 
-      {/* Fixed Bottom Pay Button */}
-      <div className="fixed bottom-20 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t safe-area-bottom">
         <Button
-          className="w-full h-14 text-lg gradient-gold"
-          onClick={handlePayment}
-          disabled={isProcessing}
+          variant="outline"
+          className="w-full"
+          onClick={() => navigate("/my-bookings")}
         >
-          {isProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <CreditCard className="mr-2 h-5 w-5" />
-              Pay ₹{payment.amount.toLocaleString()}
-            </>
-          )}
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to My Bookings
         </Button>
-        <p className="text-xs text-center text-muted-foreground mt-3">
-          By proceeding, you agree to our Terms of Service.
-        </p>
       </div>
     </MobileLayout>
   );
