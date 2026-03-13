@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { AISearch } from "@/components/AISearch";
 import heroWedding from "@/assets/hero-wedding.jpg";
 import heroPuja from "@/assets/hero-puja.jpg";
 import heroCelebration from "@/assets/hero-celebration.jpg";
@@ -267,6 +268,21 @@ export const HeroSection = () => {
                   </Button>
                 </div>
             </>
+          </motion.div>
+
+          {/* AI Search Divider + Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="mt-6"
+          >
+            <div className="flex items-center gap-3 max-w-2xl mx-auto mb-4">
+              <div className="flex-1 h-px bg-cream/20" />
+              <span className="text-cream/50 text-xs font-medium uppercase tracking-wider">or search with AI</span>
+              <div className="flex-1 h-px bg-cream/20" />
+            </div>
+            <AISearch />
           </motion.div>
         </div>
 
