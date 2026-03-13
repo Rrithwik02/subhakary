@@ -1,64 +1,42 @@
 
 
-# Fix White Screen Issue in Mobile App
+## Plan: AI Search Bar + Search Results Page
 
-## Problem
-Multiple pages crash with a white screen on the Subhakary mobile app because they violate **React's Rules of Hooks**. React requires that hooks (useState, useEffect, useQuery, etc.) are called in the exact same order on every render. Currently, 10 pages have an early `return` for mobile before their hooks, which means when `isMobile` changes from `true` to `false` (or vice versa), React sees a different number of hooks and crashes.
+### What we're building
+Add an AI search bar (the `AISearch` component) to the hero section below the existing form-based search. When a user submits a query, they get redirected to a new `/search` page that shows the AI-recommended results.
 
-## Solution
-Apply the same pattern already used in `Checkout.tsx` and `BookingDetails.tsx`: extract the desktop code into a separate `Desktop___` component, so the main component only has the `useMobileLayout()` hook and a simple conditional return. This way hooks are never called conditionally.
+### Changes
 
-## Pages to Fix (10 files)
+**1. Create `src/pages/SearchResults.tsx`**
+- New page that reads `?q=` from URL query params
+- On mount, calls `fetchAIRecommendations` (logged-in) or `fetchProviders` (anonymous) with the query
+- Displays AI suggestion summary + ranked provider cards (premium badge for `is_premium`)
+- Includes the AI search bar at the top so users can refine their search
+- Uses `Navbar` and `Footer` for desktop, mobile layout for mobile
 
-Each file will be restructured from:
-```text
-const PageName = () => {
-  const isMobile = useMobileLayout();
-  // maybe some hooks here...
-  if (isMobile) return <MobileVersion />;
-  // more hooks here (VIOLATION!)
-  return <DesktopJSX />;
-};
-```
+**2. Add route in `App.tsx`**
+- Add `<Route path="/search" element={<SearchResults />} />`
 
-To:
-```text
-const PageName = () => {
-  const isMobile = useMobileLayout();
-  if (isMobile) return <MobileVersion />;
-  return <DesktopPageName />;
-};
+**3. Update `AISearch.tsx`**
+- Instead of showing inline results, redirect to `/search?q=<query>` on submit
+- Remove the inline results panel (AnimatePresence section)
+- Accept an optional `initialQuery` prop for pre-filling on the search page
 
-const DesktopPageName = () => {
-  // ALL hooks and desktop logic here
-  return <DesktopJSX />;
-};
-```
+**4. Update `MobileAISearch.tsx`**
+- Same redirect behavior: navigate to `/search?q=<query>` on submit
+- Remove inline results panel
 
-### Files affected:
-1. `src/pages/Providers.tsx` -- extract `DesktopProviders`
-2. `src/pages/Favorites.tsx` -- extract `DesktopFavorites`
-3. `src/pages/Chat.tsx` -- extract `DesktopChat`
-4. `src/pages/MyBookings.tsx` -- extract `DesktopMyBookings`
-5. `src/pages/ProviderProfile.tsx` -- extract `DesktopProviderProfile`
-6. `src/pages/ProviderDashboard.tsx` -- extract `DesktopProviderDashboard`
-7. `src/pages/Profile.tsx` -- extract `DesktopProfile`
-8. `src/pages/ProviderSettings.tsx` -- extract `DesktopProviderSettings`
-9. `src/pages/AdminDashboard.tsx` -- extract `DesktopAdminDashboard`
-10. `src/pages/Notifications.tsx` -- extract `DesktopNotifications`
+**5. Add AI search bar to `HeroSection.tsx`**
+- Place the `AISearch` component below the existing service/date/location search form
+- Add a subtle "or" divider between them
 
-## What stays the same
-- No visual changes at all
-- No database changes
-- Mobile components remain untouched
-- Two pages already using this pattern (`Checkout.tsx`, `BookingDetails.tsx`) need no changes
-- `PaymentHistory.tsx` already has hooks before the early return, so it is fine
+**6. Add AI search bar to `MobileHome.tsx`**
+- Already uses `MobileAISearch` — confirm it's present, ensure redirect behavior works
 
-## Technical Details
-
-For each file, the refactor involves:
-- Wrapping everything after the `if (isMobile)` check into a new `Desktop___` component within the same file
-- Moving all `useState`, `useEffect`, `useQuery`, `useNavigate`, `useAuth`, `useToast`, etc. calls into the new desktop component
-- The parent component keeps only `useMobileLayout()` and the conditional return
-- The `export default` stays on the original component name so routes are unaffected
+### Flow
+1. User types in AI search bar on homepage → presses search
+2. Redirected to `/search?q=photographer+for+wedding+in+hyderabad`
+3. Search results page loads, calls AI recommendation edge function
+4. Shows AI summary + ranked providers (premium first, then by rating)
+5. User can click a provider to go to their profile, or refine the search
 
