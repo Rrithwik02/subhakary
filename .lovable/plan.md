@@ -1,38 +1,64 @@
 
 
-# Plan: Improve AI Search Term Coverage & Location Fallback
+# Fix White Screen Issue in Mobile App
 
-## Problem 1: Missing term mappings
-The AI system prompt has limited "Common mappings." Terms like "makeup artists," "makeup artist in vizag," "wedding photographers," "best caterers" etc. aren't explicitly listed. While the LLM *should* handle these, adding more explicit mappings in the prompt will make detection more reliable.
+## Problem
+Multiple pages crash with a white screen on the Subhakary mobile app because they violate **React's Rules of Hooks**. React requires that hooks (useState, useEffect, useQuery, etc.) are called in the exact same order on every render. Currently, 10 pages have an early `return` for mobile before their hooks, which means when `isMobile` changes from `true` to `false` (or vice versa), React sees a different number of hooks and crashes.
 
-**Fix:** Expand the system prompt's common mappings section with more variations — plurals, "artist/artists" suffixes, compound terms, and colloquial phrases.
+## Solution
+Apply the same pattern already used in `Checkout.tsx` and `BookingDetails.tsx`: extract the desktop code into a separate `Desktop___` component, so the main component only has the `useMobileLayout()` hook and a simple conditional return. This way hooks are never called conditionally.
 
-## Problem 2: No location fallback
-When providers exist for a category but not in the searched location, the user sees zero results with no guidance.
+## Pages to Fix (10 files)
 
-**Fix:** Add a two-pass query in the edge function:
-1. First query: filter by category + location (current behavior)
-2. If zero results: re-query with category only (no location filter), and update the summary to say "No [service] providers found in [location]. Here are top providers in other cities."
+Each file will be restructured from:
+```text
+const PageName = () => {
+  const isMobile = useMobileLayout();
+  // maybe some hooks here...
+  if (isMobile) return <MobileVersion />;
+  // more hooks here (VIOLATION!)
+  return <DesktopJSX />;
+};
+```
 
-## Changes
+To:
+```text
+const PageName = () => {
+  const isMobile = useMobileLayout();
+  if (isMobile) return <MobileVersion />;
+  return <DesktopPageName />;
+};
 
-### 1. Update `supabase/functions/ai-recommend/index.ts`
-- Expand AI system prompt with more keyword mappings:
-  - "makeup artist", "makeup artists", "MUA", "beautician" → makeup
-  - "wedding photographer", "photographers near me" → photographers  
-  - "best caterers", "food" → catering
-  - "pandal", "stage decoration", "floral" → decorations
-  - "DJ", "band", "music" → mangalavaadhyams
-  - etc.
-- After the first DB query, if results are empty AND a location was detected:
-  - Re-query without the location filter (same categories)
-  - Prepend the summary with a note like "No providers found in [location]. Showing results from other cities."
+const DesktopPageName = () => {
+  // ALL hooks and desktop logic here
+  return <DesktopJSX />;
+};
+```
 
-### 2. Update `src/pages/SearchResults.tsx`
-- Display a subtle info banner when results are from a fallback (different location than searched)
-- No structural changes needed — the edge function returns the updated summary
+### Files affected:
+1. `src/pages/Providers.tsx` -- extract `DesktopProviders`
+2. `src/pages/Favorites.tsx` -- extract `DesktopFavorites`
+3. `src/pages/Chat.tsx` -- extract `DesktopChat`
+4. `src/pages/MyBookings.tsx` -- extract `DesktopMyBookings`
+5. `src/pages/ProviderProfile.tsx` -- extract `DesktopProviderProfile`
+6. `src/pages/ProviderDashboard.tsx` -- extract `DesktopProviderDashboard`
+7. `src/pages/Profile.tsx` -- extract `DesktopProfile`
+8. `src/pages/ProviderSettings.tsx` -- extract `DesktopProviderSettings`
+9. `src/pages/AdminDashboard.tsx` -- extract `DesktopAdminDashboard`
+10. `src/pages/Notifications.tsx` -- extract `DesktopNotifications`
 
-### Files changed
-- `supabase/functions/ai-recommend/index.ts` — expanded prompt + location fallback logic
-- `src/pages/SearchResults.tsx` — minor: show fallback location note from summary
+## What stays the same
+- No visual changes at all
+- No database changes
+- Mobile components remain untouched
+- Two pages already using this pattern (`Checkout.tsx`, `BookingDetails.tsx`) need no changes
+- `PaymentHistory.tsx` already has hooks before the early return, so it is fine
+
+## Technical Details
+
+For each file, the refactor involves:
+- Wrapping everything after the `if (isMobile)` check into a new `Desktop___` component within the same file
+- Moving all `useState`, `useEffect`, `useQuery`, `useNavigate`, `useAuth`, `useToast`, etc. calls into the new desktop component
+- The parent component keeps only `useMobileLayout()` and the conditional return
+- The `export default` stays on the original component name so routes are unaffected
 

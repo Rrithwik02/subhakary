@@ -107,11 +107,23 @@ function useSearchLogic(query: string) {
           const params = extractSearchParams(query);
           const fetched = await fetchProviders(params);
           setProviders(fetched);
-          setSuggestion(
-            fetched.length > 0
-              ? `Found ${fetched.length} providers matching "${query}".`
-              : "No providers found. Try browsing our service categories."
-          );
+          if (fetched.length > 0 && params.location) {
+            // Check if results are from the searched location or a fallback
+            const hasLocalResults = fetched.some(
+              (p) => p.city && p.city.toLowerCase().includes(params.location!.toLowerCase())
+            );
+            if (!hasLocalResults) {
+              setSuggestion(
+                `No providers found in ${params.location}. Showing top providers from other cities.`
+              );
+            } else {
+              setSuggestion(`Found ${fetched.length} providers matching "${query}".`);
+            }
+          } else if (fetched.length > 0) {
+            setSuggestion(`Found ${fetched.length} providers matching "${query}".`);
+          } else {
+            setSuggestion("No providers found. Try browsing our service categories.");
+          }
         }
       } catch {
         try {

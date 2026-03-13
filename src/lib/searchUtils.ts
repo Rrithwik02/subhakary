@@ -53,9 +53,12 @@ const CATEGORY_MAP: Record<string, string> = {
 const SERVICE_KEYWORD_MAP: Record<string, string> = {
   poojari: 'poojari',
   priest: 'poojari',
+  priests: 'poojari',
   pandit: 'poojari',
+  panditji: 'poojari',
   pujari: 'poojari',
   purohit: 'poojari',
+  guruji: 'poojari',
   pooja: 'poojari',
   puja: 'poojari',
   homam: 'poojari',
@@ -67,39 +70,92 @@ const SERVICE_KEYWORD_MAP: Record<string, string> = {
   'gruhapravesam': 'poojari',
   'house warming': 'poojari',
   'griha pravesh': 'poojari',
+  'temple priest': 'poojari',
   photography: 'photography',
   photographer: 'photography',
+  photographers: 'photography',
   'photo shoot': 'photography',
+  'wedding photographer': 'photography',
+  'wedding photographers': 'photography',
+  'wedding photography': 'photography',
+  'candid photographer': 'photography',
+  'best photographers': 'photography',
+  'photographers near me': 'photography',
+  'pre-wedding shoot': 'photography',
   videography: 'videography',
   videographer: 'videography',
+  videographers: 'videography',
   'video shoot': 'videography',
+  'wedding videography': 'videography',
+  'wedding film': 'videography',
+  'drone videography': 'videography',
+  cinematic: 'videography',
   makeup: 'makeup',
   'bridal makeup': 'makeup',
   'makeup artist': 'makeup',
+  'makeup artists': 'makeup',
+  beautician: 'makeup',
+  beauty: 'makeup',
+  makeover: 'makeup',
+  mua: 'makeup',
+  'hair stylist': 'makeup',
+  'best makeup': 'makeup',
   mehandi: 'mehandi',
   mehndi: 'mehandi',
   henna: 'mehandi',
+  'mehndi artist': 'mehandi',
+  'mehndi artists': 'mehandi',
+  'henna artist': 'mehandi',
+  'bridal mehndi': 'mehandi',
   decoration: 'decoration',
   decorator: 'decoration',
+  decorators: 'decoration',
   decorations: 'decoration',
   'flower decoration': 'decoration',
+  'floral decoration': 'decoration',
+  'stage decoration': 'decoration',
+  'wedding decoration': 'decoration',
+  'wedding decorations': 'decoration',
+  mandap: 'decoration',
+  pandal: 'decoration',
+  backdrop: 'decoration',
+  'balloon decoration': 'decoration',
   catering: 'catering',
   caterer: 'catering',
+  caterers: 'catering',
   'food service': 'catering',
+  'best caterers': 'catering',
+  'catering service': 'catering',
+  'wedding food': 'catering',
+  food: 'catering',
+  buffet: 'catering',
+  'veg catering': 'catering',
   'function hall': 'function-halls',
   'function halls': 'function-halls',
   venue: 'function-halls',
   hall: 'function-halls',
   'banquet hall': 'function-halls',
   'convention center': 'function-halls',
+  'marriage hall': 'function-halls',
+  'wedding venue': 'function-halls',
+  'kalyana mandapam': 'function-halls',
+  auditorium: 'function-halls',
   'event manager': 'event-managers',
+  'event managers': 'event-managers',
   'event management': 'event-managers',
   'wedding planner': 'event-managers',
+  'wedding planners': 'event-managers',
   'event planner': 'event-managers',
+  'event planners': 'event-managers',
+  coordinator: 'event-managers',
   'mangala vadyam': 'mangala-vadyam',
   nadaswaram: 'mangala-vadyam',
   nadhaswaram: 'mangala-vadyam',
   shehnai: 'mangala-vadyam',
+  band: 'mangala-vadyam',
+  dj: 'mangala-vadyam',
+  dhol: 'mangala-vadyam',
+  'wedding band': 'mangala-vadyam',
 };
 
 // Location aliases
@@ -224,5 +280,24 @@ export async function fetchProviders(params: SearchParams): Promise<SearchProvid
     console.error('Error fetching providers:', error);
     return [];
   }
+
+  // Location fallback: if no results with location, retry without location
+  if ((!data || data.length === 0) && location && categoryId) {
+    let fallbackQb = supabase
+      .from('public_service_providers')
+      .select('id, business_name, service_type, city, rating, total_reviews, base_price')
+      .eq('status', 'approved')
+      .eq('category_id', categoryId)
+      .order('rating', { ascending: false })
+      .limit(5);
+
+    const { data: fallbackData, error: fallbackError } = await fallbackQb;
+    if (fallbackError) {
+      console.error('Fallback query error:', fallbackError);
+      return [];
+    }
+    return fallbackData || [];
+  }
+
   return data || [];
 }
