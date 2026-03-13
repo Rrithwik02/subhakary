@@ -2,14 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, Star, MapPin, ArrowRight, X, Loader2 } from "lucide-react";
+import { Search, Sparkles, Star, MapPin, ArrowRight, X, Loader2, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/searchUtils";
-
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+import { fetchAIRecommendations, extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/searchUtils";
+import { toast } from "sonner";
 
 const EMOJI_MAP: Record<string, string> = {
   poojari: "🙏",
@@ -74,63 +73,39 @@ export const MobileAISearch = () => {
     setSuggestion("");
     setProviders([]);
 
-    const params = extractSearchParams(searchQuery);
-
     try {
-      const providersPromise = fetchProviders(params);
-
-      // Stream AI suggestion only for logged-in users
       if (user) {
-        try {
-          const { data: sessionData } = await supabase.auth.getSession();
-          const accessToken = sessionData?.session?.access_token;
-
-          if (accessToken) {
-            const response = await fetch(CHAT_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
-              },
-              body: JSON.stringify({
-                messages: [{ role: "user", content: `I'm looking for: ${searchQuery}. Give me a brief suggestion on what service category and type of provider would be best for my needs. Keep it to 2-3 sentences.` }],
-                type: "search",
-              }),
-            });
-
-          if (response.ok) {
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-            let content = "";
-
-            if (reader) {
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n");
-                for (const line of lines) {
-                  if (line.startsWith("data: ") && line !== "data: [DONE]") {
-                    try {
-                      const json = JSON.parse(line.slice(6));
-                      const delta = json.choices?.[0]?.delta?.content;
-                      if (delta) { content += delta; setSuggestion(content); }
-                    } catch { /* skip */ }
-                  }
-                }
-              }
-            }
-          }
-          }
-        } catch (err) {
-          console.error("AI suggestion error:", err);
-        }
+        // Use AI recommendation engine for logged-in users
+        const result = await fetchAIRecommendations(searchQuery.trim());
+        setSuggestion(result.summary);
+        setProviders(result.results);
+      } else {
+        // Fallback to client-side keyword search for anonymous users
+        const params = extractSearchParams(searchQuery);
+        const fetchedProviders = await fetchProviders(params);
+        setProviders(fetchedProviders);
+        setSuggestion(
+          fetchedProviders.length > 0
+            ? `Found ${fetchedProviders.length} providers matching your search.`
+            : "No providers found. Try browsing our service categories."
+        );
       }
-
-      const fetchedProviders = await providersPromise;
-      setProviders(fetchedProviders);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Search error:", error);
+      if (error.message?.includes("Rate limit")) {
+        toast.error("Search is busy. Please try again in a moment.");
+      } else if (error.message?.includes("credits")) {
+        toast.error("AI search temporarily unavailable.");
+      }
+      // Fallback to keyword search on AI failure
+      try {
+        const params = extractSearchParams(searchQuery);
+        const fetchedProviders = await fetchProviders(params);
+        setProviders(fetchedProviders);
+        setSuggestion("Here are providers matching your search.");
+      } catch {
+        setSuggestion("Unable to search right now. Please browse our categories.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -140,8 +115,6 @@ export const MobileAISearch = () => {
     e?.preventDefault();
     doSearch(query);
   };
-
-  // quickChips defined above via useQuery + fallback
 
   return (
     <div className="px-4 py-3">
@@ -206,31 +179,29 @@ export const MobileAISearch = () => {
             exit={{ opacity: 0, y: -10 }}
             className="mt-3 space-y-3"
           >
-            {/* AI Suggestion - only for logged-in users */}
-            {user && (
-              <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl">
-                <div className="flex items-start gap-2">
-                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-primary mb-1">AI Suggestion</p>
-                    {isLoading && !suggestion ? (
-                      <div className="flex gap-1">
-                        <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground leading-relaxed">{suggestion || "Thinking..."}</p>
-                    )}
-                  </div>
-                  <button onClick={() => setShowResults(false)} className="text-muted-foreground p-1">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
+            {/* AI Suggestion */}
+            <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl">
+              <div className="flex items-start gap-2">
+                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-primary mb-1">AI Suggestion</p>
+                  {isLoading && !suggestion ? (
+                    <div className="flex gap-1">
+                      <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground leading-relaxed">{suggestion || "Thinking..."}</p>
+                  )}
+                </div>
+                <button onClick={() => setShowResults(false)} className="text-muted-foreground p-1">
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
-            )}
+            </div>
 
             {/* Provider Results */}
             {providers.length > 0 && (
@@ -254,9 +225,17 @@ export const MobileAISearch = () => {
                       onClick={() => navigate(`/providers/${provider.id}`)}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground text-sm truncate">
-                          {provider.business_name}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-medium text-foreground text-sm truncate">
+                            {provider.business_name}
+                          </p>
+                          {provider.is_premium && (
+                            <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-semibold flex-shrink-0">
+                              <Crown className="h-2 w-2" />
+                              Premium
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                           {provider.service_type && (
                             <span className="capitalize truncate">{provider.service_type}</span>
@@ -308,18 +287,6 @@ export const MobileAISearch = () => {
                   Browse All Providers
                 </Button>
               </motion.div>
-            )}
-
-            {/* Close results - for non-logged-in users */}
-            {!user && (
-              <div className="flex justify-center">
-                <button
-                  onClick={() => setShowResults(false)}
-                  className="text-xs text-muted-foreground underline"
-                >
-                  Close results
-                </button>
-              </div>
             )}
           </motion.div>
         )}

@@ -1,5 +1,40 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// ─── AI Recommendation (primary for logged-in users) ───────────
+
+const RECOMMEND_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-recommend`;
+
+export interface AIRecommendationResult {
+  query: string;
+  detected_categories: string[];
+  summary: string;
+  location: string | null;
+  total: number;
+  results: SearchProvider[];
+}
+
+export async function fetchAIRecommendations(
+  query: string
+): Promise<AIRecommendationResult> {
+  const response = await fetch(RECOMMEND_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// ─── Fallback: client-side keyword search (for anonymous users) ───
+
 // Category slug -> UUID mapping from service_categories table
 const CATEGORY_MAP: Record<string, string> = {
   poojari: '7feb9e4f-372c-4430-94b4-7576c3508372',
@@ -103,12 +138,13 @@ export interface SearchProvider {
   rating: number | null;
   total_reviews: number | null;
   base_price: number | null;
+  is_premium?: boolean | null;
+  is_verified?: boolean | null;
 }
 
 export function extractSearchParams(searchQuery: string): SearchParams {
   const q = searchQuery.toLowerCase().trim();
 
-  // Find category by matching service keywords (longest match first)
   let categorySlug: string | null = null;
   const sortedKeywords = Object.keys(SERVICE_KEYWORD_MAP).sort((a, b) => b.length - a.length);
   for (const keyword of sortedKeywords) {
@@ -119,16 +155,13 @@ export function extractSearchParams(searchQuery: string): SearchParams {
   }
   const categoryId = categorySlug ? CATEGORY_MAP[categorySlug] ?? null : null;
 
-  // Find location
   let location: string | null = null;
-  // Check aliases first
   for (const [alias, canonical] of Object.entries(LOCATION_ALIASES)) {
     if (q.includes(alias)) {
       location = canonical;
       break;
     }
   }
-  // Then check known locations
   if (!location) {
     for (const loc of KNOWN_LOCATIONS) {
       if (q.includes(loc)) {
@@ -138,7 +171,6 @@ export function extractSearchParams(searchQuery: string): SearchParams {
     }
   }
 
-  // Extract remaining keywords for description/subcategory search
   const stopWords = new Set(['for', 'in', 'at', 'the', 'a', 'an', 'and', 'or', 'near', 'me', 'my', 'i', 'need', 'want', 'looking', 'find', 'best', 'top', 'good']);
   const allMatchedTerms = new Set<string>();
   if (categorySlug) {
@@ -180,7 +212,6 @@ export async function fetchProviders(params: SearchParams): Promise<SearchProvid
     qb = qb.or(`city.ilike.%${location}%,service_cities.cs.{${location}}`);
   }
 
-  // If we have extra keywords, search description and subcategory
   if (keywords.length > 0) {
     const keywordFilters = keywords
       .map(kw => `description.ilike.%${kw}%,subcategory.ilike.%${kw}%`)
