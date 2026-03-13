@@ -23,7 +23,7 @@ export const useChatPresence = ({
     isTyping: false,
   });
   const [isTyping, setIsTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Track own typing status
