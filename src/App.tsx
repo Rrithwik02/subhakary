@@ -81,6 +81,7 @@ const App = () => (
               <Route path="/checkout/:paymentId" element={<Checkout />} />
               <Route path="/payment-history" element={<PaymentHistory />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/search" element={<SearchResults />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CompareBar />
