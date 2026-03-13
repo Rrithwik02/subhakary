@@ -38,6 +38,7 @@ import Install from "./pages/Install";
 import Checkout from "./pages/Checkout";
 import PaymentHistory from "./pages/PaymentHistory";
 import ResetPassword from "./pages/ResetPassword";
+import SearchResults from "./pages/SearchResults";
 
 const queryClient = new QueryClient();
 
