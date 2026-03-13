@@ -2,13 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Loader2, Star, MapPin, ArrowRight } from "lucide-react";
+import { Search, Sparkles, Loader2, Star, MapPin, ArrowRight, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/searchUtils";
+import { fetchAIRecommendations, extractSearchParams, fetchProviders, type SearchProvider } from "@/lib/searchUtils";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+import { toast } from "sonner";
 
 interface AISearchProps {
   onSearch?: (query: string) => void;
@@ -23,7 +21,7 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-  const getAISuggestion = async () => {
+  const doSearch = async () => {
     if (!query.trim()) return;
 
     setIsLoading(true);
@@ -31,71 +29,39 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
     setSuggestion("");
     setProviders([]);
 
-    const params = extractSearchParams(query);
-
     try {
-      const providersPromise = fetchProviders(params);
-
-      // Only call AI for logged-in users
       if (user) {
-        try {
-          const { data: sessionData } = await supabase.auth.getSession();
-          const accessToken = sessionData?.session?.access_token;
-
-          if (accessToken) {
-            const response = await fetch(CHAT_URL, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accessToken}`,
-              },
-              body: JSON.stringify({
-                messages: [{ role: "user", content: `I'm looking for: ${query}. Give me a brief suggestion on what service category and type of provider would be best for my needs. Keep it to 2-3 sentences.` }],
-                type: "search"
-              }),
-            });
-
-            if (response.ok) {
-              const reader = response.body?.getReader();
-              const decoder = new TextDecoder();
-              let content = "";
-
-              if (reader) {
-                while (true) {
-                  const { done, value } = await reader.read();
-                  if (done) break;
-
-                  const chunk = decoder.decode(value, { stream: true });
-                  const lines = chunk.split("\n");
-
-                  for (const line of lines) {
-                    if (line.startsWith("data: ") && line !== "data: [DONE]") {
-                      try {
-                        const json = JSON.parse(line.slice(6));
-                        const delta = json.choices?.[0]?.delta?.content;
-                        if (delta) {
-                          content += delta;
-                          setSuggestion(content);
-                        }
-                      } catch {
-                        // Skip invalid JSON
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.error("AI suggestion error:", err);
-        }
+        // Use AI recommendation engine for logged-in users
+        const result = await fetchAIRecommendations(query.trim());
+        setSuggestion(result.summary);
+        setProviders(result.results);
+      } else {
+        // Fallback to client-side keyword search for anonymous users
+        const params = extractSearchParams(query);
+        const fetchedProviders = await fetchProviders(params);
+        setProviders(fetchedProviders);
+        setSuggestion(
+          fetchedProviders.length > 0
+            ? `Found ${fetchedProviders.length} providers matching your search.`
+            : "No providers found. Try browsing our service categories."
+        );
       }
-
-      const fetchedProviders = await providersPromise;
-      setProviders(fetchedProviders);
-    } catch (error) {
-      console.error("AI search error:", error);
-      setSuggestion("I couldn't process your request. Try browsing our service categories directly.");
+    } catch (error: any) {
+      console.error("Search error:", error);
+      if (error.message?.includes("Rate limit")) {
+        toast.error("Search is busy. Please try again in a moment.");
+      } else if (error.message?.includes("credits")) {
+        toast.error("AI search temporarily unavailable. Please try again later.");
+      }
+      // Fallback to keyword search on AI failure
+      try {
+        const params = extractSearchParams(query);
+        const fetchedProviders = await fetchProviders(params);
+        setProviders(fetchedProviders);
+        setSuggestion("Here are providers matching your search.");
+      } catch {
+        setSuggestion("Unable to search right now. Please browse our categories.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +71,7 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
     if (onSearch && query.trim()) {
       onSearch(query.trim());
     }
-    getAISuggestion();
+    doSearch();
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -206,9 +172,17 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
                       onClick={() => navigate(`/providers/${provider.id}`)}
                     >
                       <div className="flex-1">
-                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">
-                          {provider.business_name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground group-hover:text-primary transition-colors">
+                            {provider.business_name}
+                          </p>
+                          {provider.is_premium && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold">
+                              <Crown className="h-2.5 w-2.5" />
+                              Premium
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                           {provider.service_type && (
                             <span className="capitalize">{provider.service_type}</span>
