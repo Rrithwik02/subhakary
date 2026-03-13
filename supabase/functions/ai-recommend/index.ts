@@ -62,23 +62,30 @@ Available categories (use ONLY these exact keys):
 - decorations
 - eventplanners
 
-Common mappings:
-- "pandit", "poojari", "purohit", "priest" → priests
-- "nadaswaram", "shehnai", "mangala vadyam" → mangalavaadhyams
-- "venue", "hall", "banquet" → functionhalls
-- "wedding planner", "event manager" → eventplanners
-- "henna", "mehandi" → mehndi
-- "bridal makeup", "makeup artist" → makeup
-- "decorator", "flower decoration", "mandap" → decorations
-- "caterer", "food service" → catering
-- "photo", "photographer" → photographers
-- "video", "videographer", "cinematic" → videographers
+Common mappings (match ANY of these terms to the category):
+- "pandit", "poojari", "purohit", "priest", "priests", "pujari", "panditji", "guruji", "astrologer", "temple priest" → priests
+- "nadaswaram", "shehnai", "mangala vadyam", "mangala vadhyam", "nadhaswaram", "band", "DJ", "music", "wedding band", "dhol", "drums" → mangalavaadhyams
+- "venue", "hall", "banquet", "banquet hall", "function hall", "function halls", "marriage hall", "wedding venue", "kalyana mandapam", "convention center", "auditorium" → functionhalls
+- "wedding planner", "wedding planners", "event manager", "event managers", "event planner", "event planners", "event organizer", "coordinator" → eventplanners
+- "henna", "mehandi", "mehndi", "mehndi artist", "mehndi artists", "henna artist", "bridal mehndi" → mehndi
+- "bridal makeup", "makeup artist", "makeup artists", "MUA", "beautician", "beauty", "bridal beauty", "makeover", "hair stylist", "hairdresser", "makeup near me", "best makeup" → makeup
+- "decorator", "decorators", "flower decoration", "floral decoration", "mandap", "pandal", "stage decoration", "wedding decoration", "wedding decorations", "event decoration", "balloon decoration", "backdrop" → decorations
+- "caterer", "caterers", "catering", "food", "food service", "wedding food", "best caterers", "catering service", "biryani", "veg catering", "non-veg catering", "buffet" → catering
+- "photo", "photographer", "photographers", "photography", "wedding photographer", "wedding photography", "candid photographer", "pre-wedding shoot", "photo studio", "best photographers", "photographers near me" → photographers
+- "video", "videographer", "videographers", "videography", "wedding videography", "cinematic", "drone videography", "wedding film", "video editor" → videographers
+
+IMPORTANT: Be generous in matching. If the user mentions any variation, plural, or colloquial form of a service, map it to the correct category. For example "makeup artists in vizag" should map to "makeup", "best wedding photographers" should map to "photographers".
 
 For location, normalize common aliases:
 - "vizag" → "Visakhapatnam"
 - "hyd" → "Hyderabad"
-- "blr" → "Bangalore"
-- "sec" → "Secunderabad"`,
+- "blr", "bengaluru" → "Bangalore"
+- "sec", "secbad" → "Secunderabad"
+- "chennai" → "Chennai"
+- "mumbai", "bombay" → "Mumbai"
+- "delhi", "new delhi" → "Delhi"
+- "pune" → "Pune"
+- "kolkata", "calcutta" → "Kolkata"`,
           },
           { role: "user", content: query },
         ],
@@ -158,13 +165,33 @@ For location, normalize common aliases:
 
 function rankProviders(providers: any[]): any[] {
   return [...providers].sort((a, b) => {
-    // Primary: premium first
     if (a.is_premium !== b.is_premium) {
       return b.is_premium ? 1 : -1;
     }
-    // Secondary: higher rating first
     return (b.rating || 0) - (a.rating || 0);
   });
+}
+
+function buildQuery(supabase: any, categoryIds: string[], location: string | null) {
+  let qb = supabase
+    .from("service_providers")
+    .select(
+      "id, business_name, service_type, city, rating, total_reviews, base_price, is_premium, is_verified, description, subcategory, category_id"
+    )
+    .eq("status", "approved")
+    .limit(10);
+
+  if (categoryIds.length > 0) {
+    qb = qb.in("category_id", categoryIds);
+  }
+
+  if (location) {
+    qb = qb.or(
+      `city.ilike.%${location}%,service_cities.cs.{${location}}`
+    );
+  }
+
+  return qb;
 }
 
 serve(async (req) => {
@@ -201,40 +228,39 @@ serve(async (req) => {
       .map((c: string) => CATEGORY_MAP[c])
       .filter(Boolean);
 
-    // Step 3: Query providers
-    let qb = supabase
-      .from("service_providers")
-      .select(
-        "id, business_name, service_type, city, rating, total_reviews, base_price, is_premium, is_verified, description, subcategory, category_id"
-      )
-      .eq("status", "approved")
-      .limit(10);
-
-    if (categoryIds.length > 0) {
-      qb = qb.in("category_id", categoryIds);
-    }
-
-    if (location) {
-      qb = qb.or(
-        `city.ilike.%${location}%,service_cities.cs.{${location}}`
-      );
-    }
-
-    const { data: providers, error } = await qb;
+    // Step 3: Query providers with location
+    const { data: providers, error } = await buildQuery(supabase, categoryIds, location);
     if (error) {
       console.error("DB query error:", error);
       throw new Error("Failed to fetch providers");
     }
 
-    // Step 4: Rank — premium first, then by rating
-    const ranked = rankProviders(providers || []);
+    let finalProviders = providers || [];
+    let finalSummary = summary;
+    let locationFallback = false;
+
+    // Step 4: Location fallback — if no results found with location, try without location
+    if (finalProviders.length === 0 && location && categoryIds.length > 0) {
+      const { data: fallbackProviders, error: fallbackError } = await buildQuery(supabase, categoryIds, null);
+      if (fallbackError) {
+        console.error("Fallback query error:", fallbackError);
+      } else if (fallbackProviders && fallbackProviders.length > 0) {
+        finalProviders = fallbackProviders;
+        locationFallback = true;
+        finalSummary = `No providers found in ${location}. Showing top providers from other cities.`;
+      }
+    }
+
+    // Step 5: Rank — premium first, then by rating
+    const ranked = rankProviders(finalProviders);
 
     return new Response(
       JSON.stringify({
         query: query.trim(),
         detected_categories: categories,
-        summary,
+        summary: finalSummary,
         location,
+        location_fallback: locationFallback,
         total: ranked.length,
         results: ranked,
       }),
@@ -245,7 +271,6 @@ serve(async (req) => {
   } catch (e) {
     console.error("ai-recommend error:", e);
 
-    // Handle rate limits
     if (e instanceof Response) {
       if (e.status === 429) {
         return new Response(
