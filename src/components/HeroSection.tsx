@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { AISearch } from "@/components/AISearch";
 import heroWedding from "@/assets/hero-wedding.jpg";
 import heroPuja from "@/assets/hero-puja.jpg";
 import heroCelebration from "@/assets/hero-celebration.jpg";
