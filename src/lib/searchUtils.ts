@@ -280,5 +280,24 @@ export async function fetchProviders(params: SearchParams): Promise<SearchProvid
     console.error('Error fetching providers:', error);
     return [];
   }
+
+  // Location fallback: if no results with location, retry without location
+  if ((!data || data.length === 0) && location && categoryId) {
+    let fallbackQb = supabase
+      .from('public_service_providers')
+      .select('id, business_name, service_type, city, rating, total_reviews, base_price')
+      .eq('status', 'approved')
+      .eq('category_id', categoryId)
+      .order('rating', { ascending: false })
+      .limit(5);
+
+    const { data: fallbackData, error: fallbackError } = await fallbackQb;
+    if (fallbackError) {
+      console.error('Fallback query error:', fallbackError);
+      return [];
+    }
+    return fallbackData || [];
+  }
+
   return data || [];
 }
