@@ -230,7 +230,7 @@ export const MobileAISearch = () => {
                             {provider.business_name}
                           </p>
                           {provider.is_premium && (
-                            <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-semibold flex-shrink-0">
+                            <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded-full bg-accent text-accent-foreground text-[9px] font-semibold flex-shrink-0">
                               <Crown className="h-2 w-2" />
                               Premium
                             </span>

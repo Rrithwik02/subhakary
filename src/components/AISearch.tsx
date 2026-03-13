@@ -177,7 +177,7 @@ export const AISearch = ({ onSearch }: AISearchProps) => {
                             {provider.business_name}
                           </p>
                           {provider.is_premium && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold">
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold">
                               <Crown className="h-2.5 w-2.5" />
                               Premium
                             </span>
