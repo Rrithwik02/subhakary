@@ -1,72 +1,47 @@
 
 
-# Plan: Auto-Block Dates When Bookings Are Accepted
+# Investigation: Provider Application Not Showing for Admin
 
-## What we're building
-When a provider accepts a booking, automatically block that date in `service_provider_availability` so no new bookings can be made for the same date. If a booking is cancelled or rejected, unblock the date (unless other bookings exist on that date).
+## Findings
 
-## Changes
+After thorough investigation of the database, triggers, RLS policies, and application code, here are the potential issues:
 
-### 1. Database trigger (migration)
-Create a trigger function `auto_block_booking_date()` on the `bookings` table:
-- **On status change to `accepted`**: Insert a record into `service_provider_availability` with `is_blocked = true` and `specific_date = service_date` (if one doesn't already exist for that provider + date).
-- **On status change to `cancelled` or `rejected`**: Check if any other accepted bookings exist for that provider + date. If none, delete the auto-blocked availability record.
-- Mark auto-blocked records with a distinguishing approach (e.g., `start_time = '00:00'` and `end_time = '23:59'` is already the convention).
+### Issue 1: Resubmission blocked by trigger (most likely)
+The `validate_provider_update` trigger blocks non-admin users from changing the `status` and `reviewed_at` fields. When a user with a **previously rejected** application tries to resubmit, the code attempts to UPDATE these fields (`status: "pending"`, `reviewed_at: null`). The trigger silently rejects this, causing the update to fail with an error.
 
-### 2. Update booking form validation (`Checkout.tsx`)
-- Before submitting a booking, check `service_provider_availability` for the selected date to see if it's blocked.
-- Also check if the selected date falls on a recurring blocked day of week.
-- Show an error message if the date is unavailable.
+Even if the user believes this is a "brand new application," there could be an old rejected/approved entry for the same `user_id` in the database. Because `user_id` has a **UNIQUE constraint**, a new INSERT would also fail if an old record exists.
 
-### 3. No UI changes needed for provider calendar
-- `ProviderAvailabilityCalendar` already reads from `service_provider_availability` and shows blocked dates as "Unavailable" — it will automatically reflect the auto-blocked dates.
-- `BookingCalendar` (provider dashboard) also reads blocked dates and will show them correctly.
+### Issue 2: Unique constraint on user_id
+The `service_providers` table has `UNIQUE(user_id)`, meaning each user can only have one provider record. If the user previously had any application (even deleted/rejected), attempting a fresh INSERT will fail.
 
-## Technical Details
+### Root Cause Summary
+The resubmission path tries to change `status` (blocked by trigger) and the fresh insert path fails if any prior record exists (blocked by unique constraint). The error gets caught and shown as a toast, but might be missed.
 
-**Trigger SQL:**
+## Proposed Fix
+
+### 1. Update the `validate_provider_update` trigger
+Allow providers to change `status` back to `"pending"` specifically when the current status is `"rejected"` — this enables resubmission without admin intervention.
+
 ```sql
-CREATE OR REPLACE FUNCTION auto_block_booking_date()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
-SET search_path TO 'public' AS $$
-BEGIN
-  -- When booking is accepted, block the date
-  IF NEW.status = 'accepted' AND (OLD.status IS DISTINCT FROM 'accepted') THEN
-    INSERT INTO service_provider_availability 
-      (provider_id, specific_date, is_blocked, is_available, start_time, end_time)
-    VALUES 
-      (NEW.provider_id, NEW.service_date, true, false, '00:00', '23:59')
-    ON CONFLICT DO NOTHING; -- avoid duplicates
+-- In validate_provider_update():
+-- Allow resubmission: user can set status from 'rejected' to 'pending'
+IF OLD.status IS DISTINCT FROM NEW.status THEN
+  IF NOT (OLD.status = 'rejected' AND NEW.status = 'pending') THEN
+    RAISE EXCEPTION 'Cannot modify status field';
   END IF;
+END IF;
 
-  -- When booking is cancelled/rejected, unblock if no other accepted bookings
-  IF NEW.status IN ('cancelled', 'rejected') AND OLD.status = 'accepted' THEN
-    IF NOT EXISTS (
-      SELECT 1 FROM bookings 
-      WHERE provider_id = NEW.provider_id 
-        AND service_date = NEW.service_date 
-        AND status = 'accepted' 
-        AND id != NEW.id
-    ) THEN
-      DELETE FROM service_provider_availability
-      WHERE provider_id = NEW.provider_id
-        AND specific_date = NEW.service_date
-        AND is_blocked = true;
-    END IF;
+-- Similarly allow clearing reviewed_at during resubmission
+IF OLD.reviewed_at IS DISTINCT FROM NEW.reviewed_at THEN
+  IF NOT (OLD.status = 'rejected' AND NEW.status = 'pending') THEN
+    RAISE EXCEPTION 'Cannot modify reviewed_at field';
   END IF;
-
-  RETURN NEW;
-END; $$;
-
-CREATE TRIGGER trg_auto_block_booking_date
-  AFTER UPDATE OF status ON bookings
-  FOR EACH ROW
-  EXECUTE FUNCTION auto_block_booking_date();
+END IF;
 ```
 
-**Checkout validation** — add a check before booking submission in the checkout page to query availability and warn if the date is blocked.
+### 2. No frontend changes needed
+The existing BecomeProvider.tsx code already handles the resubmission flow correctly — it detects existing applications and uses UPDATE. The trigger fix is all that's needed.
 
 ### Files changed
-- **New migration**: Auto-block trigger on bookings table
-- **`src/pages/Checkout.tsx`**: Add date availability check before submission
+- **New migration**: Update `validate_provider_update()` to allow rejected→pending resubmission
 
