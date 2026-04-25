@@ -15,7 +15,7 @@ export type WeddingEvent = {
   progress_percent: number;
 };
 
-export const useWeddingEvent = () => {
+export const useWeddingEvent = (eventId?: string | null) => {
   const { user } = useAuth();
   const [event, setEvent] = useState<WeddingEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,17 +27,22 @@ export const useWeddingEvent = () => {
       return;
     }
     setLoading(true);
-    const { data } = await supabase
+    let query = supabase
       .from("wedding_events")
       .select("*")
       .eq("user_id", user.id)
-      .order("is_primary", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+
+    if (eventId) {
+      query = query.eq("id", eventId);
+    } else {
+      query = query.order("is_primary", { ascending: false }).order("created_at", { ascending: false });
+    }
+
+    const { data } = await query.maybeSingle();
     setEvent((data as WeddingEvent) ?? null);
     setLoading(false);
-  }, [user]);
+  }, [user, eventId]);
 
   useEffect(() => {
     fetchEvent();

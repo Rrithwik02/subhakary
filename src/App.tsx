@@ -41,6 +41,7 @@ import ResetPassword from "./pages/ResetPassword";
 import SearchResults from "./pages/SearchResults";
 import WeddingDashboard from "./pages/WeddingDashboard";
 import PlanWedding from "./pages/PlanWedding";
+import Journey from "./pages/Journey";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const App = () => (
               <Route path="/search" element={<SearchResults />} />
               <Route path="/wedding-dashboard" element={<WeddingDashboard />} />
               <Route path="/plan-wedding" element={<PlanWedding />} />
+              <Route path="/journey" element={<Journey />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CompareBar />

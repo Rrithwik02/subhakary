@@ -16,11 +16,14 @@ export interface AIRecommendationResult {
 export async function fetchAIRecommendations(
   query: string
 ): Promise<AIRecommendationResult> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
   const response = await fetch(RECOMMEND_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ query }),
   });
@@ -196,6 +199,8 @@ export interface SearchProvider {
   base_price: number | null;
   is_premium?: boolean | null;
   is_verified?: boolean | null;
+  recommendation_reason?: string | null;
+  match_score?: number | null;
 }
 
 export function extractSearchParams(searchQuery: string): SearchParams {

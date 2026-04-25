@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { Star, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -48,6 +49,8 @@ export const ReviewForm = ({
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [aspectScores, setAspectScores] = useState<Record<string, number>>({});
   const [aspectHover, setAspectHover] = useState<Record<string, number>>({});
+  const [weddingBudgetRange, setWeddingBudgetRange] = useState("");
+  const [weddingSize, setWeddingSize] = useState("");
 
   // File validation constants
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -169,6 +172,8 @@ export const ReviewForm = ({
         communication_rating: aspectScores.communication_rating || null,
         value_for_money_rating: aspectScores.value_for_money_rating || null,
         punctuality_rating: aspectScores.punctuality_rating || null,
+        wedding_budget_range: weddingBudgetRange || null,
+        wedding_size: weddingSize || null,
       });
 
       if (error) throw error;
@@ -184,6 +189,8 @@ export const ReviewForm = ({
       setPhotos([]);
       setPhotoPreviews([]);
       setAspectScores({});
+      setWeddingBudgetRange("");
+      setWeddingSize("");
       onOpenChange(false);
       onReviewSubmitted();
     } catch (error: any) {
@@ -322,6 +329,33 @@ export const ReviewForm = ({
               )}
             </div>
             <p className="text-xs text-muted-foreground">Up to 5 photos</p>
+          </div>
+
+          {/* Review Text */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="budget_range">Wedding budget range</Label>
+              <Input
+                id="budget_range"
+                placeholder="e.g., Rs 5L-10L"
+                value={weddingBudgetRange}
+                onChange={(e) => setWeddingBudgetRange(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="wedding_size">Wedding size</Label>
+              <select
+                id="wedding_size"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={weddingSize}
+                onChange={(e) => setWeddingSize(e.target.value)}
+              >
+                <option value="">Select size</option>
+                <option value="intimate">Intimate</option>
+                <option value="mid">Mid-size</option>
+                <option value="grand">Grand</option>
+              </select>
+            </div>
           </div>
 
           {/* Review Text */}

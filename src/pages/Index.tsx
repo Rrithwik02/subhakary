@@ -7,6 +7,7 @@ import { TrustSection } from "@/components/TrustSection";
 import { BlogSection } from "@/components/BlogSection";
 import { Footer } from "@/components/Footer";
 import { AIChatbot } from "@/components/AIChatbot";
+import { NextStepCard } from "@/components/NextStepCard";
 import { MobileHome } from "@/components/mobile/MobileHome";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 
@@ -23,6 +24,7 @@ const Index = () => {
     <main className="min-h-screen">
       <Navbar />
       <HeroSection />
+      <NextStepCard className="py-8" />
       <AboutSection />
       <ServicesSection />
       <BookingFlowSection />

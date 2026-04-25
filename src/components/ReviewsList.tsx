@@ -5,6 +5,7 @@ import { Star, User, ChevronDown, ChevronUp, Image as ImageIcon } from "lucide-r
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -25,6 +26,7 @@ const aspectLabels: Record<string, string> = {
 export const ReviewsList = ({ providerId }: ReviewsListProps) => {
   const [expandedReview, setExpandedReview] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [sizeFilter, setSizeFilter] = useState("all");
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["provider-reviews", providerId],
@@ -58,16 +60,18 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
   });
 
   // Calculate rating summary
+  const filteredReviews = sizeFilter === "all" ? reviews : reviews.filter((review) => review.wedding_size === sizeFilter);
+
   const ratingCounts = [5, 4, 3, 2, 1].map((star) => ({
     star,
-    count: reviews.filter((r) => r.rating === star).length,
-    percentage: reviews.length > 0 
-      ? (reviews.filter((r) => r.rating === star).length / reviews.length) * 100 
+    count: filteredReviews.filter((r) => r.rating === star).length,
+    percentage: filteredReviews.length > 0 
+      ? (filteredReviews.filter((r) => r.rating === star).length / filteredReviews.length) * 100 
       : 0,
   }));
 
-  const averageRating = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+  const averageRating = filteredReviews.length > 0
+    ? (filteredReviews.reduce((sum, r) => sum + r.rating, 0) / filteredReviews.length).toFixed(1)
     : "0.0";
 
   if (isLoading) {
@@ -114,8 +118,15 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {["all", "intimate", "mid", "grand"].map((size) => (
+              <Button key={size} size="sm" variant={sizeFilter === size ? "default" : "outline"} onClick={() => setSizeFilter(size)} className="capitalize">
+                {size === "all" ? "All weddings" : size}
+              </Button>
+            ))}
+          </div>
           {/* Rating Summary */}
-          {reviews.length > 0 && (
+          {filteredReviews.length > 0 && (
             <div className="flex flex-col md:flex-row gap-6 pb-6 border-b border-border">
               <div className="text-center">
                 <div className="text-4xl font-bold text-foreground">{averageRating}</div>
@@ -131,7 +142,7 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
                     />
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">{reviews.length} reviews</p>
+                <p className="text-sm text-muted-foreground mt-1">{filteredReviews.length} reviews</p>
               </div>
               <div className="flex-1 space-y-2">
                 {ratingCounts.map(({ star, count, percentage }) => (
@@ -147,7 +158,7 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
           )}
 
           {/* Individual Reviews */}
-          {reviews.map((review) => {
+          {filteredReviews.map((review) => {
             const hasAspectRatings = review.service_quality_rating || 
               review.communication_rating || 
               review.value_for_money_rating || 
@@ -195,6 +206,13 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
 
                 {review.review_text && (
                   <p className="text-sm text-muted-foreground mb-3">{review.review_text}</p>
+                )}
+
+                {(review.wedding_budget_range || review.wedding_size) && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {review.wedding_budget_range && <Badge variant="secondary">{review.wedding_budget_range}</Badge>}
+                    {review.wedding_size && <Badge variant="outline" className="capitalize">{review.wedding_size} wedding</Badge>}
+                  </div>
                 )}
 
                 {/* Photos */}

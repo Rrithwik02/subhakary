@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Star, MapPin, ArrowRight, Crown, Loader2 } from "lucide-react";
+import { Sparkles, Star, MapPin, ArrowRight, Crown, Loader2, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AISearch } from "@/components/AISearch";
@@ -212,6 +212,12 @@ const ProviderList = ({ providers, navigate }: { providers: SearchProvider[]; na
                   </Badge>
                 )}
               </div>
+              {provider.recommendation_reason && (
+                <div className="flex items-start gap-1.5 text-xs text-primary mb-2">
+                  <BadgeCheck className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                  <span>{provider.recommendation_reason}</span>
+                </div>
+              )}
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 {provider.service_type && (
                   <span className="capitalize">{provider.service_type}</span>

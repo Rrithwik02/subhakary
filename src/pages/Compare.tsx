@@ -1,16 +1,35 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, MapPin, Clock, Languages, BadgeCheck, Crown, X } from "lucide-react";
+import { ArrowLeft, Star, MapPin, BadgeCheck, Crown, X, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useProviderComparison } from "@/hooks/useProviderComparison";
+import { supabase } from "@/integrations/supabase/client";
+
+const COMPARE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-compare`;
 
 const Compare = () => {
   const navigate = useNavigate();
   const { compareList, removeFromCompare, clearCompare } = useProviderComparison();
+  const [aiVerdict, setAiVerdict] = useState<{ verdict: string; providers: { provider_id: string; tagline: string }[] } | null>(null);
+
+  useEffect(() => {
+    if (compareList.length < 2) return;
+    (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const response = await fetch(COMPARE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ providers: compareList }),
+      });
+      if (response.ok) setAiVerdict(await response.json());
+    })();
+  }, [compareList]);
 
   if (compareList.length < 2) {
     return (
@@ -158,6 +177,20 @@ const Compare = () => {
             Side-by-side comparison of {compareList.length} providers
           </p>
 
+          {aiVerdict && (
+            <Card className="mb-6 border-primary/20 bg-primary/5">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-primary mb-1">AI compare verdict</p>
+                    <p className="text-sm text-muted-foreground">{aiVerdict.verdict}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Comparison Table */}
           <div className="overflow-x-auto">
             <div className="min-w-[600px]">
@@ -189,6 +222,11 @@ const Compare = () => {
                       <h3 className="font-semibold text-sm line-clamp-2 mb-2">
                         {provider.business_name}
                       </h3>
+                      {aiVerdict?.providers.find((p) => p.provider_id === provider.id)?.tagline && (
+                        <Badge variant="outline" className="mb-2 text-[10px]">
+                          {aiVerdict.providers.find((p) => p.provider_id === provider.id)?.tagline}
+                        </Badge>
+                      )}
                       <Button
                         size="sm"
                         className="w-full gradient-gold text-primary-foreground"

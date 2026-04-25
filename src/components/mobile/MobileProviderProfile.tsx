@@ -34,6 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/integrations/supabase/client";
+import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -149,9 +150,11 @@ const MobileProviderProfile = () => {
 
     setIsSubmitting(true);
     try {
+      const eventId = await getPrimaryWeddingEventId(user.id);
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         provider_id: providerId,
+        event_id: eventId,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),

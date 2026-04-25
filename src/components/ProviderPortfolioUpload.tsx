@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { ImagePlus, X, Loader2, Upload, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +70,8 @@ export const ProviderPortfolioUpload = ({
   const [images, setImages] = useState<string[]>(currentImages || []);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [portfolioTags, setPortfolioTags] = useState("");
+  const [storyDraft, setStoryDraft] = useState("");
 
   const processAndUploadFiles = async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -239,6 +242,33 @@ export const ProviderPortfolioUpload = ({
     }
   };
 
+  const savePortfolioContext = async () => {
+    try {
+      const tags = portfolioTags
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((label) => ({ label }));
+      const stories = storyDraft
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const [title, description = ""] = line.split(":");
+          return { title: title.trim(), description: description.trim() };
+        });
+      const { error } = await (supabase as any)
+        .from("service_providers")
+        .update({ portfolio_tags: tags, real_wedding_stories: stories })
+        .eq("id", providerId);
+      if (error) throw error;
+      toast({ title: "Portfolio context saved", description: "Tags and wedding stories are now visible on your profile." });
+      onImagesUpdated();
+    } catch (error: any) {
+      toast({ title: "Could not save context", description: error.message, variant: "destructive" });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -340,6 +370,30 @@ export const ProviderPortfolioUpload = ({
               Tip: Hover over images to remove them
             </p>
           )}
+        </div>
+
+        <div className="mt-6 grid gap-4">
+          <div>
+            <p className="text-sm font-medium mb-2">Portfolio tags</p>
+            <Textarea
+              placeholder="One tag per line, e.g. Traditional wedding, Rs 5L-10L, 300 guests"
+              value={portfolioTags}
+              onChange={(e) => setPortfolioTags(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-2">Real wedding stories</p>
+            <Textarea
+              placeholder="One story per line, e.g. Hyderabad wedding: Decor and photography for a 300 guest traditional wedding"
+              value={storyDraft}
+              onChange={(e) => setStoryDraft(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <Button type="button" variant="outline" onClick={savePortfolioContext}>
+            Save portfolio context
+          </Button>
         </div>
       </CardContent>
     </Card>

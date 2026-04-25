@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWeddingEvent } from "@/hooks/useWeddingEvent";
@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { SEOHead } from "@/components/SEOHead";
-import { Heart, Calendar, MapPin, IndianRupee, CheckCircle2, Clock, Plus, ArrowRight } from "lucide-react";
+import { Heart, Calendar, MapPin, IndianRupee, CheckCircle2, Clock, Plus, ArrowRight, Trash2, Save, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 type Task = {
@@ -21,6 +23,7 @@ type Task = {
   due_date: string | null;
   status: string;
   sort_order: number;
+  is_default?: boolean;
 };
 
 type Booking = {
@@ -29,16 +32,42 @@ type Booking = {
   service_date: string;
   total_amount: number | null;
   provider_id: string;
-  service_providers?: { business_name: string; category_id: string | null } | null;
+  service_providers?: { business_name: string; category_id: string | null; category?: { name: string | null } | null } | null;
+};
+
+type BudgetCategory = {
+  id: string;
+  category: string;
+  planned_amount: number;
+  actual_amount: number;
+};
+
+const normalizePlanningCategory = (name?: string | null) => {
+  const value = (name || "").toLowerCase();
+  if (value.includes("photo") || value.includes("video")) return "Photography";
+  if (value.includes("cater")) return "Catering";
+  if (value.includes("decor")) return "Decor";
+  if (value.includes("function") || value.includes("venue") || value.includes("hall")) return "Venue";
+  if (value.includes("makeup") || value.includes("mehndi")) return "Makeup and Mehndi";
+  if (value.includes("music") || value.includes("mangala") || value.includes("dj")) return "Music and Entertainment";
+  if (value.includes("pandit") || value.includes("priest") || value.includes("pooj")) return "Pandit";
+  return name || "Other vendors";
 };
 
 const WeddingDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { event, loading: eventLoading, refetch } = useWeddingEvent();
+  const [searchParams] = useSearchParams();
+  const { event, loading: eventLoading, refetch } = useWeddingEvent(searchParams.get("event"));
   const [tasks, setTasks] = useState<Task[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
   const [budgetSpent, setBudgetSpent] = useState(0);
+  const [taskFilter, setTaskFilter] = useState<"all" | "pending" | "completed">("pending");
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [newTaskCategory, setNewTaskCategory] = useState("planning");
+  const [editingBudget, setEditingBudget] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth?redirect=/wedding-dashboard");
@@ -47,16 +76,19 @@ const WeddingDashboard = () => {
   useEffect(() => {
     if (!event) return;
     (async () => {
-      const [{ data: t }, { data: b }] = await Promise.all([
+      const [{ data: t }, { data: b }, { data: c }] = await Promise.all([
         supabase.from("wedding_tasks").select("*").eq("event_id", event.id).order("sort_order"),
         supabase
           .from("bookings")
-          .select("id,status,service_date,total_amount,provider_id,service_providers(business_name,category_id)")
-          .eq("user_id", user!.id),
+          .select("id,status,service_date,total_amount,provider_id,service_providers(business_name,category_id,category:service_categories(name))")
+          .eq("user_id", user!.id)
+          .eq("event_id", event.id),
+        supabase.from("wedding_budget_categories").select("*").eq("event_id", event.id).order("planned_amount", { ascending: false }),
       ]);
       setTasks((t as Task[]) ?? []);
-      const bks = (b as any[]) ?? [];
+      const bks = (b as Booking[]) ?? [];
       setBookings(bks);
+      setBudgetCategories((c as BudgetCategory[]) ?? []);
       const spent = bks
         .filter((x) => ["accepted", "completed"].includes(x.status))
         .reduce((s, x) => s + (Number(x.total_amount) || 0), 0);
@@ -66,7 +98,11 @@ const WeddingDashboard = () => {
 
   const updateProgress = async (eventId: string, newTasks: Task[]) => {
     const completed = newTasks.filter((t) => t.status === "completed").length;
-    const pct = newTasks.length ? Math.round((completed / newTasks.length) * 100) : 0;
+    const taskPct = newTasks.length ? (completed / newTasks.length) * 55 : 0;
+    const bookedCategories = new Set(acceptedBookings.map((b) => b.service_providers?.category?.name).filter(Boolean)).size;
+    const vendorPct = Math.min(25, bookedCategories * 5);
+    const budgetPct = event?.total_budget ? Math.min(20, (budgetSpent / Number(event.total_budget)) * 20) : 0;
+    const pct = Math.min(100, Math.round(taskPct + vendorPct + budgetPct));
     await supabase.from("wedding_events").update({ progress_percent: pct }).eq("id", eventId);
     refetch();
   };
@@ -84,6 +120,74 @@ const WeddingDashboard = () => {
     const updated = tasks.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t));
     setTasks(updated);
     if (event) updateProgress(event.id, updated);
+  };
+
+  const addTask = async () => {
+    if (!event || !newTaskTitle.trim()) return;
+    const { data, error } = await supabase
+      .from("wedding_tasks")
+      .insert({
+        event_id: event.id,
+        title: newTaskTitle.trim(),
+        category: newTaskCategory || null,
+        due_date: newTaskDueDate || null,
+        sort_order: tasks.length + 1,
+        is_default: false,
+      })
+      .select()
+      .single();
+    if (error) {
+      toast.error("Could not add task");
+      return;
+    }
+    const updated = [...tasks, data as Task];
+    setTasks(updated);
+    setNewTaskTitle("");
+    setNewTaskDueDate("");
+    updateProgress(event.id, updated);
+  };
+
+  const deleteTask = async (taskId: string) => {
+    if (!event) return;
+    const { error } = await supabase.from("wedding_tasks").delete().eq("id", taskId);
+    if (error) {
+      toast.error("Could not delete task");
+      return;
+    }
+    const updated = tasks.filter((task) => task.id !== taskId);
+    setTasks(updated);
+    updateProgress(event.id, updated);
+  };
+
+  const saveBudget = async (category: BudgetCategory) => {
+    const planned = Number(editingBudget[category.id] ?? category.planned_amount);
+    const { error } = await supabase
+      .from("wedding_budget_categories")
+      .update({ planned_amount: Number.isFinite(planned) ? planned : 0 })
+      .eq("id", category.id);
+    if (error) {
+      toast.error("Could not update budget");
+      return;
+    }
+    setBudgetCategories((rows) => rows.map((row) => row.id === category.id ? { ...row, planned_amount: planned } : row));
+    toast.success("Budget updated");
+  };
+
+  const syncActualSpend = async () => {
+    const updates = budgetCategories.map((category) => {
+      const actual = acceptedBookings
+        .filter((booking) => normalizePlanningCategory(booking.service_providers?.category?.name) === category.category)
+        .reduce((sum, booking) => sum + (Number(booking.total_amount) || 0), 0);
+      return supabase.from("wedding_budget_categories").update({ actual_amount: actual }).eq("id", category.id);
+    });
+    await Promise.all(updates);
+    setBudgetCategories((rows) => rows.map((category) => ({
+      ...category,
+      actual_amount: acceptedBookings
+        .filter((booking) => normalizePlanningCategory(booking.service_providers?.category?.name) === category.category)
+        .reduce((sum, booking) => sum + (Number(booking.total_amount) || 0), 0),
+    })));
+    toast.success("Actual spend synced from accepted bookings");
   };
 
   if (authLoading || eventLoading) {
@@ -117,9 +221,47 @@ const WeddingDashboard = () => {
 
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
   const upcomingTasks = tasks.filter((t) => t.status !== "completed").slice(0, 5);
+  const filteredTasks = tasks.filter((task) => taskFilter === "all" || task.status === taskFilter);
+  const visibleTasks = filteredTasks.slice(0, 12);
   const acceptedBookings = bookings.filter((b) => ["accepted", "completed"].includes(b.status));
   const pendingBookings = bookings.filter((b) => b.status === "pending");
   const budgetPct = event.total_budget ? Math.min(100, Math.round((budgetSpent / Number(event.total_budget)) * 100)) : 0;
+  const budgetRows = (() => {
+    const rows = new Map<string, { category: string; planned: number; actual: number }>();
+    budgetCategories.forEach((category) => {
+      rows.set(category.category, {
+        category: category.category,
+        planned: Number(category.planned_amount) || 0,
+        actual: Number(category.actual_amount) || 0,
+      });
+    });
+    acceptedBookings.forEach((booking) => {
+      const category = normalizePlanningCategory(booking.service_providers?.category?.name);
+      const existing = rows.get(category) ?? { category, planned: 0, actual: 0 };
+      existing.actual += Number(booking.total_amount) || 0;
+      rows.set(category, existing);
+    });
+    return Array.from(rows.values()).sort((a, b) => b.actual + b.planned - (a.actual + a.planned));
+  })();
+  const vendorCategories = ["Venue", "Catering", "Photography", "Decor", "Makeup", "Mehndi", "Pandit", "Music"];
+  const vendorStatusRows = vendorCategories.map((category) => {
+    const matching = bookings.filter((booking) =>
+      normalizePlanningCategory(booking.service_providers?.category?.name).toLowerCase().includes(category.toLowerCase()) ||
+      booking.service_providers?.business_name?.toLowerCase().includes(category.toLowerCase())
+    );
+    const accepted = matching.find((booking) => ["accepted", "completed"].includes(booking.status));
+    const pending = matching.find((booking) => booking.status === "pending");
+    return { category, status: accepted ? "booked" : pending ? "pending" : "not started", booking: accepted || pending };
+  });
+  const nextStep = (() => {
+    const overdue = tasks.find((task) => task.status !== "completed" && task.due_date && new Date(task.due_date) < new Date());
+    if (overdue) return { label: `Finish overdue task: ${overdue.title}`, href: "/wedding-dashboard" };
+    const openVendor = vendorStatusRows.find((row) => row.status === "not started");
+    if (openVendor) return { label: `Book your ${openVendor.category}`, href: `/providers` };
+    const nextTask = tasks.find((task) => task.status !== "completed");
+    if (nextTask) return { label: `Next: ${nextTask.title}`, href: "/wedding-dashboard" };
+    return { label: "Review your plan", href: "/journey" };
+  })();
   const daysAway = event.event_date
     ? Math.max(0, Math.ceil((new Date(event.event_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
@@ -141,7 +283,7 @@ const WeddingDashboard = () => {
               </span>
             )}
             {event.city && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{event.city}</span>}
-            {event.wedding_style && <Badge variant="outline">{event.wedding_style}</Badge>}
+            {event.wedding_style && <Badge variant="outline" className="capitalize">{event.wedding_style}</Badge>}
           </div>
         </div>
 
@@ -157,8 +299,20 @@ const WeddingDashboard = () => {
             </div>
             <Progress value={event.progress_percent} className="h-3" />
             <p className="text-sm text-muted-foreground mt-3">
-              {completedTasks} of {tasks.length} tasks done
+              {completedTasks} of {tasks.length} tasks done, {acceptedBookings.length} vendors booked, {budgetPct}% of budget allocated
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-8 border-primary/20">
+          <CardContent className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">What should I do next?</p>
+              <p className="text-lg font-semibold">{nextStep.label}</p>
+            </div>
+            <Button asChild>
+              <Link to={nextStep.href}>Continue <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -220,11 +374,24 @@ const WeddingDashboard = () => {
               <CardDescription>Top tasks to focus on next</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px_120px_auto] gap-2">
+                <Input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} placeholder="Add a custom task" />
+                <Input value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)} placeholder="Category" />
+                <Input type="date" value={newTaskDueDate} onChange={(e) => setNewTaskDueDate(e.target.value)} />
+                <Button onClick={addTask} size="sm"><Plus className="h-4 w-4 mr-1" /> Add</Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(["pending", "completed", "all"] as const).map((filter) => (
+                  <Button key={filter} size="sm" variant={taskFilter === filter ? "default" : "outline"} onClick={() => setTaskFilter(filter)} className="capitalize">
+                    {filter}
+                  </Button>
+                ))}
+              </div>
               {tasks.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No tasks yet.</p>
               ) : (
                 <>
-                  {upcomingTasks.map((task) => (
+                  {visibleTasks.map((task) => (
                     <div key={task.id} className="flex items-start gap-3 p-3 rounded-md border hover:bg-accent/50 transition">
                       <Checkbox
                         checked={task.status === "completed"}
@@ -236,18 +403,25 @@ const WeddingDashboard = () => {
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                           {task.category && <Badge variant="outline" className="text-xs">{task.category}</Badge>}
                           {task.due_date && (
-                            <span className="flex items-center gap-1">
+                            <span className={`flex items-center gap-1 ${
+                              task.status !== "completed" && new Date(task.due_date) < new Date() ? "text-destructive" : ""
+                            }`}>
                               <Clock className="h-3 w-3" />
                               {new Date(task.due_date).toLocaleDateString()}
                             </span>
                           )}
                         </div>
                       </div>
+                      {!task.is_default && (
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground" onClick={() => deleteTask(task.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   ))}
-                  {tasks.length > 5 && (
+                  {tasks.length > visibleTasks.length && (
                     <p className="text-xs text-muted-foreground text-center pt-2">
-                      Showing 5 of {tasks.length} tasks
+                      Showing {visibleTasks.length} of {tasks.length} tasks
                     </p>
                   )}
                 </>
@@ -294,7 +468,88 @@ const WeddingDashboard = () => {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Vendor status tracker</CardTitle>
+              <CardDescription>Category-level planning status</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {vendorStatusRows.map((row) => (
+                <div key={row.category} className="flex items-center justify-between p-3 rounded-md border">
+                  <div>
+                    <p className="text-sm font-medium">{row.category}</p>
+                    {row.booking?.service_providers?.business_name && (
+                      <p className="text-xs text-muted-foreground">{row.booking.service_providers.business_name}</p>
+                    )}
+                  </div>
+                  <Badge variant={row.status === "booked" ? "default" : row.status === "pending" ? "secondary" : "outline"} className="capitalize">
+                    {row.status}
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </div>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle>Budget tracker</CardTitle>
+                <CardDescription>Planned budget by category compared with accepted vendor spend</CardDescription>
+              </div>
+              <Button size="sm" variant="outline" onClick={syncActualSpend}>Sync actuals</Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {budgetRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Accepted bookings will appear here as actual spend.</p>
+            ) : (
+              budgetRows.slice(0, 6).map((row) => {
+                const categoryRecord = budgetCategories.find((category) => category.category === row.category);
+                const planned = row.planned || (event.total_budget ? Number(event.total_budget) / Math.max(budgetRows.length, 1) : 0);
+                const pct = planned ? Math.min(100, Math.round((row.actual / planned) * 100)) : 0;
+                const isOver = planned > 0 && row.actual > planned;
+                return (
+                  <div key={row.category} className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_160px_auto] gap-3 md:items-center text-sm">
+                      <div>
+                        <span className="font-medium">{row.category}</span>
+                        {isOver && (
+                          <span className="ml-2 inline-flex items-center text-destructive text-xs">
+                            <AlertTriangle className="h-3 w-3 mr-1" /> Over budget
+                          </span>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Rs {row.actual.toLocaleString("en-IN")} actual
+                        </p>
+                      </div>
+                      {categoryRecord ? (
+                        <div>
+                          <Label className="text-xs">Planned</Label>
+                          <Input
+                            type="number"
+                            value={editingBudget[categoryRecord.id] ?? categoryRecord.planned_amount}
+                            onChange={(e) => setEditingBudget((cur) => ({ ...cur, [categoryRecord.id]: e.target.value }))}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Rs {Math.round(planned).toLocaleString("en-IN")}</span>
+                      )}
+                      {categoryRecord && (
+                        <Button size="sm" variant="outline" onClick={() => saveBudget(categoryRecord)}>
+                          <Save className="h-3.5 w-3.5 mr-1" /> Save
+                        </Button>
+                      )}
+                    </div>
+                    <Progress value={pct} className="h-2" />
+                  </div>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
       </main>
       <Footer />
     </div>

@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, ZoomIn, Download } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface PortfolioGalleryProps {
   images: string[];
   providerName?: string;
+  tags?: { label?: string; wedding_type?: string; budget?: string; size?: string }[] | null;
+  stories?: { title?: string; description?: string; wedding_type?: string; budget?: string; size?: string }[] | null;
 }
 
-export const PortfolioGallery = ({ images, providerName }: PortfolioGalleryProps) => {
+export const PortfolioGallery = ({ images, providerName, tags = [], stories = [] }: PortfolioGalleryProps) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -54,6 +56,15 @@ export const PortfolioGallery = ({ images, providerName }: PortfolioGalleryProps
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {tags.map((tag, index) => (
+                <Badge key={index} variant="secondary">
+                  {tag.label || [tag.wedding_type, tag.budget, tag.size].filter(Boolean).join(" · ")}
+                </Badge>
+              ))}
+            </div>
+          )}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {images.map((url, index) => (
               <motion.div
@@ -79,6 +90,21 @@ export const PortfolioGallery = ({ images, providerName }: PortfolioGalleryProps
           <p className="text-sm text-muted-foreground mt-3 text-center">
             Click on any image to view full screen
           </p>
+          {stories && stories.length > 0 && (
+            <div className="mt-5 grid gap-3">
+              {stories.map((story, index) => (
+                <div key={index} className="rounded-lg border p-3">
+                  <div className="flex flex-wrap gap-2 mb-1">
+                    {story.wedding_type && <Badge variant="outline">{story.wedding_type}</Badge>}
+                    {story.budget && <Badge variant="secondary">{story.budget}</Badge>}
+                    {story.size && <Badge variant="outline">{story.size}</Badge>}
+                  </div>
+                  <p className="font-medium">{story.title || "Real wedding story"}</p>
+                  {story.description && <p className="text-sm text-muted-foreground mt-1">{story.description}</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

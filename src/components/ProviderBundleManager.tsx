@@ -38,6 +38,9 @@ interface BundleFormData {
   min_advance_percentage: number;
   terms_conditions: string;
   is_active: boolean;
+  inclusions: string[];
+  exclusions: string[];
+  extra_charges_text: string;
 }
 
 interface BundleItem {
@@ -60,6 +63,9 @@ const defaultFormData: BundleFormData = {
   min_advance_percentage: 30,
   terms_conditions: "",
   is_active: true,
+  inclusions: [],
+  exclusions: [],
+  extra_charges_text: "",
 };
 
 const defaultItem: BundleItem = {
@@ -68,6 +74,18 @@ const defaultItem: BundleItem = {
   description: "",
   individual_price: null,
   quantity: 1,
+};
+
+const toBundlePayload = (data: BundleFormData) => {
+  const { extra_charges_text, ...bundleData } = data;
+  return {
+    ...bundleData,
+    extra_charges: extra_charges_text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => ({ label: line })),
+  };
 };
 
 export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps) {
@@ -104,13 +122,13 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
       if (editingBundle) {
         const { error } = await supabase
           .from("service_bundles")
-          .update(data)
+          .update(toBundlePayload(data))
           .eq("id", editingBundle);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("service_bundles")
-          .insert({ ...data, provider_id: providerId });
+          .insert({ ...toBundlePayload(data), provider_id: providerId });
         if (error) throw error;
       }
     },
@@ -218,6 +236,11 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
       min_advance_percentage: bundle.min_advance_percentage || 30,
       terms_conditions: bundle.terms_conditions || "",
       is_active: bundle.is_active ?? true,
+      inclusions: bundle.inclusions || [],
+      exclusions: bundle.exclusions || [],
+      extra_charges_text: Array.isArray(bundle.extra_charges)
+        ? bundle.extra_charges.map((charge: any) => charge.label || charge.description || String(charge)).join("\n")
+        : "",
     });
     setDialogOpen(true);
   };
@@ -488,6 +511,39 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
                 value={formData.terms_conditions}
                 onChange={(e) => setFormData({ ...formData, terms_conditions: e.target.value })}
                 rows={2}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="inclusions">What's included</Label>
+              <Textarea
+                id="inclusions"
+                placeholder="One inclusion per line"
+                value={formData.inclusions.join("\n")}
+                onChange={(e) => setFormData({ ...formData, inclusions: e.target.value.split("\n").map((x) => x.trim()).filter(Boolean) })}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="exclusions">What's not included</Label>
+              <Textarea
+                id="exclusions"
+                placeholder="One exclusion per line"
+                value={formData.exclusions.join("\n")}
+                onChange={(e) => setFormData({ ...formData, exclusions: e.target.value.split("\n").map((x) => x.trim()).filter(Boolean) })}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="extra_charges">Possible extra charges</Label>
+              <Textarea
+                id="extra_charges"
+                placeholder="One extra charge disclosure per line"
+                value={formData.extra_charges_text}
+                onChange={(e) => setFormData({ ...formData, extra_charges_text: e.target.value })}
+                rows={3}
               />
             </div>
 

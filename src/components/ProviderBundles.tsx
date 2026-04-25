@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Package, IndianRupee, Calendar, Users, Check } from "lucide-react";
+import { Package, IndianRupee, Calendar, Users, Check, XCircle, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { trackBundleBooking } from "@/lib/analytics";
+import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
 
 interface ProviderBundlesProps {
   providerId: string;
@@ -85,10 +86,12 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
 
     setIsSubmitting(true);
     try {
+      const eventId = await getPrimaryWeddingEventId(user!.id);
       // Create a booking for the bundle
       const { error } = await supabase.from("bookings").insert({
         user_id: user!.id,
         provider_id: providerId,
+        event_id: eventId,
         service_date: format(selectedDate, "yyyy-MM-dd"),
         message: `Package: ${selectedBundle.bundle_name}\nGuests: ${guestCount || 'Not specified'}`,
         special_requirements: specialRequirements || null,
@@ -214,11 +217,11 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
               </div>
 
               {/* Bundle items */}
-              {bundle.items && bundle.items.length > 0 && (
+              {(bundle.items && bundle.items.length > 0) || bundle.inclusions?.length > 0 || bundle.exclusions?.length > 0 || (Array.isArray(bundle.extra_charges) && bundle.extra_charges.length > 0) ? (
                 <div className="bg-muted/50 rounded-lg p-3 mb-3">
                   <p className="text-xs font-medium text-muted-foreground mb-2">What's included:</p>
                   <div className="grid gap-1">
-                    {bundle.items.map((item: any) => (
+                    {bundle.items?.map((item: any) => (
                       <div key={item.id} className="flex items-center gap-2 text-sm">
                         <Check className="h-3.5 w-3.5 text-green-600" />
                         <span>
@@ -230,9 +233,41 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
                         </span>
                       </div>
                     ))}
+                    {bundle.inclusions?.map((item: string) => (
+                      <div key={item} className="flex items-center gap-2 text-sm">
+                        <Check className="h-3.5 w-3.5 text-green-600" />
+                        <span>{item}</span>
+                      </div>
+                    ))}
                   </div>
+                  {bundle.exclusions?.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Not included:</p>
+                      <div className="grid gap-1">
+                        {bundle.exclusions.map((item: string) => (
+                          <div key={item} className="flex items-center gap-2 text-sm">
+                            <XCircle className="h-3.5 w-3.5 text-destructive" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {Array.isArray(bundle.extra_charges) && bundle.extra_charges.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Possible extra charges:</p>
+                      <div className="grid gap-1">
+                        {bundle.extra_charges.map((charge: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-2 text-sm">
+                            <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                            <span>{charge.label || charge.description || String(charge)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              ) : null}
 
               <Button 
                 className="w-full gradient-gold text-primary-foreground"
