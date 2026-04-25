@@ -264,6 +264,7 @@ export type Database = {
           completion_status: string | null
           created_at: string
           end_date: string | null
+          event_id: string | null
           id: string
           message: string | null
           payment_preference: string | null
@@ -292,6 +293,7 @@ export type Database = {
           completion_status?: string | null
           created_at?: string
           end_date?: string | null
+          event_id?: string | null
           id?: string
           message?: string | null
           payment_preference?: string | null
@@ -320,6 +322,7 @@ export type Database = {
           completion_status?: string | null
           created_at?: string
           end_date?: string | null
+          event_id?: string | null
           id?: string
           message?: string | null
           payment_preference?: string | null
@@ -339,6 +342,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_provider_id_fkey"
             columns: ["provider_id"]
@@ -1437,6 +1447,8 @@ export type Database = {
           status: string | null
           user_id: string
           value_for_money_rating: number | null
+          wedding_budget_range: string | null
+          wedding_size: string | null
         }
         Insert: {
           booking_id: string
@@ -1453,6 +1465,8 @@ export type Database = {
           status?: string | null
           user_id: string
           value_for_money_rating?: number | null
+          wedding_budget_range?: string | null
+          wedding_size?: string | null
         }
         Update: {
           booking_id?: string
@@ -1469,6 +1483,8 @@ export type Database = {
           status?: string | null
           user_id?: string
           value_for_money_rating?: number | null
+          wedding_budget_range?: string | null
+          wedding_size?: string | null
         }
         Relationships: [
           {
@@ -1539,7 +1555,10 @@ export type Database = {
           discount_percentage: number | null
           discounted_price: number
           duration_days: number | null
+          exclusions: string[] | null
+          extra_charges: Json | null
           id: string
+          inclusions: string[] | null
           is_active: boolean | null
           max_guests: number | null
           min_advance_percentage: number | null
@@ -1556,7 +1575,10 @@ export type Database = {
           discount_percentage?: number | null
           discounted_price: number
           duration_days?: number | null
+          exclusions?: string[] | null
+          extra_charges?: Json | null
           id?: string
+          inclusions?: string[] | null
           is_active?: boolean | null
           max_guests?: number | null
           min_advance_percentage?: number | null
@@ -1573,7 +1595,10 @@ export type Database = {
           discount_percentage?: number | null
           discounted_price?: number
           duration_days?: number | null
+          exclusions?: string[] | null
+          extra_charges?: Json | null
           id?: string
+          inclusions?: string[] | null
           is_active?: boolean | null
           max_guests?: number | null
           min_advance_percentage?: number | null
@@ -2070,6 +2095,190 @@ export type Database = {
             columns: ["theme_id"]
             isOneToOne: false
             referencedRelation: "ceremony_themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wedding_budget_categories: {
+        Row: {
+          actual_amount: number
+          category: string
+          created_at: string
+          event_id: string
+          id: string
+          notes: string | null
+          planned_amount: number
+          updated_at: string
+        }
+        Insert: {
+          actual_amount?: number
+          category: string
+          created_at?: string
+          event_id: string
+          id?: string
+          notes?: string | null
+          planned_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          actual_amount?: number
+          category?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          notes?: string | null
+          planned_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wedding_budget_categories_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wedding_events: {
+        Row: {
+          city: string | null
+          created_at: string
+          event_date: string | null
+          id: string
+          is_primary: boolean
+          name: string
+          progress_percent: number
+          total_budget: number | null
+          updated_at: string
+          user_id: string
+          wedding_size: string | null
+          wedding_style: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          is_primary?: boolean
+          name?: string
+          progress_percent?: number
+          total_budget?: number | null
+          updated_at?: string
+          user_id: string
+          wedding_size?: string | null
+          wedding_style?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          is_primary?: boolean
+          name?: string
+          progress_percent?: number
+          total_budget?: number | null
+          updated_at?: string
+          user_id?: string
+          wedding_size?: string | null
+          wedding_style?: string | null
+        }
+        Relationships: []
+      }
+      wedding_preferences: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          event_date: string | null
+          guest_count: number | null
+          id: string
+          location: string | null
+          priorities: string[] | null
+          updated_at: string
+          user_id: string
+          wedding_size: string | null
+          wedding_style: string | null
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          event_date?: string | null
+          guest_count?: number | null
+          id?: string
+          location?: string | null
+          priorities?: string[] | null
+          updated_at?: string
+          user_id: string
+          wedding_size?: string | null
+          wedding_style?: string | null
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          event_date?: string | null
+          guest_count?: number | null
+          id?: string
+          location?: string | null
+          priorities?: string[] | null
+          updated_at?: string
+          user_id?: string
+          wedding_size?: string | null
+          wedding_style?: string | null
+        }
+        Relationships: []
+      }
+      wedding_tasks: {
+        Row: {
+          category: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          event_id: string
+          id: string
+          is_default: boolean
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          event_id: string
+          id?: string
+          is_default?: boolean
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          event_id?: string
+          id?: string
+          is_default?: boolean
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wedding_tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_events"
             referencedColumns: ["id"]
           },
         ]
