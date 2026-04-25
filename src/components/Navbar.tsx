@@ -13,6 +13,9 @@ const navLinks = [{
   name: "Home",
   href: "/"
 }, {
+  name: "Plan Wedding",
+  href: "/wedding-dashboard"
+}, {
   name: "Find Providers",
   href: "/providers"
 }, {
