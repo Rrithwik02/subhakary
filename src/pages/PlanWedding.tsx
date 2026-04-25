@@ -33,7 +33,7 @@ const PlanWedding = () => {
   const [budget, setBudget] = useState<string>("500000");
   const [guestCount, setGuestCount] = useState<string>("200");
   const [style, setStyle] = useState<string>("Traditional");
-  const [size, setSize] = useState<string>("medium");
+  const [size, setSize] = useState<string>("mid");
   const [priorities, setPriorities] = useState<string[]>([]);
 
   useEffect(() => {
