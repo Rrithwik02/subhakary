@@ -13,7 +13,12 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 
-const STYLES = ["Traditional", "Modern", "Destination", "Intimate", "Royal", "Minimalist"];
+const STYLES = [
+  { id: "traditional", label: "Traditional" },
+  { id: "modern", label: "Modern" },
+  { id: "luxury", label: "Luxury" },
+  { id: "fusion", label: "Fusion" },
+];
 const SIZES = [
   { id: "intimate", label: "Intimate", desc: "< 100 guests" },
   { id: "mid", label: "Mid-size", desc: "100–400 guests" },
@@ -32,7 +37,7 @@ const PlanWedding = () => {
   const [city, setCity] = useState("");
   const [budget, setBudget] = useState<string>("500000");
   const [guestCount, setGuestCount] = useState<string>("200");
-  const [style, setStyle] = useState<string>("Traditional");
+  const [style, setStyle] = useState<string>("traditional");
   const [size, setSize] = useState<string>("mid");
   const [priorities, setPriorities] = useState<string[]>([]);
 
@@ -151,14 +156,14 @@ const PlanWedding = () => {
                   <div className="grid grid-cols-2 gap-2">
                     {STYLES.map((s) => (
                       <button
-                        key={s}
+                        key={s.id}
                         type="button"
-                        onClick={() => setStyle(s)}
+                        onClick={() => setStyle(s.id)}
                         className={`p-3 rounded-md border text-sm transition ${
-                          style === s ? "border-primary bg-primary/10 font-medium" : "border-border hover:border-primary/50"
+                          style === s.id ? "border-primary bg-primary/10 font-medium" : "border-border hover:border-primary/50"
                         }`}
                       >
-                        {s}
+                        {s.label}
                       </button>
                     ))}
                   </div>
