@@ -16,9 +16,8 @@ import { SEOHead } from "@/components/SEOHead";
 const STYLES = ["Traditional", "Modern", "Destination", "Intimate", "Royal", "Minimalist"];
 const SIZES = [
   { id: "intimate", label: "Intimate", desc: "< 100 guests" },
-  { id: "medium", label: "Medium", desc: "100–300 guests" },
-  { id: "large", label: "Large", desc: "300–600 guests" },
-  { id: "grand", label: "Grand", desc: "600+ guests" },
+  { id: "mid", label: "Mid-size", desc: "100–400 guests" },
+  { id: "grand", label: "Grand", desc: "400+ guests" },
 ];
 const PRIORITIES = ["Photography", "Decor", "Catering", "Venue", "Makeup", "Music/DJ", "Mehndi", "Pandit"];
 
