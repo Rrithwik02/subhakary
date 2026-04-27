@@ -104,7 +104,9 @@ const PlanWedding = () => {
   const progress = (step / 4) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background pb-12 relative">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 opacity-50 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-3xl rounded-full translate-y-1/2 -translate-x-1/2 opacity-50 pointer-events-none" />
       <SEOHead title="Plan Your Wedding | Subhakary" description="Tell us about your dream wedding and get a personalized plan." />
       <Navbar />
       <main className="container max-w-2xl mx-auto px-4 py-12">
@@ -114,19 +116,21 @@ const PlanWedding = () => {
           <p className="text-muted-foreground mt-2">A few quick questions to personalize your journey</p>
         </div>
 
-        <Progress value={progress} className="mb-6 h-2" />
+        <div className="max-w-md mx-auto mb-8 bg-background/50 p-1 rounded-full border border-border/50">
+          <Progress value={progress} className="h-2 rounded-full" />
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Step {step} of 4</CardTitle>
-            <CardDescription>
+        <div className="glass-card rounded-3xl overflow-hidden shadow-elevated border border-border/40 p-2 md:p-4 relative z-10 bg-card/80 backdrop-blur-xl">
+          <div className="pb-4 border-b border-border/50 mb-6">
+            <h2 className="font-display text-2xl font-bold mb-1">Step {step} of 4</h2>
+            <p className="text-muted-foreground">
               {step === 1 && "Basics about your wedding"}
               {step === 2 && "Your budget & guest count"}
               {step === 3 && "Style & scale"}
               {step === 4 && "What matters most to you"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </p>
+          </div>
+          <div className="space-y-6">
             {step === 1 && (
               <>
                 <div className="space-y-2">
@@ -231,8 +235,8 @@ const PlanWedding = () => {
                 </Button>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
       <Footer />
     </div>

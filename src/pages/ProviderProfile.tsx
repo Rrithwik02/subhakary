@@ -363,7 +363,7 @@ const DesktopProviderProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 pb-20">
       <Navbar />
 
       <section className="pt-20 md:pt-32 pb-12 px-3 md:px-4">
@@ -384,8 +384,9 @@ const DesktopProviderProfile = () => {
             animate={{ opacity: 1, y: 0 }}
           >
             {/* Header */}
-            <Card className="mb-4 md:mb-6">
-              <CardContent className="p-3 md:p-8">
+            <div className="glass-card rounded-2xl mb-4 md:mb-8 overflow-hidden relative shadow-elevated border border-border/40">
+              <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent z-0" />
+              <div className="p-3 md:p-8 relative z-10">
                 {/* Desktop Layout */}
                 <div className="hidden md:flex flex-col gap-6">
                   <div className="flex items-start gap-6">
@@ -579,8 +580,8 @@ const DesktopProviderProfile = () => {
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Mobile action buttons - fixed at bottom */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-2.5 z-40 safe-area-bottom">
@@ -627,29 +628,29 @@ const DesktopProviderProfile = () => {
               {/* Main content */}
               <div className="md:col-span-2 space-y-3 md:space-y-6">
                 {/* About */}
-                <Card>
-                  <CardHeader className="pb-2 p-3 md:p-6 md:pb-4">
-                    <CardTitle className="font-display text-base md:text-xl">About</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 px-3 pb-3 md:px-6 md:pb-6">
+                <div className="glass-card rounded-2xl overflow-hidden shadow-elevated border border-border/40 mb-6">
+                  <div className="pb-2 p-4 md:p-6 md:pb-4 border-b border-border/20 bg-muted/20">
+                    <h3 className="font-display text-lg md:text-xl font-bold flex items-center gap-2">About</h3>
+                  </div>
+                  <div className="pt-4 px-4 pb-4 md:px-6 md:pb-6">
                     <p className="text-xs md:text-base text-muted-foreground whitespace-pre-line leading-relaxed">
                       {provider.description || "No description provided."}
                     </p>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* Service details */}
                 {provider.category?.description && (
-                  <Card>
-                    <CardHeader className="pb-2 p-3 md:p-6 md:pb-4">
-                      <CardTitle className="font-display text-base md:text-xl">Service Category</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0 px-3 pb-3 md:px-6 md:pb-6">
+                  <div className="glass-card rounded-2xl overflow-hidden shadow-elevated border border-border/40 mb-6">
+                    <div className="pb-2 p-4 md:p-6 md:pb-4 border-b border-border/20 bg-muted/20">
+                      <h3 className="font-display text-lg md:text-xl font-bold flex items-center gap-2">Service Category</h3>
+                    </div>
+                    <div className="pt-4 px-4 pb-4 md:px-6 md:pb-6">
                       <p className="text-xs md:text-base text-muted-foreground">
                         {provider.category.description}
                       </p>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )}
 
                 {/* Service Packages */}
@@ -683,11 +684,11 @@ const DesktopProviderProfile = () => {
 
               {/* Booking sidebar - hidden on mobile */}
               <div className="hidden md:block space-y-6">
-                <Card className="sticky top-28">
-                  <CardHeader>
-                    <CardTitle className="font-display">Connect with Provider</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <div className="sticky top-28 glass-card rounded-2xl border border-primary/20 shadow-elevated overflow-hidden">
+                  <div className="bg-primary/5 pb-4 p-6">
+                    <h3 className="font-display text-xl font-bold">Connect with Provider</h3>
+                  </div>
+                  <div className="space-y-4 p-6 pt-2">
                     <p className="text-sm text-muted-foreground">
                       Chat with {provider.business_name} to discuss your requirements
                       before booking.
@@ -714,8 +715,8 @@ const DesktopProviderProfile = () => {
                       <Calendar className="mr-2 h-4 w-4" />
                       Request Booking
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
