@@ -481,12 +481,13 @@ const DesktopProviders = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 pb-12">
       <Navbar />
 
       {/* Hero Section - Compact on mobile */}
-      <section className="pt-24 md:pt-32 pb-6 md:pb-12 px-4 bg-gradient-to-b from-muted to-background">
-        <div className="container max-w-6xl mx-auto">
+      <section className="pt-24 md:pt-32 pb-6 md:pb-12 px-4 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-background to-background z-0" />
+        <div className="container max-w-6xl mx-auto relative z-10">
           {/* Back Button */}
           <Button
             variant="ghost"
@@ -710,8 +711,9 @@ const DesktopProviders = () => {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Link to={`/provider/${provider.url_slug || provider.id}${selectedDate ? `?date=${selectedDate}` : ''}`}>
-                    <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden group">
-                      <CardContent className="p-4 md:p-6">
+                    <div className="hover-lift cursor-pointer h-full glass-card rounded-2xl border border-border/40 overflow-hidden group relative">
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary/5 to-transparent z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="p-4 md:p-6 relative z-10">
                         {/* Header with Avatar, Name and Verification Badge */}
                         <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
                           <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0 border-2 border-primary/20">
@@ -856,8 +858,8 @@ const DesktopProviders = () => {
                             <CompareButton provider={provider} variant="icon" />
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   </Link>
                 </motion.div>
               ))}
