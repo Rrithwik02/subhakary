@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { indianStates, getCitiesByState } from "@/data/indianLocations";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
+import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
 
 export const MobileProviders = () => {
   const [searchParams] = useSearchParams();
@@ -347,6 +348,11 @@ export const MobileProviders = () => {
                             VERIFIED
                           </Badge>
                         )}
+                        <AvailabilityStatusBadge
+                          status={provider.availability_status as "online" | "offline" | "busy" | null}
+                          size="sm"
+                          className="bg-white/95"
+                        />
                       </div>
 
                       {/* Favorite Button */}

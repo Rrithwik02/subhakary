@@ -16,6 +16,7 @@ interface Provider {
   languages?: string[] | null;
   category?: { name: string; icon?: string } | null;
   subcategory?: string | null;
+  url_slug?: string | null;
 }
 
 interface ComparisonContextType {

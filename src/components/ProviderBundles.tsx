@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Package, IndianRupee, Calendar, Users, Check, XCircle, AlertCircle } from "lucide-react";
+import { Package, IndianRupee, Calendar, Users, Check, XCircle, AlertCircle, Clock3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -214,6 +214,12 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
                   <IndianRupee className="h-3.5 w-3.5" />
                   {bundle.min_advance_percentage}% advance
                 </span>
+                {bundle.response_time_hours && (
+                  <span className="flex items-center gap-1">
+                    <Clock3 className="h-3.5 w-3.5" />
+                    Replies in about {bundle.response_time_hours}h
+                  </span>
+                )}
               </div>
 
               {/* Bundle items */}
@@ -268,6 +274,13 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
                   )}
                 </div>
               ) : null}
+
+              {bundle.cancellation_policy && (
+                <div className="mb-3 rounded-lg border bg-background/70 p-3">
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">Cancellation policy</p>
+                  <p className="text-sm text-muted-foreground">{bundle.cancellation_policy}</p>
+                </div>
+              )}
 
               <Button 
                 className="w-full gradient-gold text-primary-foreground"
@@ -337,6 +350,12 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
               <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
                 <p className="font-medium mb-1">Terms & Conditions:</p>
                 <p>{selectedBundle.terms_conditions}</p>
+              </div>
+            )}
+            {selectedBundle?.cancellation_policy && (
+              <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                <p className="font-medium mb-1">Cancellation Policy:</p>
+                <p>{selectedBundle.cancellation_policy}</p>
               </div>
             )}
           </div>

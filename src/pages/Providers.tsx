@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { indianStates, getCitiesByState } from "@/data/indianLocations";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import { MobileProviders } from "@/components/mobile/MobileProviders";
+import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
 
 // Areas for cities (used when a city is selected)
 const CITY_AREAS: Record<string, string[]> = {
@@ -160,6 +161,7 @@ const DesktopProviders = () => {
           service_type,
           pricing_info,
           base_price,
+          availability_status,
           requires_advance_payment,
           advance_payment_percentage,
           travel_charges_applicable,
@@ -760,6 +762,10 @@ const DesktopProviders = () => {
                                   {provider.subcategory}
                                 </Badge>
                               )}
+                              <AvailabilityStatusBadge
+                                status={provider.availability_status as "online" | "offline" | "busy" | null}
+                                size="sm"
+                              />
                             </div>
                             {provider.specializations && provider.specializations.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1.5">
@@ -844,11 +850,14 @@ const DesktopProviders = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             {(provider.base_price || provider.pricing_info) && (
-                              <span className="text-xs md:text-sm font-semibold text-primary">
-                                {provider.base_price 
-                                  ? `₹${provider.base_price.toLocaleString()}` 
-                                  : provider.pricing_info}
-                              </span>
+                              <div className="text-right">
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Starting from</p>
+                                <span className="text-xs md:text-sm font-semibold text-primary">
+                                  {provider.base_price 
+                                    ? `Rs ${provider.base_price.toLocaleString("en-IN")}` 
+                                    : provider.pricing_info}
+                                </span>
+                              </div>
                             )}
                             <ShareButton
                               title={provider.business_name}

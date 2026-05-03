@@ -901,6 +901,8 @@ const DesktopProviderDashboard = () => {
                 <ProviderPortfolioUpload
                   providerId={provider.id}
                   currentImages={provider.portfolio_images || []}
+                  initialTags={provider.portfolio_tags || []}
+                  initialStories={provider.real_wedding_stories || []}
                   onImagesUpdated={() => refetch()}
                 />
                 

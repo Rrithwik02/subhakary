@@ -36,6 +36,8 @@ interface BundleFormData {
   duration_days: number;
   max_guests: number | null;
   min_advance_percentage: number;
+  response_time_hours: number | null;
+  cancellation_policy: string;
   terms_conditions: string;
   is_active: boolean;
   inclusions: string[];
@@ -61,6 +63,8 @@ const defaultFormData: BundleFormData = {
   duration_days: 1,
   max_guests: null,
   min_advance_percentage: 30,
+  response_time_hours: 6,
+  cancellation_policy: "",
   terms_conditions: "",
   is_active: true,
   inclusions: [],
@@ -234,6 +238,8 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
       duration_days: bundle.duration_days || 1,
       max_guests: bundle.max_guests,
       min_advance_percentage: bundle.min_advance_percentage || 30,
+      response_time_hours: bundle.response_time_hours || 6,
+      cancellation_policy: bundle.cancellation_policy || "",
       terms_conditions: bundle.terms_conditions || "",
       is_active: bundle.is_active ?? true,
       inclusions: bundle.inclusions || [],
@@ -491,15 +497,38 @@ export function ProviderBundleManager({ providerId }: ProviderBundleManagerProps
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="min_advance">Minimum Advance (%)</Label>
+                <Input
+                  id="min_advance"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.min_advance_percentage}
+                  onChange={(e) => setFormData({ ...formData, min_advance_percentage: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="response_time_hours">Response Time (hours)</Label>
+                <Input
+                  id="response_time_hours"
+                  type="number"
+                  min="1"
+                  value={formData.response_time_hours || ""}
+                  onChange={(e) => setFormData({ ...formData, response_time_hours: e.target.value ? Number(e.target.value) : null })}
+                />
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="min_advance">Minimum Advance (%)</Label>
-              <Input
-                id="min_advance"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.min_advance_percentage}
-                onChange={(e) => setFormData({ ...formData, min_advance_percentage: Number(e.target.value) })}
+              <Label htmlFor="cancellation_policy">Cancellation Policy</Label>
+              <Textarea
+                id="cancellation_policy"
+                placeholder="Example: 50% refund up to 30 days before the event"
+                value={formData.cancellation_policy}
+                onChange={(e) => setFormData({ ...formData, cancellation_policy: e.target.value })}
+                rows={2}
               />
             </div>
 

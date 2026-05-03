@@ -197,6 +197,7 @@ export interface SearchProvider {
   rating: number | null;
   total_reviews: number | null;
   base_price: number | null;
+  url_slug?: string | null;
   is_premium?: boolean | null;
   is_verified?: boolean | null;
   recommendation_reason?: string | null;
@@ -260,7 +261,7 @@ export async function fetchProviders(params: SearchParams): Promise<SearchProvid
 
   let qb = supabase
     .from('public_service_providers')
-    .select('id, business_name, service_type, city, rating, total_reviews, base_price')
+    .select('id, business_name, service_type, city, rating, total_reviews, base_price, url_slug, is_premium, is_verified')
     .eq('status', 'approved')
     .order('rating', { ascending: false })
     .limit(5);
@@ -290,7 +291,7 @@ export async function fetchProviders(params: SearchParams): Promise<SearchProvid
   if ((!data || data.length === 0) && location && categoryId) {
     let fallbackQb = supabase
       .from('public_service_providers')
-      .select('id, business_name, service_type, city, rating, total_reviews, base_price')
+      .select('id, business_name, service_type, city, rating, total_reviews, base_price, url_slug, is_premium, is_verified')
       .eq('status', 'approved')
       .eq('category_id', categoryId)
       .order('rating', { ascending: false })

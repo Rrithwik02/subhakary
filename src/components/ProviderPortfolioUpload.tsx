@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 interface ProviderPortfolioUploadProps {
   providerId: string;
   currentImages: string[];
+  initialTags?: { label?: string }[];
+  initialStories?: { title?: string; description?: string }[];
   onImagesUpdated: () => void;
 }
 
@@ -62,6 +64,8 @@ const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.
 export const ProviderPortfolioUpload = ({
   providerId,
   currentImages,
+  initialTags = [],
+  initialStories = [],
   onImagesUpdated,
 }: ProviderPortfolioUploadProps) => {
   const { toast } = useToast();
@@ -70,8 +74,19 @@ export const ProviderPortfolioUpload = ({
   const [images, setImages] = useState<string[]>(currentImages || []);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [portfolioTags, setPortfolioTags] = useState("");
-  const [storyDraft, setStoryDraft] = useState("");
+  const [portfolioTags, setPortfolioTags] = useState(
+    initialTags.map((tag) => tag.label || "").filter(Boolean).join("\n")
+  );
+  const [storyDraft, setStoryDraft] = useState(
+    initialStories
+      .map((story) => {
+        const title = story.title?.trim() || "";
+        const description = story.description?.trim() || "";
+        return description ? `${title}: ${description}` : title;
+      })
+      .filter(Boolean)
+      .join("\n")
+  );
 
   const processAndUploadFiles = async (files: FileList | File[]) => {
     const fileArray = Array.from(files);

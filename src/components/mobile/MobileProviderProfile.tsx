@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, differenceInDays } from "date-fns";
 import { DateRange } from "react-day-picker";
@@ -15,8 +15,6 @@ import {
   MessageCircle,
   Share2,
   Heart,
-  Phone,
-  ChevronRight,
   X,
   Loader2,
   Image as ImageIcon,
@@ -30,6 +28,10 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
+import { ProviderDecisionSurface } from "@/components/ProviderDecisionSurface";
+import { ProviderBundles } from "@/components/ProviderBundles";
+import { PortfolioGallery } from "@/components/PortfolioGallery";
+import { ReviewsList } from "@/components/ReviewsList";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -45,7 +47,6 @@ const MobileProviderProfile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const queryClient = useQueryClient();
   
   const [showBookingSheet, setShowBookingSheet] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -89,23 +90,6 @@ const MobileProviderProfile = () => {
   });
 
   const providerId = provider?.id;
-
-  // Fetch reviews
-  const { data: reviews = [] } = useQuery({
-    queryKey: ["provider-reviews", providerId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("*, booking:bookings(user_id)")
-        .eq("provider_id", providerId!)
-        .eq("status", "approved")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!providerId,
-  });
 
   const handleShare = async () => {
     const slug = provider?.url_slug || paramValue;
@@ -378,6 +362,8 @@ const MobileProviderProfile = () => {
             </div>
           )}
 
+          <ProviderDecisionSurface provider={provider as any} />
+
           {/* Languages & Specializations */}
           <div className="flex flex-wrap gap-2">
             {provider.languages?.map((lang: string) => (
@@ -393,43 +379,18 @@ const MobileProviderProfile = () => {
             ))}
           </div>
 
-          {/* Reviews Section */}
-          {reviews.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Reviews</h3>
-                <Button variant="ghost" size="sm" className="text-primary text-xs">
-                  See all <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {reviews.slice(0, 3).map((review: any) => (
-                  <div key={review.id} className="bg-muted/30 rounded-xl p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-3 w-3 ${
-                              i < review.rating ? "fill-primary text-primary" : "text-muted"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(review.created_at), "MMM d, yyyy")}
-                      </span>
-                    </div>
-                    {review.review_text && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {review.review_text}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+          <ProviderBundles providerId={provider.id} providerName={provider.business_name} />
+
+          {portfolioImages.length > 0 && (
+            <PortfolioGallery
+              images={portfolioImages}
+              providerName={provider.business_name}
+              tags={(provider as any).portfolio_tags}
+              stories={(provider as any).real_wedding_stories}
+            />
           )}
+
+          <ReviewsList providerId={provider.id} />
         </div>
 
         {/* Fixed Bottom Action Bar */}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Star, User, ChevronDown, ChevronUp, Image as ImageIcon } from "lucide-react";
+import { Star, User, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -27,6 +27,7 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
   const [expandedReview, setExpandedReview] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [sizeFilter, setSizeFilter] = useState("all");
+  const [budgetFilter, setBudgetFilter] = useState("all");
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["provider-reviews", providerId],
@@ -59,8 +60,15 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
     enabled: !!providerId,
   });
 
-  // Calculate rating summary
-  const filteredReviews = sizeFilter === "all" ? reviews : reviews.filter((review) => review.wedding_size === sizeFilter);
+  const budgetOptions = Array.from(
+    new Set(reviews.map((review) => review.wedding_budget_range).filter(Boolean)),
+  ) as string[];
+
+  const filteredReviews = reviews.filter((review) => {
+    const sizeMatches = sizeFilter === "all" || review.wedding_size === sizeFilter;
+    const budgetMatches = budgetFilter === "all" || review.wedding_budget_range === budgetFilter;
+    return sizeMatches && budgetMatches;
+  });
 
   const ratingCounts = [5, 4, 3, 2, 1].map((star) => ({
     star,
@@ -118,12 +126,26 @@ export const ReviewsList = ({ providerId }: ReviewsListProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex flex-wrap gap-2">
-            {["all", "intimate", "mid", "grand"].map((size) => (
-              <Button key={size} size="sm" variant={sizeFilter === size ? "default" : "outline"} onClick={() => setSizeFilter(size)} className="capitalize">
-                {size === "all" ? "All weddings" : size}
-              </Button>
-            ))}
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {["all", "intimate", "mid", "grand"].map((size) => (
+                <Button key={size} size="sm" variant={sizeFilter === size ? "default" : "outline"} onClick={() => setSizeFilter(size)} className="capitalize">
+                  {size === "all" ? "All sizes" : size}
+                </Button>
+              ))}
+            </div>
+            {budgetOptions.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant={budgetFilter === "all" ? "default" : "outline"} onClick={() => setBudgetFilter("all")}>
+                  All budgets
+                </Button>
+                {budgetOptions.map((budget) => (
+                  <Button key={budget} size="sm" variant={budgetFilter === budget ? "default" : "outline"} onClick={() => setBudgetFilter(budget)}>
+                    {budget}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
           {/* Rating Summary */}
           {filteredReviews.length > 0 && (

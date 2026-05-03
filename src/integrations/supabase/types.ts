@@ -1550,6 +1550,7 @@ export type Database = {
         Row: {
           base_price: number
           bundle_name: string
+          cancellation_policy: string | null
           created_at: string | null
           description: string | null
           discount_percentage: number | null
@@ -1564,12 +1565,14 @@ export type Database = {
           min_advance_percentage: number | null
           portfolio_images: string[] | null
           provider_id: string
+          response_time_hours: number | null
           terms_conditions: string | null
           updated_at: string | null
         }
         Insert: {
           base_price: number
           bundle_name: string
+          cancellation_policy?: string | null
           created_at?: string | null
           description?: string | null
           discount_percentage?: number | null
@@ -1584,12 +1587,14 @@ export type Database = {
           min_advance_percentage?: number | null
           portfolio_images?: string[] | null
           provider_id: string
+          response_time_hours?: number | null
           terms_conditions?: string | null
           updated_at?: string | null
         }
         Update: {
           base_price?: number
           bundle_name?: string
+          cancellation_policy?: string | null
           created_at?: string | null
           description?: string | null
           discount_percentage?: number | null
@@ -1604,6 +1609,7 @@ export type Database = {
           min_advance_percentage?: number | null
           portfolio_images?: string[] | null
           provider_id?: string
+          response_time_hours?: number | null
           terms_conditions?: string | null
           updated_at?: string | null
         }

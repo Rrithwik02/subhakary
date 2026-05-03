@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { Star, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -31,6 +30,8 @@ const aspectRatings = [
   { key: "value_for_money_rating", label: "Value for Money" },
   { key: "punctuality_rating", label: "Punctuality" },
 ];
+
+const budgetOptions = ["Under Rs 5L", "Rs 5L-10L", "Rs 10L-20L", "Rs 20L+"];
 
 export const ReviewForm = ({
   bookingId,
@@ -335,12 +336,17 @@ export const ReviewForm = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="budget_range">Wedding budget range</Label>
-              <Input
+              <select
                 id="budget_range"
-                placeholder="e.g., Rs 5L-10L"
                 value={weddingBudgetRange}
                 onChange={(e) => setWeddingBudgetRange(e.target.value)}
-              />
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">Select budget range</option>
+                {budgetOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="wedding_size">Wedding size</Label>

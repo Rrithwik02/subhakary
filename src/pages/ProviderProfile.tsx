@@ -25,8 +25,8 @@ import { ProviderBundles } from "@/components/ProviderBundles";
 import { PortfolioGallery } from "@/components/PortfolioGallery";
 import { PricingTiers } from "@/components/PricingTiers";
 import { DateRangePicker } from "@/components/DateRangePicker";
-import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
 import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
+import { ProviderDecisionSurface } from "@/components/ProviderDecisionSurface";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,6 +155,7 @@ const DesktopProviderProfile = () => {
           service_type,
           pricing_info,
           base_price,
+          availability_status,
           requires_advance_payment,
           advance_payment_percentage,
           travel_charges_applicable,
@@ -627,6 +628,8 @@ const DesktopProviderProfile = () => {
             <div className="grid md:grid-cols-3 gap-3 md:gap-6 pb-16 md:pb-0">
               {/* Main content */}
               <div className="md:col-span-2 space-y-3 md:space-y-6">
+                <ProviderDecisionSurface provider={provider as any} />
+
                 {/* About */}
                 <div className="glass-card rounded-2xl overflow-hidden shadow-elevated border border-border/40 mb-6">
                   <div className="pb-2 p-4 md:p-6 md:pb-4 border-b border-border/20 bg-muted/20">
@@ -674,25 +677,33 @@ const DesktopProviderProfile = () => {
 
                 {/* Reviews */}
                 <ReviewsList providerId={provider.id} />
-
-                {/* Availability Calendar */}
-                <ProviderAvailabilityCalendar 
-                  providerId={provider.id} 
-                  providerName={provider.business_name}
-                />
               </div>
 
               {/* Booking sidebar - hidden on mobile */}
               <div className="hidden md:block space-y-6">
                 <div className="sticky top-28 glass-card rounded-2xl border border-primary/20 shadow-elevated overflow-hidden">
                   <div className="bg-primary/5 pb-4 p-6">
-                    <h3 className="font-display text-xl font-bold">Connect with Provider</h3>
+                    <h3 className="font-display text-xl font-bold">Ready to shortlist or book?</h3>
                   </div>
                   <div className="space-y-4 p-6 pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      Chat with {provider.business_name} to discuss your requirements
-                      before booking.
-                    </p>
+                    <div className="rounded-xl border bg-background/80 p-4 text-sm">
+                      <p className="text-muted-foreground">Starting price</p>
+                      <p className="mt-1 text-lg font-semibold text-foreground">
+                        {provider.base_price ? `Rs ${provider.base_price.toLocaleString("en-IN")}` : provider.pricing_info || "Contact for price"}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Use chat for custom scope, then send a booking request once your date and coverage are clear.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {provider.is_verified ? <Badge variant="secondary">Verified profile</Badge> : null}
+                      {provider.total_reviews ? <Badge variant="outline">{provider.total_reviews} reviews</Badge> : null}
+                      {provider.advance_booking_days ? (
+                        <Badge variant="outline">{provider.advance_booking_days}+ day lead time</Badge>
+                      ) : null}
+                    </div>
+
                     <Button
                       className="w-full"
                       variant="outline"
