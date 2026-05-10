@@ -15,11 +15,16 @@ import { indianStates, getCitiesByState } from "@/data/indianLocations";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
 import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useWeddingEvent } from "@/hooks/useWeddingEvent";
+import { computeBudgetFit, computePriceBenchmark, computeTrustInsight } from "@/lib/vendorInsights";
+import { normalizePlanningCategory } from "@/lib/weddingPlanning";
 
 export const MobileProviders = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { event } = useWeddingEvent();
   const { favorites, toggleFavorite } = useFavorites();
   
   const serviceParam = searchParams.get("service");
@@ -30,6 +35,7 @@ export const MobileProviders = () => {
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [fitOnly, setFitOnly] = useState(false);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
@@ -68,15 +74,61 @@ export const MobileProviders = () => {
     },
   });
 
+  const { data: budgetCategories = [] } = useQuery({
+    queryKey: ["mobile-wedding-budget-categories", event?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("wedding_budget_categories").select("category,planned_amount").eq("event_id", event!.id);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user && !!event?.id,
+  });
+
   // Get cities based on selected state
   const stateCities = useMemo(() => {
     if (selectedState === "all") return [];
     return getCitiesByState(selectedState);
   }, [selectedState]);
 
+  const budgetTargets = useMemo(() => {
+    const map = new Map<string, number>();
+    budgetCategories.forEach((row: { category: string; planned_amount: number }) => {
+      map.set(row.category, Number(row.planned_amount) || 0);
+    });
+    return map;
+  }, [budgetCategories]);
+
+  const enrichedProviders = useMemo(
+    () =>
+      providers.map((provider) => {
+        const planningCategory = normalizePlanningCategory(provider.category?.name);
+        return {
+          ...provider,
+          benchmark: computePriceBenchmark(provider, providers),
+          budgetFit: computeBudgetFit({
+            providerPrice: provider.base_price,
+            categoryName: provider.category?.name,
+            context: {
+              totalBudget: event?.total_budget,
+              city: event?.city,
+              plannedCategoryBudget: budgetTargets.get(planningCategory) || null,
+            },
+          }),
+          trust: computeTrustInsight({
+            isVerified: provider.is_verified,
+            isPremium: provider.is_premium,
+            rating: provider.rating,
+            totalReviews: provider.total_reviews,
+            experienceYears: provider.experience_years,
+          }),
+        };
+      }),
+    [providers, budgetTargets, event],
+  );
+
   // Filter and sort providers
   const filteredProviders = useMemo(() => {
-    let result = [...providers];
+    let result = [...enrichedProviders];
 
     // Text search filter
     if (searchQuery) {
@@ -113,6 +165,10 @@ export const MobileProviders = () => {
       );
     }
 
+    if (fitOnly) {
+      result = result.filter((p) => p.budgetFit.label === "YES" || p.budgetFit.label === "STRETCH");
+    }
+
     // Sorting
     switch (sortBy) {
       case "rating":
@@ -130,24 +186,26 @@ export const MobileProviders = () => {
     }
 
     return result;
-  }, [providers, searchQuery, selectedCategory, selectedState, selectedCity, sortBy]);
+  }, [enrichedProviders, searchQuery, selectedCategory, selectedState, selectedCity, sortBy, fitOnly]);
 
   const handleStateChange = (value: string) => {
     setSelectedState(value);
     setSelectedCity("all");
   };
 
-  const hasActiveFilters = selectedCategory !== "all" || selectedState !== "all" || selectedCity !== "all";
+  const hasActiveFilters = selectedCategory !== "all" || selectedState !== "all" || selectedCity !== "all" || fitOnly;
   const activeFilterCount = [
     selectedCategory !== "all",
     selectedState !== "all",
     selectedCity !== "all",
+    fitOnly,
   ].filter(Boolean).length;
 
   const clearFilters = () => {
     setSelectedCategory("all");
     setSelectedState("all");
     setSelectedCity("all");
+    setFitOnly(false);
     setFiltersOpen(false);
   };
 
@@ -258,6 +316,13 @@ export const MobileProviders = () => {
                     </Select>
                   </div>
 
+                  {event ? (
+                    <label className="flex items-center gap-3 rounded-xl border p-3 text-sm">
+                      <Checkbox checked={fitOnly} onCheckedChange={(checked) => setFitOnly(Boolean(checked))} />
+                      <span>Only show vendors that fit my wedding</span>
+                    </label>
+                  ) : null}
+
                   <div className="flex gap-3 pt-4">
                     <Button variant="outline" className="flex-1" onClick={clearFilters}>
                       Clear All
@@ -288,6 +353,16 @@ export const MobileProviders = () => {
             >
               Pricing
             </Button>
+            {event ? (
+              <Button
+                variant={fitOnly ? "default" : "outline"}
+                size="sm"
+                className="flex-shrink-0 rounded-full gap-1"
+                onClick={() => setFitOnly((current) => !current)}
+              >
+                Fits my wedding
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -301,6 +376,13 @@ export const MobileProviders = () => {
               {filteredProviders.length} found
             </span>
           </div>
+          {event ? (
+            <div className="mb-3 rounded-xl border bg-primary/5 p-3 text-xs text-muted-foreground">
+              {fitOnly
+                ? "Showing vendors that look workable for your active wedding plan."
+                : "Turn on wedding-fit mode to trim out vendors that miss your current budget plan."}
+            </div>
+          ) : null}
 
           {/* Provider Cards */}
           <div className="space-y-3">
@@ -373,7 +455,6 @@ export const MobileProviders = () => {
                           }`}
                         />
                       </button>
-
                       {/* Rating Badge */}
                       <div className="absolute bottom-3 right-3">
                         <Badge variant="secondary" className="bg-white/95 text-foreground gap-1">
@@ -391,17 +472,43 @@ export const MobileProviders = () => {
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
                         <MapPin className="h-3 w-3" />
                         <span>{provider.city || "India"}</span>
-                        <span>•</span>
+                        <span>�</span>
                         <span>{provider.category?.name}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs text-muted-foreground">Starting from</span>
                           <p className="text-lg font-bold text-foreground">
-                            ₹{provider.base_price?.toLocaleString("en-IN") || "N/A"}
+                            {"Rs "}{provider.base_price?.toLocaleString("en-IN") || "N/A"}
                             <span className="text-xs font-normal text-muted-foreground"> / session</span>
                           </p>
                         </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {provider.benchmark?.label ? (
+                          <Badge variant="outline" className="text-[10px]">
+                            {provider.benchmark.label}
+                          </Badge>
+                        ) : null}
+                        {provider.budgetFit?.label && provider.budgetFit.label !== "UNKNOWN" ? (
+                          <Badge
+                            variant={
+                              provider.budgetFit.label === "YES"
+                                ? "default"
+                                : provider.budgetFit.label === "STRETCH"
+                                  ? "secondary"
+                                  : "destructive"
+                            }
+                            className="text-[10px]"
+                          >
+                            Budget fit: {provider.budgetFit.label}
+                          </Badge>
+                        ) : null}
+                        {provider.trust?.label ? (
+                          <Badge variant="secondary" className="text-[10px]">
+                            {provider.trust.label}
+                          </Badge>
+                        ) : null}
                       </div>
                     </div>
                   </motion.div>

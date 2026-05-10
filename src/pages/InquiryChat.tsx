@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { trackChatStarted } from "@/lib/analytics";
+import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { InquiryWorkspacePanel } from "@/components/InquiryWorkspacePanel";
 
 const InquiryChat = () => {
   const { providerId } = useParams();
@@ -69,11 +71,13 @@ const InquiryChat = () => {
       }
 
       // Create new conversation
+      const eventId = await getPrimaryWeddingEventId(user.id);
       const { data: newConvo, error } = await supabase
         .from("inquiry_conversations")
         .insert({
           user_id: user.id,
           provider_id: providerId,
+          event_id: eventId,
         })
         .select()
         .single();
@@ -168,7 +172,7 @@ const InquiryChat = () => {
           </Button>
 
           {/* Full height chat on mobile, constrained on desktop */}
-          <div className="h-[calc(100dvh-56px)] md:h-[calc(100vh-220px)] min-h-0 md:min-h-[500px]">
+          <div className="min-h-[70dvh] md:h-[calc(100vh-220px)] md:min-h-[500px]">
             {conversationId && (
               <InquiryChatWindow
                 conversationId={conversationId}
@@ -184,6 +188,11 @@ const InquiryChat = () => {
               />
             )}
           </div>
+          {conversationId ? (
+            <div className="mt-4 md:hidden">
+              <InquiryWorkspacePanel conversationId={conversationId} role="couple" />
+            </div>
+          ) : null}
         </div>
       </section>
 

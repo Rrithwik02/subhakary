@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useWeddingEvent } from "@/hooks/useWeddingEvent";
 import { supabase } from "@/integrations/supabase/client";
-import { computePlanningProgress, computeVendorStatusRows, findOverdueTask } from "@/lib/weddingPlanning";
+import { computePlanningProgress, computeVendorStatusRows, computeWeddingHealth, findOverdueTask } from "@/lib/weddingPlanning";
 
 type Task = { title: string; status: string; due_date: string | null };
 type Booking = {
@@ -53,6 +53,7 @@ export const NextStepCard = ({ className = "" }: { className?: string }) => {
     actual: Number(category.actual_amount) || 0,
   }));
   const planningSummary = computePlanningProgress({ event, tasks, vendorStatusRows, budgetRows });
+  const weddingHealth = computeWeddingHealth({ event, tasks, vendorStatusRows, budgetRows });
   const completedTasks = planningSummary.completedTasks;
   const budgetSpent = budgetRows.reduce((sum, row) => sum + row.actual, 0);
   const overdueTask = findOverdueTask(tasks);
@@ -79,12 +80,14 @@ export const NextStepCard = ({ className = "" }: { className?: string }) => {
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <Badge variant="secondary">Wedding health</Badge>
                 <Badge variant="outline">{planningSummary.progressPercent}% on track</Badge>
+                <Badge variant="outline">Health {weddingHealth.score}</Badge>
               </div>
               <div className="mb-3 flex items-start gap-3">
                 <Sparkles className="mt-0.5 h-5 w-5 text-primary" />
                 <div>
                   <p className="text-sm text-muted-foreground">What should I do next?</p>
                   <p className="text-lg font-semibold">{next.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{weddingHealth.summary}</p>
                 </div>
               </div>
               <Progress value={planningSummary.progressPercent} className="h-2.5" />
@@ -126,11 +129,18 @@ export const NextStepCard = ({ className = "" }: { className?: string }) => {
                   <p>{vendorStatusRows.filter((row) => row.status === "shortlisted").length} lanes have enough options in motion.</p>
                 </div>
               </div>
-              <Button asChild>
-                <Link to={next.href}>
-                  {next.cta} <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button asChild>
+                  <Link to={next.href}>
+                    {next.cta} <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                {event ? (
+                  <Button asChild variant="outline">
+                    <Link to="/build-my-wedding">Build my wedding</Link>
+                  </Button>
+                ) : null}
+              </div>
             </div>
           </div>
         </CardContent>

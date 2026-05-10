@@ -42,6 +42,7 @@ import SearchResults from "./pages/SearchResults";
 import WeddingDashboard from "./pages/WeddingDashboard";
 import PlanWedding from "./pages/PlanWedding";
 import Journey from "./pages/Journey";
+import BuildMyWedding from "./pages/BuildMyWedding";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="/wedding-dashboard" element={<WeddingDashboard />} />
               <Route path="/plan-wedding" element={<PlanWedding />} />
               <Route path="/journey" element={<Journey />} />
+              <Route path="/build-my-wedding" element={<BuildMyWedding />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CompareBar />

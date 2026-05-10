@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Briefcase, ArrowRight } from "lucide-react";
+import { Briefcase, ArrowRight, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const MobileHome = () => {
@@ -49,6 +49,41 @@ export const MobileHome = () => {
 
         {/* Service Categories Grid */}
         <MobileServiceGrid />
+
+        {user && (
+          <div className="px-4 py-2">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="rounded-2xl bg-background p-4 border border-primary/20"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/10 rounded-xl">
+                  <Wand2 className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-foreground text-sm">
+                    Build the whole wedding
+                  </h4>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Simulate your vendor mix, total cost, and style fit in one place.
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-3 text-xs"
+                onClick={() => navigate('/build-my-wedding')}
+              >
+                Open simulator
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Button>
+            </motion.div>
+          </div>
+        )}
 
         {/* Become a Provider CTA - Only for logged-in non-providers */}
         {showBecomeProviderCTA && (

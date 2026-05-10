@@ -16,11 +16,16 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
+import { useWeddingEvent } from "@/hooks/useWeddingEvent";
+import { computeBudgetFit, computePriceBenchmark, computeReliabilityInsight, computeTrustInsight } from "@/lib/vendorInsights";
 
 type ProviderDecisionSurfaceProps = {
   provider: {
     id: string;
     business_name: string;
+    city?: string | null;
+    category_id?: string | null;
+    category?: { name?: string | null } | null;
     base_price?: number | null;
     pricing_info?: string | null;
     rating?: number | null;
@@ -33,6 +38,8 @@ type ProviderDecisionSurfaceProps = {
     advance_payment_percentage?: number | null;
     requires_advance_payment?: boolean | null;
     travel_charges_applicable?: boolean | null;
+    portfolio_tags?: { label?: string; wedding_type?: string; budget?: string; size?: string }[] | null;
+    real_wedding_stories?: { title?: string; description?: string; wedding_type?: string; budget?: string; size?: string }[] | null;
   };
 };
 
@@ -40,6 +47,7 @@ const formatCurrency = (value?: number | null) =>
   typeof value === "number" ? `Rs ${Math.round(value).toLocaleString("en-IN")}` : null;
 
 export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfaceProps) => {
+  const { event } = useWeddingEvent();
   const { data: bundles = [] } = useQuery({
     queryKey: ["provider-bundles-decision-surface", provider.id],
     queryFn: async () => {
@@ -52,6 +60,33 @@ export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfacePro
         .eq("is_active", true)
         .order("discounted_price", { ascending: true });
 
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!provider.id,
+  });
+
+  const { data: peerProviders = [] } = useQuery({
+    queryKey: ["provider-price-benchmark", provider.category_id, provider.city],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("public_service_providers")
+        .select("id,city,category_id,base_price")
+        .eq("category_id", provider.category_id!)
+        .eq("status", "approved");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!provider.category_id,
+  });
+
+  const { data: bookingSignals = [] } = useQuery({
+    queryKey: ["provider-reliability-bookings", provider.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("status,service_date,completion_confirmed_by_customer,completion_confirmed_by_provider,completion_status,cancelled_at")
+        .eq("provider_id", provider.id);
       if (error) throw error;
       return data || [];
     },
@@ -81,6 +116,41 @@ export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfacePro
     provider.total_reviews ? `${provider.total_reviews} reviews` : null,
     provider.experience_years ? `${provider.experience_years}+ years experience` : null,
   ].filter(Boolean) as string[];
+  const benchmark = computePriceBenchmark(
+    {
+      id: provider.id,
+      city: provider.city,
+      category_id: provider.category_id,
+      base_price: provider.base_price ?? cheapestBundle?.discounted_price ?? null,
+      business_name: provider.business_name,
+    },
+    peerProviders,
+  );
+  const budgetFit = computeBudgetFit({
+    providerPrice: provider.base_price ?? cheapestBundle?.discounted_price ?? null,
+    categoryName: provider.category?.name,
+    context: {
+      totalBudget: event?.total_budget,
+      city: event?.city,
+    },
+  });
+  const trustInsight = computeTrustInsight({
+    isVerified: provider.is_verified,
+    isPremium: provider.is_premium,
+    rating: provider.rating,
+    totalReviews: provider.total_reviews,
+    experienceYears: provider.experience_years,
+    responseTimeHours,
+    publishedPackages: bundles.length,
+    packagesWithDisclosure: bundlesWithDisclosure,
+    storyCount: provider.real_wedding_stories?.length || 0,
+  });
+  const reliabilityInsight = computeReliabilityInsight({
+    bookings: bookingSignals,
+    responseTimeHours,
+    trust: trustInsight,
+  });
+  const weddingProof = [...(provider.real_wedding_stories || []), ...(provider.portfolio_tags || [])].slice(0, 4);
 
   return (
     <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-background via-background to-primary/5 shadow-elevated">
@@ -142,6 +212,24 @@ export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfacePro
           </div>
         </div>
 
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border bg-background/80 p-4">
+            <p className="text-sm text-muted-foreground">Market benchmark</p>
+            <p className="mt-2 text-lg font-semibold text-foreground">{benchmark.label}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{benchmark.detail}</p>
+          </div>
+          <div className="rounded-2xl border bg-background/80 p-4">
+            <p className="text-sm text-muted-foreground">Budget fit</p>
+            <p className="mt-2 text-lg font-semibold text-foreground">{budgetFit.label}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{budgetFit.detail}</p>
+          </div>
+          <div className="rounded-2xl border bg-background/80 p-4">
+            <p className="text-sm text-muted-foreground">Reliability score</p>
+            <p className="mt-2 text-lg font-semibold text-foreground">{reliabilityInsight.score}/100</p>
+            <p className="mt-1 text-xs text-muted-foreground">{reliabilityInsight.summary}</p>
+          </div>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-2xl border bg-background/70 p-4 md:p-5">
             <div className="mb-4 flex items-center gap-2">
@@ -199,6 +287,32 @@ export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfacePro
                   {trustSignals.length ? trustSignals.join(" | ") : "This profile still needs more proof points to feel fully decision-ready."}
                 </p>
               </div>
+              <div className="rounded-xl border bg-muted/30 p-3 text-sm sm:col-span-2">
+                <p className="font-medium text-foreground">Trust read</p>
+                <p className="mt-1 text-muted-foreground">{trustInsight.label}. {trustInsight.summary}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {trustInsight.highlights.map((item) => (
+                    <Badge key={item} variant="secondary">{item}</Badge>
+                  ))}
+                  {trustInsight.concerns.map((item) => (
+                    <Badge key={item} variant="outline">{item}</Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl border bg-muted/30 p-3 text-sm sm:col-span-2">
+                <p className="font-medium text-foreground">Reliability read</p>
+                <p className="mt-1 text-muted-foreground">
+                  {reliabilityInsight.platformProof}. {reliabilityInsight.summary}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge variant="secondary">{reliabilityInsight.label}</Badge>
+                  <Badge variant="outline">{reliabilityInsight.completedCount} completed</Badge>
+                  <Badge variant="outline">{reliabilityInsight.recentSuccessCount} recent wins</Badge>
+                  {reliabilityInsight.cancellationRate > 0 ? (
+                    <Badge variant="outline">{Math.round(reliabilityInsight.cancellationRate * 100)}% cancellations</Badge>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -240,6 +354,28 @@ export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfacePro
             )}
           </div>
         </div>
+
+        {weddingProof.length ? (
+          <div className="rounded-2xl border bg-background/70 p-4 md:p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold">Similar weddings handled</h3>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {weddingProof.map((item, index) => (
+                <div key={`${item.title || item.label || "proof"}-${index}`} className="rounded-xl border bg-muted/30 p-3 text-sm">
+                  <div className="flex flex-wrap gap-2">
+                    {item.wedding_type ? <Badge variant="outline">{item.wedding_type}</Badge> : null}
+                    {item.budget ? <Badge variant="secondary">{item.budget}</Badge> : null}
+                    {item.size ? <Badge variant="outline">{item.size}</Badge> : null}
+                  </div>
+                  <p className="mt-3 font-medium text-foreground">{item.title || item.label || "Wedding proof point"}</p>
+                  {item.description ? <p className="mt-1 text-muted-foreground">{item.description}</p> : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <Separator />
 

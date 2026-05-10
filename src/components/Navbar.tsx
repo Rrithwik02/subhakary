@@ -19,6 +19,9 @@ const navLinks = [{
   name: "Journey",
   href: "/journey"
 }, {
+  name: "Build Wedding",
+  href: "/build-my-wedding"
+}, {
   name: "Find Providers",
   href: "/providers"
 }, {

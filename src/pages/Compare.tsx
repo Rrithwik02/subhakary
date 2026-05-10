@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProviderComparison } from "@/hooks/useProviderComparison";
+import { useWeddingEvent } from "@/hooks/useWeddingEvent";
 import { supabase } from "@/integrations/supabase/client";
+import { buildTradeoffNotes, computeBudgetFit, computePriceBenchmark, computeReliabilityInsight, computeTrustInsight } from "@/lib/vendorInsights";
+import { normalizePlanningCategory } from "@/lib/weddingPlanning";
 
 const COMPARE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-compare`;
 
@@ -60,16 +63,27 @@ const getProviderRoute = (provider: CompareProvider) =>
 const Compare = () => {
   const navigate = useNavigate();
   const { compareList, removeFromCompare, clearCompare } = useProviderComparison();
+  const { event } = useWeddingEvent();
   const [aiVerdict, setAiVerdict] = useState<{ verdict: string; providers: { provider_id: string; tagline: string }[] } | null>(null);
   const [providerDetails, setProviderDetails] = useState<Record<string, ProviderDetail>>({});
   const [providerBundles, setProviderBundles] = useState<Record<string, BundleRow[]>>({});
+  const [providerBookings, setProviderBookings] = useState<Record<string, Array<{
+    status: string | null;
+    service_date: string | null;
+    completion_confirmed_by_customer: boolean | null;
+    completion_confirmed_by_provider: boolean | null;
+    completion_status: string | null;
+    cancelled_at: string | null;
+  }>>>({});
+  const [peerProviders, setPeerProviders] = useState<Array<{ id: string; city: string | null; category_id: string | null; base_price: number | null }>>([]);
 
   useEffect(() => {
     if (compareList.length < 2) return;
 
     (async () => {
       const providerIds = compareList.map((provider) => provider.id);
-      const [{ data: detailRows }, { data: bundleRows }] = await Promise.all([
+      const categoryIds = Array.from(new Set(compareList.map((provider) => provider.category_id).filter(Boolean)));
+      const [{ data: detailRows }, { data: bundleRows }, { data: peerRows }, { data: bookingRows }] = await Promise.all([
         supabase
           .from("public_service_providers")
           .select("id,business_name,base_price,availability_status,advance_booking_days,advance_payment_percentage,travel_charges_applicable,requires_advance_payment,pricing_info,url_slug")
@@ -80,6 +94,14 @@ const Compare = () => {
           .in("provider_id", providerIds)
           .eq("is_active", true)
           .order("discounted_price"),
+        supabase
+          .from("public_service_providers")
+          .select("id,city,category_id,base_price")
+          .in("category_id", categoryIds.length ? categoryIds : [""]),
+        supabase
+          .from("bookings")
+          .select("provider_id,status,service_date,completion_confirmed_by_customer,completion_confirmed_by_provider,completion_status,cancelled_at")
+          .in("provider_id", providerIds),
       ]);
 
       const detailsMap = ((detailRows as ProviderDetail[] | null) ?? []).reduce<Record<string, ProviderDetail>>((acc, row) => {
@@ -90,9 +112,30 @@ const Compare = () => {
         acc[row.provider_id] = [...(acc[row.provider_id] || []), row];
         return acc;
       }, {});
+      const bookingMap = (((bookingRows as Array<{
+        provider_id: string;
+        status: string | null;
+        service_date: string | null;
+        completion_confirmed_by_customer: boolean | null;
+        completion_confirmed_by_provider: boolean | null;
+        completion_status: string | null;
+        cancelled_at: string | null;
+      }> | null) ?? [])).reduce<Record<string, Array<{
+        status: string | null;
+        service_date: string | null;
+        completion_confirmed_by_customer: boolean | null;
+        completion_confirmed_by_provider: boolean | null;
+        completion_status: string | null;
+        cancelled_at: string | null;
+      }>>>((acc, row) => {
+        acc[row.provider_id] = [...(acc[row.provider_id] || []), row];
+        return acc;
+      }, {});
 
       setProviderDetails(detailsMap);
       setProviderBundles(bundlesMap);
+      setProviderBookings(bookingMap);
+      setPeerProviders((peerRows as Array<{ id: string; city: string | null; category_id: string | null; base_price: number | null }> | null) ?? []);
     })();
   }, [compareList]);
 
@@ -120,6 +163,115 @@ const Compare = () => {
       })),
     [compareList, providerBundles, providerDetails],
   );
+
+  const providerInsights = useMemo(() => {
+    const budgetTargets = new Map<string, number>();
+    return enrichedProviders.reduce<Record<string, {
+      benchmark: ReturnType<typeof computePriceBenchmark>;
+      budgetFit: ReturnType<typeof computeBudgetFit>;
+      trust: ReturnType<typeof computeTrustInsight>;
+      reliability: ReturnType<typeof computeReliabilityInsight>;
+      responseTimeHours: number | null;
+      tradeoffs: string[];
+    }>>((acc, provider) => {
+      const responseTimeHours =
+        provider.bundles.find((bundle) => typeof bundle.response_time_hours === "number")?.response_time_hours ?? null;
+      const packagesWithDisclosure = provider.bundles.filter(
+        (bundle) =>
+          (bundle.inclusions?.length || 0) > 0 ||
+          (bundle.exclusions?.length || 0) > 0 ||
+          !!bundle.cancellation_policy ||
+          !!bundle.terms_conditions,
+      ).length;
+      const benchmark = computePriceBenchmark(
+        {
+          id: provider.id,
+          city: provider.city,
+          category_id: provider.category_id,
+          base_price: provider.base_price ?? provider.detail?.base_price,
+          business_name: provider.business_name,
+        },
+        peerProviders.length ? peerProviders : enrichedProviders,
+      );
+      const budgetFit = computeBudgetFit({
+        providerPrice: provider.base_price ?? provider.detail?.base_price,
+        categoryName: provider.category?.name,
+        context: {
+          totalBudget: event?.total_budget,
+          city: event?.city,
+          plannedCategoryBudget: budgetTargets.get(normalizePlanningCategory(provider.category?.name)) || null,
+        },
+      });
+      const trust = computeTrustInsight({
+        isVerified: provider.is_verified,
+        isPremium: provider.is_premium,
+        rating: provider.rating,
+        totalReviews: provider.total_reviews,
+        experienceYears: provider.experience_years,
+        responseTimeHours,
+        publishedPackages: provider.bundles.length,
+        packagesWithDisclosure,
+      });
+      const reliability = computeReliabilityInsight({
+        bookings: providerBookings[provider.id] || [],
+        responseTimeHours,
+        trust,
+      });
+
+      acc[provider.id] = {
+        benchmark,
+        budgetFit,
+        trust,
+        reliability,
+        responseTimeHours,
+        tradeoffs: buildTradeoffNotes({
+          benchmark,
+          budgetFit,
+          trust: reliability.score > trust.score ? { ...trust, score: reliability.score } : trust,
+          responseTimeHours,
+          packageCount: provider.bundles.length,
+        }),
+      };
+      return acc;
+    }, {});
+  }, [enrichedProviders, event, peerProviders, providerBookings]);
+
+  const spotlightCards = useMemo(() => {
+    if (!enrichedProviders.length) return [];
+
+    const byValue = [...enrichedProviders].sort((a, b) => {
+      const aInsight = providerInsights[a.id];
+      const bInsight = providerInsights[b.id];
+      const valueA =
+        (aInsight?.budgetFit.label === "YES" ? 3 : aInsight?.budgetFit.label === "STRETCH" ? 2 : 0) +
+        (aInsight?.benchmark.label === "Great deal" ? 2 : aInsight?.benchmark.label === "Fair price" ? 1 : 0) +
+        (aInsight?.trust.score || 0) / 100;
+      const valueB =
+        (bInsight?.budgetFit.label === "YES" ? 3 : bInsight?.budgetFit.label === "STRETCH" ? 2 : 0) +
+        (bInsight?.benchmark.label === "Great deal" ? 2 : bInsight?.benchmark.label === "Fair price" ? 1 : 0) +
+        (bInsight?.trust.score || 0) / 100;
+      return valueB - valueA;
+    })[0];
+
+    const byTrust = [...enrichedProviders].sort(
+      (a, b) => (providerInsights[b.id]?.trust.score || 0) - (providerInsights[a.id]?.trust.score || 0),
+    )[0];
+    const byResponse = [...enrichedProviders]
+      .filter((provider) => providerInsights[provider.id]?.responseTimeHours)
+      .sort((a, b) => (providerInsights[a.id]?.responseTimeHours || 999) - (providerInsights[b.id]?.responseTimeHours || 999))[0];
+
+    return [
+      byValue
+        ? { title: "Best value fit", provider: byValue, note: providerInsights[byValue.id]?.benchmark.detail }
+        : null,
+      byTrust
+        ? { title: "Strongest visible proof", provider: byTrust, note: providerInsights[byTrust.id]?.trust.summary }
+        : null,
+      byResponse
+        ? { title: "Fastest published reply", provider: byResponse, note: `About ${providerInsights[byResponse.id]?.responseTimeHours} hours.` }
+        : null,
+    ].filter(Boolean) as Array<{ title: string; provider: CompareProvider; note?: string }>;
+  }, [enrichedProviders, providerInsights]);
 
   if (compareList.length < 2) {
     return (
@@ -153,6 +305,34 @@ const Compare = () => {
     {
       label: "Starting price",
       render: (provider: CompareProvider) => <span className="font-semibold text-primary">{getProviderStartingPrice(provider)}</span>,
+    },
+    {
+      label: "Market benchmark",
+      render: (provider: CompareProvider) => {
+        const insight = providerInsights[provider.id];
+        return <span>{insight?.benchmark.label || "Fair price"}</span>;
+      },
+    },
+    {
+      label: "Budget fit",
+      render: (provider: CompareProvider) => {
+        const insight = providerInsights[provider.id];
+        return (
+          <Badge
+            variant={
+              insight?.budgetFit.label === "YES"
+                ? "default"
+                : insight?.budgetFit.label === "STRETCH"
+                  ? "secondary"
+                  : insight?.budgetFit.label === "NO"
+                    ? "destructive"
+                    : "outline"
+            }
+          >
+            {insight?.budgetFit.label || "UNKNOWN"}
+          </Badge>
+        );
+      },
     },
     {
       label: "Package range",
@@ -258,6 +438,20 @@ const Compare = () => {
         </div>
       ),
     },
+    {
+      label: "Reliability",
+      render: (provider: CompareProvider) => {
+        const insight = providerInsights[provider.id]?.reliability;
+        return <span>{insight?.label || "Emerging"}</span>;
+      },
+    },
+    {
+      label: "Decision strength",
+      render: (provider: CompareProvider) => {
+        const insight = providerInsights[provider.id];
+        return <span>{insight?.trust.label || "Building proof"}</span>;
+      },
+    },
   ];
 
   return (
@@ -299,10 +493,25 @@ const Compare = () => {
             </Card>
           )}
 
+          {spotlightCards.length ? (
+            <div className="mb-6 grid gap-4 md:grid-cols-3">
+              {spotlightCards.map((card) => (
+                <Card key={card.title} className="border-border/50">
+                  <CardContent className="p-4">
+                    <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
+                    <p className="mt-2 text-base font-semibold text-foreground">{card.provider.business_name}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{card.note}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : null}
+
           <div className="mb-8 grid gap-4 lg:grid-cols-3">
             {enrichedProviders.map((provider) => {
               const tagline = aiVerdict?.providers.find((entry) => entry.provider_id === provider.id)?.tagline;
               const topBundle = provider.bundles[0];
+              const insight = providerInsights[provider.id];
               return (
                 <Card key={provider.id} className="relative overflow-hidden border-border/50">
                   <button
@@ -328,6 +537,16 @@ const Compare = () => {
                     {tagline && <Badge variant="outline" className="w-fit">{tagline}</Badge>}
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary">{insight?.trust.label || "Building proof"}</Badge>
+                      <Badge variant="secondary">{insight?.reliability.label || "Emerging"}</Badge>
+                      <Badge variant="outline">{insight?.benchmark.label || "Fair price"}</Badge>
+                      {insight?.budgetFit.label && insight.budgetFit.label !== "UNKNOWN" ? (
+                        <Badge variant={insight.budgetFit.label === "YES" ? "default" : insight.budgetFit.label === "STRETCH" ? "secondary" : "destructive"}>
+                          Budget fit: {insight.budgetFit.label}
+                        </Badge>
+                      ) : null}
+                    </div>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="rounded-lg border p-3">
                         <div className="text-muted-foreground">Rating</div>
@@ -339,7 +558,7 @@ const Compare = () => {
                       </div>
                     </div>
 
-                      <div className="rounded-lg border p-3 text-sm">
+                    <div className="rounded-lg border p-3 text-sm">
                       <p className="text-muted-foreground">Best visible offer</p>
                       <p className="mt-1 font-semibold">
                         {topBundle ? `${topBundle.bundle_name} - ${formatCurrency(topBundle.discounted_price)}` : getProviderStartingPrice(provider)}
@@ -347,6 +566,24 @@ const Compare = () => {
                       {topBundle?.response_time_hours ? (
                         <p className="mt-1 text-xs text-muted-foreground">Replies in about {topBundle.response_time_hours} hours</p>
                       ) : null}
+                    </div>
+
+                    <div className="rounded-lg border p-3 text-sm">
+                      <p className="font-medium">Tradeoffs explained</p>
+                      <div className="mt-2 space-y-2 text-muted-foreground">
+                        {(insight?.tradeoffs.length ? insight.tradeoffs : ["A balanced option, but make sure the package scope is fully written down before you commit."]).map((note) => (
+                          <p key={note}>{note}</p>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border p-3 text-sm">
+                      <p className="font-medium">Platform reliability</p>
+                      <p className="mt-1 text-muted-foreground">{insight?.reliability.platformProof}</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Badge variant="outline">{insight?.reliability.completedCount || 0} completed</Badge>
+                        <Badge variant="outline">{insight?.reliability.recentSuccessCount || 0} recent wins</Badge>
+                      </div>
                     </div>
 
                     <Button
@@ -414,6 +651,22 @@ const Compare = () => {
                       ) : (
                         <div className="rounded-lg border p-3 text-sm text-muted-foreground">No active bundles published yet.</div>
                       )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="mt-6 grid gap-4" style={{ gridTemplateColumns: `180px repeat(${enrichedProviders.length}, 1fr)` }}>
+                <div className="pt-2 text-sm font-medium text-muted-foreground">Tradeoffs</div>
+                {enrichedProviders.map((provider) => (
+                  <Card key={provider.id} className="border-border/50">
+                    <CardContent className="space-y-2 p-4 text-sm text-muted-foreground">
+                      {(providerInsights[provider.id]?.tradeoffs.length
+                        ? providerInsights[provider.id].tradeoffs
+                        : ["No major tradeoff flagged from the visible profile data."]
+                      ).map((note) => (
+                        <p key={note}>{note}</p>
+                      ))}
                     </CardContent>
                   </Card>
                 ))}

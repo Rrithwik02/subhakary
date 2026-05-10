@@ -15,7 +15,9 @@ import { Label } from "@/components/ui/label";
 import { SEOHead } from "@/components/SEOHead";
 import {
   computePlanningProgress,
+  computeTimelineSteps,
   computeVendorStatusRows,
+  computeWeddingHealth,
   findOverdueTask,
   normalizePlanningCategory,
 } from "@/lib/weddingPlanning";
@@ -34,6 +36,9 @@ import {
   Target,
   Trash2,
   Users,
+  ShieldCheck,
+  Files,
+  MessagesSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -67,6 +72,20 @@ type BudgetCategory = {
   actual_amount: number;
 };
 
+type InquiryThread = {
+  id: string;
+  negotiation_status: string;
+  provider_id: string;
+  provider?: { business_name: string | null } | null;
+};
+
+type WeddingDocument = {
+  id: string;
+  title: string;
+  document_type: string;
+  created_at: string;
+};
+
 const formatCurrency = (value: number) => `Rs ${Math.round(value).toLocaleString("en-IN")}`;
 
 const isOverdue = (date?: string | null) => !!date && new Date(date) < new Date();
@@ -79,6 +98,8 @@ const WeddingDashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
+  const [threads, setThreads] = useState<InquiryThread[]>([]);
+  const [documents, setDocuments] = useState<WeddingDocument[]>([]);
   const [taskFilter, setTaskFilter] = useState<"all" | "pending" | "completed" | "overdue">("pending");
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
@@ -92,7 +113,7 @@ const WeddingDashboard = () => {
   useEffect(() => {
     if (!event || !user) return;
     (async () => {
-      const [{ data: taskData }, { data: bookingData }, { data: budgetData }] = await Promise.all([
+      const [{ data: taskData }, { data: bookingData }, { data: budgetData }, { data: threadData }, { data: documentData }] = await Promise.all([
         supabase.from("wedding_tasks").select("*").eq("event_id", event.id).order("sort_order"),
         supabase
           .from("bookings")
@@ -100,11 +121,25 @@ const WeddingDashboard = () => {
           .eq("user_id", user.id)
           .eq("event_id", event.id),
         supabase.from("wedding_budget_categories").select("*").eq("event_id", event.id).order("planned_amount", { ascending: false }),
+        supabase
+          .from("inquiry_conversations")
+          .select("id,negotiation_status,provider_id,provider:service_providers(business_name)")
+          .eq("event_id", event.id)
+          .order("updated_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("wedding_documents")
+          .select("id,title,document_type,created_at")
+          .eq("event_id", event.id)
+          .order("created_at", { ascending: false })
+          .limit(6),
       ]);
 
       setTasks((taskData as Task[]) ?? []);
       setBookings((bookingData as Booking[]) ?? []);
       setBudgetCategories((budgetData as BudgetCategory[]) ?? []);
+      setThreads((threadData as InquiryThread[]) ?? []);
+      setDocuments((documentData as WeddingDocument[]) ?? []);
     })();
   }, [event, user]);
 
@@ -162,6 +197,14 @@ const WeddingDashboard = () => {
   const planningSummary = useMemo(
     () => computePlanningProgress({ event, tasks, vendorStatusRows, budgetRows }),
     [event, tasks, vendorStatusRows, budgetRows],
+  );
+  const weddingHealth = useMemo(
+    () => computeWeddingHealth({ event, tasks, vendorStatusRows, budgetRows }),
+    [event, tasks, vendorStatusRows, budgetRows],
+  );
+  const timelineSteps = useMemo(
+    () => computeTimelineSteps({ event, vendorStatusRows, tasks }),
+    [event, vendorStatusRows, tasks],
   );
   const completedTasks = planningSummary.completedTasks;
   const planningProgress = planningSummary.progressPercent;
@@ -243,11 +286,20 @@ const WeddingDashboard = () => {
     .slice(0, 12);
 
   useEffect(() => {
-    if (!event || planningProgress === event.progress_percent) return;
-    void supabase.from("wedding_events").update({ progress_percent: planningProgress }).eq("id", event.id).then(() => {
+    if (
+      !event ||
+      (planningProgress === event.progress_percent &&
+        weddingHealth.score === event.health_score &&
+        weddingHealth.summary === event.health_summary)
+    ) return;
+    void supabase
+      .from("wedding_events")
+      .update({ progress_percent: planningProgress, health_score: weddingHealth.score, health_summary: weddingHealth.summary })
+      .eq("id", event.id)
+      .then(() => {
       refetch();
     });
-  }, [event, planningProgress, refetch]);
+  }, [event, planningProgress, refetch, weddingHealth]);
 
   const toggleTask = async (task: Task) => {
     const newStatus = task.status === "completed" ? "pending" : "completed";
@@ -390,6 +442,10 @@ const WeddingDashboard = () => {
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <Badge variant="secondary">Wedding OS</Badge>
               <Badge variant="outline">{planningProgress}% on track</Badge>
+              <Badge variant="outline" className="gap-1">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Health {weddingHealth.score}
+              </Badge>
             </div>
             <h1 className="mb-2 text-3xl font-bold">{event.name}</h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -427,6 +483,7 @@ const WeddingDashboard = () => {
                   <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
                     Progress now weighs your planning basics, checklist movement, vendor coverage, and budget setup.
                   </p>
+                  <p className="mt-3 text-sm font-medium text-foreground">{weddingHealth.summary}</p>
                 </div>
                 <div className="grid min-w-[220px] grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg border bg-background/80 p-3">
@@ -434,9 +491,9 @@ const WeddingDashboard = () => {
                     <div className="mt-1 text-xl font-semibold">{completedTasks}/{tasks.length || 0}</div>
                   </div>
                   <div className="rounded-lg border bg-background/80 p-3">
-                    <div className="text-muted-foreground">Healthy lanes</div>
+                    <div className="text-muted-foreground">Health score</div>
                     <div className="mt-1 text-xl font-semibold">
-                      {vendorStatusRows.filter((row) => row.activeCount >= row.targetCount).length}/{vendorStatusRows.length}
+                      {weddingHealth.score}
                     </div>
                   </div>
                 </div>
@@ -463,6 +520,16 @@ const WeddingDashboard = () => {
                     Budget setup
                   </div>
                   <p className="text-lg font-semibold">{Math.round(budgetCoverage * 100)}%</p>
+                </div>
+                <div className="rounded-lg border bg-background/80 p-4 md:col-span-3">
+                  <div className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">
+                    <ShieldCheck className="h-4 w-4" />
+                    Wedding health
+                  </div>
+                  <p className="text-lg font-semibold">{weddingHealth.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {weddingHealth.risks[0] || "No major planning risks are showing right now."}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -535,6 +602,88 @@ const WeddingDashboard = () => {
 
         <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-6">
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  Wedding health score
+                </CardTitle>
+                <CardDescription>One score that blends budget discipline, vendor readiness, checklist momentum, and timeline pressure.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+                  <div className="rounded-2xl border bg-primary/5 p-5 text-center">
+                    <p className="text-sm text-muted-foreground">Current score</p>
+                    <p className="mt-2 text-5xl font-bold text-primary">{weddingHealth.score}</p>
+                    <p className="mt-2 text-sm font-medium">{weddingHealth.label}</p>
+                  </div>
+                  <div className="space-y-3">
+                    {Object.entries(weddingHealth.subscores).map(([key, value]) => (
+                      <div key={key}>
+                        <div className="mb-1 flex items-center justify-between text-sm">
+                          <span className="capitalize text-muted-foreground">{key}</span>
+                          <span className="font-medium">{value}%</span>
+                        </div>
+                        <Progress value={value} className="h-2" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {weddingHealth.risks.length > 0 ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+                    <p className="mb-2 text-sm font-medium">Active risk flags</p>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      {weddingHealth.risks.slice(0, 3).map((risk) => (
+                        <p key={risk}>- {risk}</p>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Auto timeline
+                </CardTitle>
+                <CardDescription>Recommended milestones and dependency-aware moves based on your event date.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {timelineSteps.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Add your event date to generate a timeline.</p>
+                ) : (
+                  timelineSteps.map((step) => (
+                    <div key={step.id} className="rounded-xl border p-4">
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium">{step.title}</p>
+                          <p className="text-sm text-muted-foreground">{step.detail}</p>
+                        </div>
+                        <Badge
+                          variant={
+                            step.status === "done" ? "default" : step.status === "at_risk" ? "destructive" : "secondary"
+                          }
+                          className="capitalize"
+                        >
+                          {step.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                        <span>{step.dueDate ? `Target by ${new Date(step.dueDate).toLocaleDateString()}` : "No date yet"}</span>
+                        <Button asChild variant="ghost" className="h-auto px-0 text-xs">
+                          <Link to={step.actionHref}>
+                            Take action <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
             <Card className="border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -692,6 +841,64 @@ const WeddingDashboard = () => {
           </div>
 
           <div className="space-y-6">
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessagesSquare className="h-5 w-5 text-primary" />
+                  Vendor threads
+                </CardTitle>
+                <CardDescription>Structured negotiations you can come back to without losing the thread in WhatsApp.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {threads.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
+                    Start a provider inquiry and it will show up here with quotes and documents.
+                  </div>
+                ) : (
+                  threads.map((thread) => (
+                    <Link
+                      key={thread.id}
+                      to={`/inquiry/${thread.provider_id}?conversation=${thread.id}`}
+                      className="flex items-center justify-between rounded-lg border p-3 transition hover:bg-accent/40"
+                    >
+                      <div>
+                        <p className="font-medium">{thread.provider?.business_name || "Vendor thread"}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{thread.negotiation_status}</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Files className="h-5 w-5 text-primary" />
+                  Document vault
+                </CardTitle>
+                <CardDescription>Quotes, proposals, and planning files attached to this wedding event.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {documents.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
+                    Documents shared in vendor threads will appear here.
+                  </div>
+                ) : (
+                  documents.map((document) => (
+                    <div key={document.id} className="rounded-lg border p-3">
+                      <p className="font-medium">{document.title}</p>
+                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        <span className="capitalize">{document.document_type}</span>
+                        <span>{new Date(document.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
             <Card className="border-border/50">
               <CardHeader>
                 <CardTitle>Vendor coverage</CardTitle>

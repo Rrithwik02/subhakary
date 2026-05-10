@@ -18,6 +18,7 @@ import { AISearch } from "@/components/AISearch";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
+import { useWeddingEvent } from "@/hooks/useWeddingEvent";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { MobileAISearch } from "@/components/mobile/MobileAISearch";
@@ -28,6 +29,10 @@ import {
   type SearchProvider,
 } from "@/lib/searchUtils";
 import { SEOHead } from "@/components/SEOHead";
+import { supabase } from "@/integrations/supabase/client";
+import { computeBudgetFit, computePriceBenchmark, computeTrustInsight } from "@/lib/vendorInsights";
+import { normalizePlanningCategory } from "@/lib/weddingPlanning";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const SearchResults = () => {
   const isMobile = useMobileLayout();
@@ -38,7 +43,7 @@ const SearchResults = () => {
 const MobileSearchResults = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
-  const { suggestion, providers, isLoading } = useSearchLogic(query);
+  const { suggestion, providers, isLoading, fitOnly, setFitOnly, hasWeddingContext } = useSearchLogic(query);
   const navigate = useNavigate();
 
   return (
@@ -52,6 +57,7 @@ const MobileSearchResults = () => {
         ) : (
           <>
             {suggestion && <AISuggestionCard suggestion={suggestion} />}
+            {hasWeddingContext ? <FitToggle fitOnly={fitOnly} setFitOnly={setFitOnly} /> : null}
             <ProviderList providers={providers} navigate={navigate} />
             {!isLoading && providers.length === 0 && <EmptyState navigate={navigate} />}
           </>
@@ -64,7 +70,7 @@ const MobileSearchResults = () => {
 const DesktopSearchResults = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
-  const { suggestion, providers, isLoading } = useSearchLogic(query);
+  const { suggestion, providers, isLoading, fitOnly, setFitOnly, hasWeddingContext } = useSearchLogic(query);
   const navigate = useNavigate();
 
   return (
@@ -81,6 +87,7 @@ const DesktopSearchResults = () => {
         ) : (
           <div className="mx-auto max-w-5xl space-y-6">
             {suggestion && <AISuggestionCard suggestion={suggestion} />}
+            {hasWeddingContext ? <FitToggle fitOnly={fitOnly} setFitOnly={setFitOnly} /> : null}
             <ProviderList providers={providers} navigate={navigate} />
             {!isLoading && providers.length === 0 && <EmptyState navigate={navigate} />}
           </div>
@@ -93,9 +100,27 @@ const DesktopSearchResults = () => {
 
 function useSearchLogic(query: string) {
   const { user } = useAuth();
+  const { event } = useWeddingEvent();
   const [suggestion, setSuggestion] = useState("");
   const [providers, setProviders] = useState<SearchProvider[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [fitOnly, setFitOnly] = useState(false);
+  const [budgetTargets, setBudgetTargets] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!user || !event?.id) return;
+    void supabase
+      .from("wedding_budget_categories")
+      .select("category,planned_amount")
+      .eq("event_id", event.id)
+      .then(({ data }) => {
+        const next: Record<string, number> = {};
+        (data || []).forEach((row: { category: string; planned_amount: number }) => {
+          next[row.category] = Number(row.planned_amount) || 0;
+        });
+        setBudgetTargets(next);
+      });
+  }, [user, event]);
 
   useEffect(() => {
     if (!query) return;
@@ -146,13 +171,59 @@ function useSearchLogic(query: string) {
     runSearch();
   }, [query, user]);
 
-  return { suggestion, providers, isLoading };
+  const enhancedProviders = providers.map((provider) => {
+    const category = normalizePlanningCategory(provider.service_type);
+    return {
+      ...provider,
+      benchmark: computePriceBenchmark(provider, providers),
+      budgetFit: computeBudgetFit({
+        providerPrice: provider.base_price,
+        categoryName: provider.service_type,
+        context: {
+          totalBudget: event?.total_budget,
+          city: event?.city,
+          plannedCategoryBudget: budgetTargets[category] || null,
+        },
+      }),
+      trust: computeTrustInsight({
+        isVerified: provider.is_verified,
+        isPremium: provider.is_premium,
+        rating: provider.rating,
+        totalReviews: provider.total_reviews,
+      }),
+    };
+  });
+
+  const visibleProviders = fitOnly
+    ? enhancedProviders.filter((provider) => provider.budgetFit.label === "YES" || provider.budgetFit.label === "STRETCH")
+    : enhancedProviders;
+
+  return { suggestion, providers: visibleProviders, isLoading, fitOnly, setFitOnly, hasWeddingContext: !!event };
 }
 
 const LoadingState = () => (
   <div className="flex flex-col items-center justify-center gap-4 py-16">
     <Loader2 className="h-8 w-8 animate-spin text-primary" />
     <p className="text-sm text-muted-foreground">Finding the best providers for you...</p>
+  </div>
+);
+
+const FitToggle = ({
+  fitOnly,
+  setFitOnly,
+}: {
+  fitOnly: boolean;
+  setFitOnly: (next: boolean) => void;
+}) => (
+  <div className="flex items-center justify-between rounded-2xl border bg-background p-4">
+    <div>
+      <p className="font-medium">Wedding-fit filter</p>
+      <p className="text-sm text-muted-foreground">Only show vendors that look workable for your current budget plan.</p>
+    </div>
+    <label className="flex items-center gap-2 text-sm">
+      <Checkbox checked={fitOnly} onCheckedChange={(checked) => setFitOnly(Boolean(checked))} />
+      Fits my wedding
+    </label>
   </div>
 );
 
@@ -174,7 +245,17 @@ const AISuggestionCard = ({ suggestion }: { suggestion: string }) => (
   </motion.div>
 );
 
-const ProviderList = ({ providers, navigate }: { providers: SearchProvider[]; navigate: (path: string) => void }) => {
+const ProviderList = ({
+  providers,
+  navigate,
+}: {
+  providers: Array<SearchProvider & {
+    budgetFit?: { label: string; detail: string };
+    benchmark?: { label: string };
+    trust?: { label: string };
+  }>;
+  navigate: (path: string) => void;
+}) => {
   if (providers.length === 0) return null;
 
   return (
@@ -221,6 +302,9 @@ const ProviderList = ({ providers, navigate }: { providers: SearchProvider[]; na
                           Verified
                         </Badge>
                       ) : null}
+                      {provider.trust?.label ? (
+                        <Badge variant="outline">{provider.trust.label}</Badge>
+                      ) : null}
                     </div>
 
                     <div className="mb-2 flex items-start justify-between gap-4">
@@ -260,6 +344,20 @@ const ProviderList = ({ providers, navigate }: { providers: SearchProvider[]; na
                           <span className="font-medium">Why this vendor</span>
                         </div>
                         <p className="text-muted-foreground">{provider.recommendation_reason}</p>
+                      </div>
+                    ) : null}
+                    {provider.benchmark?.label ? (
+                      <div className="mt-3 rounded-xl border p-3 text-sm">
+                        <p className="font-medium">Price read: {provider.benchmark.label}</p>
+                        <p className="mt-1 text-muted-foreground">
+                          This is a quick benchmark from the currently visible vendor set, useful for shortlisting before you compare in detail.
+                        </p>
+                      </div>
+                    ) : null}
+                    {provider.budgetFit && provider.budgetFit.label !== "UNKNOWN" ? (
+                      <div className="mt-3 rounded-xl border p-3 text-sm">
+                        <p className="font-medium">Budget fit: {provider.budgetFit.label}</p>
+                        <p className="mt-1 text-muted-foreground">{provider.budgetFit.detail}</p>
                       </div>
                     ) : null}
                   </div>

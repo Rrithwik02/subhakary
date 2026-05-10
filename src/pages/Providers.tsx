@@ -38,6 +38,10 @@ import { indianStates, getCitiesByState } from "@/data/indianLocations";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import { MobileProviders } from "@/components/mobile/MobileProviders";
 import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
+import { useAuth } from "@/hooks/useAuth";
+import { useWeddingEvent } from "@/hooks/useWeddingEvent";
+import { computeBudgetFit, computePriceBenchmark, computeReliabilityInsight, computeTrustInsight } from "@/lib/vendorInsights";
+import { normalizePlanningCategory } from "@/lib/weddingPlanning";
 
 // Areas for cities (used when a city is selected)
 const CITY_AREAS: Record<string, string[]> = {
@@ -55,6 +59,8 @@ const Providers = () => {
 };
 
 const DesktopProviders = () => {
+  const { user } = useAuth();
+  const { event } = useWeddingEvent();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,6 +74,7 @@ const DesktopProviders = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
+  const [fitOnly, setFitOnly] = useState(false);
 
   // Initialize filters from URL params and update SEO
   useEffect(() => {
@@ -181,6 +188,19 @@ const DesktopProviders = () => {
     },
   });
 
+  const { data: budgetCategories = [] } = useQuery({
+    queryKey: ["wedding-budget-categories", event?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wedding_budget_categories")
+        .select("category,planned_amount")
+        .eq("event_id", event!.id);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user && !!event?.id,
+  });
+
   // Get cities based on selected state from indianLocations data
   const stateCities = useMemo(() => {
     if (selectedState === "all") return [];
@@ -208,9 +228,82 @@ const DesktopProviders = () => {
     return Array.from(new Set(subs)).sort();
   }, [providers, selectedCategory]);
 
+  const providerIds = useMemo(() => providers.map((provider) => provider.id), [providers]);
+
+  const { data: providerBookingSignals = [] } = useQuery({
+    queryKey: ["provider-reliability-signals", providerIds.join(",")],
+    queryFn: async () => {
+      if (!providerIds.length) return [];
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("provider_id,status,service_date,completion_confirmed_by_customer,completion_confirmed_by_provider,completion_status,cancelled_at")
+        .in("provider_id", providerIds);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: providerIds.length > 0,
+  });
+
+  const bookingSignalsMap = useMemo(() => {
+    return (providerBookingSignals as Array<any>).reduce<Record<string, Array<any>>>((acc, row) => {
+      acc[row.provider_id] = [...(acc[row.provider_id] || []), row];
+      return acc;
+    }, {});
+  }, [providerBookingSignals]);
+
+  const budgetTargets = useMemo(() => {
+    const map = new Map<string, number>();
+    budgetCategories.forEach((row: { category: string; planned_amount: number }) => {
+      map.set(row.category, Number(row.planned_amount) || 0);
+    });
+    return map;
+  }, [budgetCategories]);
+
+  const enrichedProviders = useMemo(
+    () =>
+      providers.map((provider) => {
+        const planningCategory = normalizePlanningCategory(provider.category?.name);
+        const benchmark = computePriceBenchmark(provider, providers);
+        const budgetFit = computeBudgetFit({
+          providerPrice: provider.base_price,
+          categoryName: provider.category?.name,
+          context: {
+            totalBudget: event?.total_budget,
+            city: event?.city,
+            plannedCategoryBudget: budgetTargets.get(planningCategory) || null,
+          },
+        });
+
+        return {
+          ...provider,
+          planningCategory,
+          benchmark,
+          budgetFit,
+          trust: computeTrustInsight({
+            isVerified: provider.is_verified,
+            isPremium: provider.is_premium,
+            rating: provider.rating,
+            totalReviews: provider.total_reviews,
+            experienceYears: provider.experience_years,
+          }),
+          reliability: computeReliabilityInsight({
+            bookings: bookingSignalsMap[provider.id] || [],
+            trust: computeTrustInsight({
+              isVerified: provider.is_verified,
+              isPremium: provider.is_premium,
+              rating: provider.rating,
+              totalReviews: provider.total_reviews,
+              experienceYears: provider.experience_years,
+            }),
+          }),
+        };
+      }),
+    [providers, event, budgetTargets, bookingSignalsMap],
+  );
+
   // Filter and sort providers
   const filteredProviders = useMemo(() => {
-    let result = [...providers];
+    let result = [...enrichedProviders];
 
     // Search filter
     if (searchQuery) {
@@ -268,6 +361,10 @@ const DesktopProviders = () => {
       result = result.filter((p) => (p.base_price || 0) <= max);
     }
 
+    if (fitOnly) {
+      result = result.filter((p) => p.budgetFit.label === "YES" || p.budgetFit.label === "STRETCH");
+    }
+
     // Sorting - Premium providers always first, then by selected sort
     switch (sortBy) {
       case "rating":
@@ -309,7 +406,7 @@ const DesktopProviders = () => {
     }
 
     return result;
-  }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedState, selectedCity, selectedArea, sortBy, minPrice, maxPrice]);
+  }, [enrichedProviders, searchQuery, selectedCategory, selectedSubcategory, selectedState, selectedCity, selectedArea, sortBy, minPrice, maxPrice, fitOnly]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -322,6 +419,7 @@ const DesktopProviders = () => {
     setSelectedDate("");
     setMinPrice("");
     setMaxPrice("");
+    setFitOnly(false);
   };
 
   const handleCategoryChange = (value: string) => {
@@ -341,7 +439,7 @@ const DesktopProviders = () => {
   };
 
   const hasActiveFilters =
-    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedState !== "all" || selectedCity !== "all" || selectedArea !== "all" || minPrice || maxPrice;
+    searchQuery || selectedCategory !== "all" || selectedSubcategory !== "all" || selectedState !== "all" || selectedCity !== "all" || selectedArea !== "all" || minPrice || maxPrice || fitOnly;
 
   const activeFilterCount = [
     searchQuery,
@@ -352,6 +450,7 @@ const DesktopProviders = () => {
     selectedArea !== "all" ? selectedArea : null,
     minPrice || null,
     maxPrice || null,
+    fitOnly ? "fitOnly" : null,
   ].filter(Boolean).length;
 
   // Filter component for reuse in both mobile and desktop
@@ -473,6 +572,13 @@ const DesktopProviders = () => {
         </SelectContent>
       </Select>
 
+      {event ? (
+        <label className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${isMobile ? "w-full" : ""}`}>
+          <Checkbox checked={fitOnly} onCheckedChange={(checked) => setFitOnly(Boolean(checked))} />
+          <span>Only show vendors that fit my wedding</span>
+        </label>
+      ) : null}
+
       {isMobile && hasActiveFilters && (
         <Button variant="outline" onClick={clearFilters} className="w-full text-destructive border-destructive/30">
           <X className="h-4 w-4 mr-2" />
@@ -583,6 +689,12 @@ const DesktopProviders = () => {
                 <X className="h-3 w-3 ml-1" />
               </Badge>
             )}
+            {fitOnly && (
+              <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer whitespace-nowrap flex-shrink-0" onClick={() => setFitOnly(false)}>
+                Fits my wedding
+                <X className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive text-xs whitespace-nowrap flex-shrink-0 h-6 px-2">
               Clear
             </Button>
@@ -662,6 +774,13 @@ const DesktopProviders = () => {
                 </Badge>
               )}
               
+              {fitOnly && (
+                <Badge variant="secondary" className="gap-1 pr-1 cursor-pointer hover:bg-destructive/20" onClick={() => setFitOnly(false)}>
+                  Fits my wedding
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              )}
+
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive hover:text-destructive hover:bg-destructive/10">
                 <X className="h-4 w-4 mr-1" />
                 Clear All
@@ -679,6 +798,13 @@ const DesktopProviders = () => {
               {filteredProviders.length} provider{filteredProviders.length !== 1 ? "s" : ""} found
             </p>
           </div>
+          {event && (
+            <div className="mb-5 rounded-xl border bg-primary/5 p-4 text-sm text-muted-foreground">
+              {fitOnly
+                ? "These results are narrowed to vendors that look workable for your active wedding plan."
+                : "Turn on wedding-fit mode to prioritize vendors that match your budgeted planning lanes."}
+            </div>
+          )}
 
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -726,7 +852,9 @@ const DesktopProviders = () => {
                                 className="h-full w-full rounded-full object-cover"
                               />
                             ) : (
-                              <span className="text-2xl md:text-3xl">👤</span>
+                              <span className="text-2xl md:text-3xl font-semibold text-primary">
+                                {provider.business_name.charAt(0).toUpperCase()}
+                              </span>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -737,7 +865,7 @@ const DesktopProviders = () => {
                                 </h3>
                                 {provider.is_verified ? (
                                   <span className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-green-500/20 text-green-500 text-[10px] md:text-xs font-medium rounded-md whitespace-nowrap border border-green-500/30 flex-shrink-0">
-                                    ✓ Verified
+                                    Verified
                                   </span>
                                 ) : (
                                   <span className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-yellow-500/20 text-yellow-600 text-[10px] md:text-xs font-medium rounded-md whitespace-nowrap border border-yellow-500/30 flex-shrink-0">
@@ -745,11 +873,18 @@ const DesktopProviders = () => {
                                   </span>
                                 )}
                               </div>
-                              {provider.is_premium && (
-                                <span className="self-start flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] md:text-xs font-bold rounded-md whitespace-nowrap shadow-sm">
-                                  ⭐ Premium
-                                </span>
-                              )}
+                              <div className="flex flex-wrap gap-2">
+                                {provider.is_premium && (
+                                  <span className="self-start flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] md:text-xs font-bold rounded-md whitespace-nowrap shadow-sm">
+                                    Premium
+                                  </span>
+                                )}
+                                {provider.trust?.label ? (
+                                  <Badge variant="outline" className="self-start text-[10px] md:text-xs px-2">
+                                    {provider.trust.label}
+                                  </Badge>
+                                ) : null}
+                              </div>
                             </div>
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {provider.category?.name && (
@@ -866,6 +1001,28 @@ const DesktopProviders = () => {
                             />
                             <CompareButton provider={provider} variant="icon" />
                           </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {provider.benchmark?.label ? (
+                            <Badge variant="outline" className="text-[10px] md:text-xs">
+                              {provider.benchmark.low && provider.benchmark.high
+                                ? ` - Typical Rs ${Math.round(provider.benchmark.low).toLocaleString("en-IN")}-${Math.round(provider.benchmark.high).toLocaleString("en-IN")}`
+                                : ""}
+                            </Badge>
+                          ) : null}
+                          {provider.budgetFit?.label && provider.budgetFit.label !== "UNKNOWN" ? (
+                            <Badge
+                              variant={provider.budgetFit.label === "YES" ? "default" : provider.budgetFit.label === "STRETCH" ? "secondary" : "destructive"}
+                              className="text-[10px] md:text-xs"
+                            >
+                              Budget fit: {provider.budgetFit.label}
+                            </Badge>
+                          ) : null}
+                          {provider.reliability?.label ? (
+                            <Badge variant="secondary" className="text-[10px] md:text-xs">
+                              {provider.reliability.label}
+                            </Badge>
+                          ) : null}
                         </div>
                       </div>
                     </div>

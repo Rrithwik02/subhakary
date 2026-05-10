@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { cn } from "@/lib/utils";
 import { trackMessageSent, trackBookingInquiry } from "@/lib/analytics";
+import { InquiryWorkspacePanel } from "@/components/InquiryWorkspacePanel";
 
 interface InquiryChatWindowProps {
   conversationId: string;
@@ -82,6 +83,20 @@ export const InquiryChatWindow = ({
 
       if (error) throw error;
       return data || [];
+    },
+    enabled: !!conversationId,
+  });
+
+  const { data: conversation } = useQuery({
+    queryKey: ["inquiry-conversation-details", conversationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("inquiry_conversations")
+        .select("id,event_id,booking_id")
+        .eq("id", conversationId)
+        .single();
+      if (error) throw error;
+      return data;
     },
     enabled: !!conversationId,
   });
@@ -237,6 +252,7 @@ export const InquiryChatWindow = ({
         .insert({
           user_id: user.id,
           provider_id: providerId,
+          event_id: conversation?.event_id || null,
           service_date: format(selectedDate, "yyyy-MM-dd"),
           service_time: selectedTime || null,
           message: bookingMessage || null,
@@ -278,6 +294,7 @@ export const InquiryChatWindow = ({
 
   return (
     <>
+      <div className="grid h-full gap-4 md:grid-cols-[minmax(0,1fr)_320px]">
       <div className="flex flex-col h-full bg-background md:rounded-xl md:border overflow-hidden">
         {/* Header - hidden on mobile since page has its own header */}
         <div className="hidden md:flex items-center justify-between p-4 border-b bg-card">
@@ -501,6 +518,10 @@ export const InquiryChatWindow = ({
             </Button>
           </div>
         </div>
+      </div>
+      <div className="hidden h-full overflow-auto md:block">
+        <InquiryWorkspacePanel conversationId={conversationId} role="couple" className="pb-4" />
+      </div>
       </div>
 
       {/* Booking Dialog - mobile optimized */}

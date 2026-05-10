@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { cn } from "@/lib/utils";
+import { InquiryWorkspacePanel } from "@/components/InquiryWorkspacePanel";
 
 interface ProviderInquiryChatProps {
   providerId: string;
@@ -236,9 +237,9 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
   }
 
   return (
-    <div className="grid md:grid-cols-3 gap-4 h-[600px]">
+    <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_340px] h-[600px]">
       {/* Conversations list */}
-      <Card className="md:col-span-1 overflow-hidden">
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="p-4 border-b">
             <h3 className="font-display font-semibold flex items-center gap-2">
@@ -296,7 +297,7 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
       </Card>
 
       {/* Chat area */}
-      <Card className="md:col-span-2 overflow-hidden flex flex-col">
+      <Card className="overflow-hidden flex flex-col">
         {selectedConversation && selectedConvo ? (
           <>
             {/* Header */}
@@ -437,6 +438,17 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
           </CardContent>
         )}
       </Card>
+      <div className="hidden xl:block overflow-auto">
+        {selectedConversation ? (
+          <InquiryWorkspacePanel conversationId={selectedConversation} role="provider" className="pb-4" />
+        ) : (
+          <Card className="h-full">
+            <CardContent className="flex h-full items-center justify-center text-center text-muted-foreground">
+              Select an inquiry to manage quotes and documents.
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };

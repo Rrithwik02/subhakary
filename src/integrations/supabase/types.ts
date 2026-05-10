@@ -789,27 +789,54 @@ export type Database = {
       inquiry_conversations: {
         Row: {
           booking_id: string | null
+          budget_fit_label: string | null
+          couple_budget: number | null
           created_at: string
+          event_id: string | null
+          fit_score: number | null
+          guest_count: number | null
           id: string
+          negotiation_status: string
+          preferred_style: string | null
           provider_id: string
+          priority_notes: string | null
+          selected_service_date: string | null
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           booking_id?: string | null
+          budget_fit_label?: string | null
+          couple_budget?: number | null
           created_at?: string
+          event_id?: string | null
+          fit_score?: number | null
+          guest_count?: number | null
           id?: string
+          negotiation_status?: string
+          preferred_style?: string | null
           provider_id: string
+          priority_notes?: string | null
+          selected_service_date?: string | null
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           booking_id?: string | null
+          budget_fit_label?: string | null
+          couple_budget?: number | null
           created_at?: string
+          event_id?: string | null
+          fit_score?: number | null
+          guest_count?: number | null
           id?: string
+          negotiation_status?: string
+          preferred_style?: string | null
           provider_id?: string
+          priority_notes?: string | null
+          selected_service_date?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -820,6 +847,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inquiry_conversations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_events"
             referencedColumns: ["id"]
           },
           {
@@ -834,6 +868,50 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inquiry_quotes: {
+        Row: {
+          amount: number
+          conversation_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          status: string
+          valid_until: string | null
+          version_no: number
+        }
+        Insert: {
+          amount: number
+          conversation_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          status?: string
+          valid_until?: string | null
+          version_no?: number
+        }
+        Update: {
+          amount?: number
+          conversation_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          status?: string
+          valid_until?: string | null
+          version_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiry_quotes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "inquiry_conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -1289,6 +1367,84 @@ export type Database = {
             columns: ["service_category_id"]
             isOneToOne: false
             referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wedding_documents: {
+        Row: {
+          booking_id: string | null
+          conversation_id: string | null
+          created_at: string
+          document_type: string
+          event_id: string
+          file_name: string
+          file_path: string
+          id: string
+          provider_id: string | null
+          title: string
+          uploaded_by: string
+        }
+        Insert: {
+          booking_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          document_type?: string
+          event_id: string
+          file_name: string
+          file_path: string
+          id?: string
+          provider_id?: string | null
+          title: string
+          uploaded_by: string
+        }
+        Update: {
+          booking_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          document_type?: string
+          event_id?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          provider_id?: string | null
+          title?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wedding_documents_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wedding_documents_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "inquiry_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wedding_documents_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wedding_documents_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wedding_documents_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
         ]
@@ -2151,6 +2307,8 @@ export type Database = {
           city: string | null
           created_at: string
           event_date: string | null
+          health_score: number
+          health_summary: string | null
           id: string
           is_primary: boolean
           name: string
@@ -2165,6 +2323,8 @@ export type Database = {
           city?: string | null
           created_at?: string
           event_date?: string | null
+          health_score?: number
+          health_summary?: string | null
           id?: string
           is_primary?: boolean
           name?: string
@@ -2179,6 +2339,8 @@ export type Database = {
           city?: string | null
           created_at?: string
           event_date?: string | null
+          health_score?: number
+          health_summary?: string | null
           id?: string
           is_primary?: boolean
           name?: string

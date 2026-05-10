@@ -13,6 +13,8 @@ export type WeddingEvent = {
   wedding_size: string | null;
   is_primary: boolean;
   progress_percent: number;
+  health_score?: number;
+  health_summary?: string | null;
 };
 
 export const useWeddingEvent = (eventId?: string | null) => {
