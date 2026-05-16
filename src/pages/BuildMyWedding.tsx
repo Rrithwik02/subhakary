@@ -11,9 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
 import { useWeddingEvent } from "@/hooks/useWeddingEvent";
 import { useProviderComparison } from "@/hooks/useProviderComparison";
 import { supabase } from "@/integrations/supabase/client";
+import { WeddingAiAssistantPanel } from "@/components/WeddingAiAssistantPanel";
 import { VENDOR_LANES, normalizePlanningCategory } from "@/lib/weddingPlanning";
 import {
   SIMULATION_TEMPLATES,
@@ -48,12 +50,14 @@ const scenarioStorageKey = (eventId?: string | null) => `subhakary:wedding-scena
 const draftStorageKey = (eventId?: string | null) => `subhakary:wedding-scenarios-draft:${eventId || "default"}`;
 
 const BuildMyWedding = () => {
+  const { user } = useAuth();
   const { event } = useWeddingEvent();
   const { compareList } = useProviderComparison();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [selectedProviders, setSelectedProviders] = useState<Record<string, string>>({});
   const [scenarioName, setScenarioName] = useState("");
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
+  const [priorities, setPriorities] = useState<string[]>([]);
 
   const [providers, setProviders] = useState<SimulationProvider[]>([]);
   const [bundles, setBundles] = useState<SimulationBundle[]>([]);
@@ -109,6 +113,16 @@ const BuildMyWedding = () => {
       setBookings((bookingRows as BookingSeed[] | null) ?? []);
     })();
   }, [event?.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    void supabase
+      .from("wedding_preferences")
+      .select("priorities")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setPriorities((data?.priorities as string[] | null) ?? []));
+  }, [user]);
 
   const activeTemplate =
     SIMULATION_TEMPLATES.find((template) => template.id === selectedTemplateId) ||
@@ -244,6 +258,10 @@ const BuildMyWedding = () => {
     }
   };
 
+  const applyPlanSelections = (nextSelections: Record<string, string>) => {
+    setSelectedProviders(nextSelections);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <SEOHead title="Build My Wedding | Subhakary" description="Simulate your full wedding plan, budget split, vendor fit, and style consistency." />
@@ -371,6 +389,17 @@ const BuildMyWedding = () => {
               </CardContent>
             </Card>
           </div>
+
+          <WeddingAiAssistantPanel
+            providers={providers}
+            bundles={bundles}
+            selectedProviders={selectedProviders}
+            totalBudget={event?.total_budget}
+            weddingStyle={event?.wedding_style}
+            priorities={priorities}
+            template={activeTemplate}
+            onApplyPlan={applyPlanSelections}
+          />
 
           <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
             <Card className="border-border/50">

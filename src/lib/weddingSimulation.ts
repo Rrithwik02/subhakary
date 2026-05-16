@@ -42,7 +42,7 @@ export type SimulationTemplate = {
 export const SIMULATION_TEMPLATES: SimulationTemplate[] = [
   {
     id: "traditional-3l",
-    name: "₹3L Traditional Wedding",
+    name: "Rs 3L Traditional Wedding",
     description: "Lean traditional setup focused on ceremony essentials, strong photo coverage, and practical catering.",
     minBudget: 200000,
     maxBudget: 400000,
@@ -59,7 +59,7 @@ export const SIMULATION_TEMPLATES: SimulationTemplate[] = [
   },
   {
     id: "minimal-8l",
-    name: "₹8L Premium Minimal Wedding",
+    name: "Rs 8L Premium Minimal Wedding",
     description: "Higher-spend build that prioritizes venue quality, polished decor, and stronger visual consistency.",
     minBudget: 550000,
     maxBudget: 1000000,
@@ -76,7 +76,7 @@ export const SIMULATION_TEMPLATES: SimulationTemplate[] = [
   },
   {
     id: "intimate-5l",
-    name: "₹5L Intimate Story-First Wedding",
+    name: "Rs 5L Intimate Story-First Wedding",
     description: "Balanced build with more room for decor and photography while keeping guest flow manageable.",
     minBudget: 350000,
     maxBudget: 650000,
@@ -150,7 +150,9 @@ export const getStyleAlignment = ({
 
   const terms = [
     ...(provider.specializations || []),
-    ...(provider.portfolio_tags || []).flatMap((tag) => [tag.label, tag.wedding_type, tag.budget, tag.size].filter(Boolean) as string[]),
+    ...(provider.portfolio_tags || []).flatMap((tag) =>
+      [tag.label, tag.wedding_type, tag.budget, tag.size].filter(Boolean) as string[],
+    ),
   ]
     .join(" ")
     .toLowerCase();
