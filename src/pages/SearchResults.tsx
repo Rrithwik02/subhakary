@@ -30,7 +30,13 @@ import {
 } from "@/lib/searchUtils";
 import { SEOHead } from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
-import { computeBudgetFit, computePriceBenchmark, computeTrustInsight } from "@/lib/vendorInsights";
+import {
+  computeBudgetFit,
+  computePriceBenchmark,
+  computeReliabilityInsight,
+  computeResponseHistoryInsight,
+  computeTrustInsight,
+} from "@/lib/vendorInsights";
 import { normalizePlanningCategory } from "@/lib/weddingPlanning";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -106,6 +112,8 @@ function useSearchLogic(query: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [fitOnly, setFitOnly] = useState(false);
   const [budgetTargets, setBudgetTargets] = useState<Record<string, number>>({});
+  const [bookingSignals, setBookingSignals] = useState<Record<string, Array<any>>>({});
+  const [responseSignals, setResponseSignals] = useState<Record<string, ReturnType<typeof computeResponseHistoryInsight>>>({});
 
   useEffect(() => {
     if (!user || !event?.id) return;
@@ -171,6 +179,58 @@ function useSearchLogic(query: string) {
     runSearch();
   }, [query, user]);
 
+  useEffect(() => {
+    if (!providers.length) {
+      setBookingSignals({});
+      setResponseSignals({});
+      return;
+    }
+
+    void (async () => {
+      const providerIds = providers.map((provider) => provider.id);
+      const [{ data: bookingRows }, { data: conversations }] = await Promise.all([
+        supabase
+          .from("bookings")
+          .select("provider_id,status,service_date,completion_confirmed_by_customer,completion_confirmed_by_provider,completion_status,cancelled_at")
+          .in("provider_id", providerIds),
+        supabase
+          .from("inquiry_conversations")
+          .select("id,provider_id,user_id")
+          .in("provider_id", providerIds),
+      ]);
+
+      const conversationIds = (conversations || []).map((conversation) => conversation.id);
+      const { data: messages } = conversationIds.length
+        ? await supabase
+            .from("inquiry_messages")
+            .select("conversation_id,sender_id,created_at")
+            .in("conversation_id", conversationIds)
+        : { data: [] };
+
+      const nextBookingSignals = ((bookingRows || []) as Array<any>).reduce<Record<string, Array<any>>>((acc, row) => {
+        acc[row.provider_id] = [...(acc[row.provider_id] || []), row];
+        return acc;
+      }, {});
+      const nextResponseSignals = (conversations || []).reduce<Record<string, ReturnType<typeof computeResponseHistoryInsight>>>(
+        (acc, conversation) => {
+          if (acc[conversation.provider_id]) return acc;
+          const providerConversations = (conversations || []).filter((item) => item.provider_id === conversation.provider_id);
+          acc[conversation.provider_id] = computeResponseHistoryInsight({
+            conversations: providerConversations.map((item) => ({ id: item.id, user_id: item.user_id })),
+            messages: (messages || []).filter((message) =>
+              providerConversations.some((item) => item.id === message.conversation_id),
+            ),
+          });
+          return acc;
+        },
+        {},
+      );
+
+      setBookingSignals(nextBookingSignals);
+      setResponseSignals(nextResponseSignals);
+    })();
+  }, [providers]);
+
   const enhancedProviders = providers.map((provider) => {
     const category = normalizePlanningCategory(provider.service_type);
     return {
@@ -190,6 +250,16 @@ function useSearchLogic(query: string) {
         isPremium: provider.is_premium,
         rating: provider.rating,
         totalReviews: provider.total_reviews,
+      }),
+      reliability: computeReliabilityInsight({
+        bookings: bookingSignals[provider.id] || [],
+        responseHistory: responseSignals[provider.id] || null,
+        trust: computeTrustInsight({
+          isVerified: provider.is_verified,
+          isPremium: provider.is_premium,
+          rating: provider.rating,
+          totalReviews: provider.total_reviews,
+        }),
       }),
     };
   });
@@ -253,6 +323,7 @@ const ProviderList = ({
     budgetFit?: { label: string; detail: string };
     benchmark?: { label: string };
     trust?: { label: string };
+    reliability?: { label: string; verifiedCompletedCount: number; responseMedianHours: number | null };
   }>;
   navigate: (path: string) => void;
 }) => {
@@ -304,6 +375,11 @@ const ProviderList = ({
                       ) : null}
                       {provider.trust?.label ? (
                         <Badge variant="outline">{provider.trust.label}</Badge>
+                      ) : null}
+                      {provider.reliability?.verifiedCompletedCount ? (
+                        <Badge variant="secondary">
+                          {provider.reliability.verifiedCompletedCount} verified completions
+                        </Badge>
                       ) : null}
                     </div>
 
@@ -358,6 +434,14 @@ const ProviderList = ({
                       <div className="mt-3 rounded-xl border p-3 text-sm">
                         <p className="font-medium">Budget fit: {provider.budgetFit.label}</p>
                         <p className="mt-1 text-muted-foreground">{provider.budgetFit.detail}</p>
+                      </div>
+                    ) : null}
+                    {provider.reliability?.responseMedianHours ? (
+                      <div className="mt-3 rounded-xl border p-3 text-sm">
+                        <p className="font-medium">Observed reply timing</p>
+                        <p className="mt-1 text-muted-foreground">
+                          This vendor usually replies in about {Math.round(provider.reliability.responseMedianHours)} hours.
+                        </p>
                       </div>
                     ) : null}
                   </div>

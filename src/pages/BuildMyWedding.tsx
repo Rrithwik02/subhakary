@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Layers3, RefreshCw, Sparkles, Wand2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Layers3, RefreshCw, Save, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWeddingEvent } from "@/hooks/useWeddingEvent";
@@ -34,11 +35,25 @@ type BookingSeed = {
   } | null;
 };
 
+type SavedScenario = {
+  id: string;
+  name: string;
+  eventId: string | null;
+  templateId: string;
+  selectedProviders: Record<string, string>;
+  savedAt: string;
+};
+
+const scenarioStorageKey = (eventId?: string | null) => `subhakary:wedding-scenarios:${eventId || "default"}`;
+const draftStorageKey = (eventId?: string | null) => `subhakary:wedding-scenarios-draft:${eventId || "default"}`;
+
 const BuildMyWedding = () => {
   const { event } = useWeddingEvent();
   const { compareList } = useProviderComparison();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [selectedProviders, setSelectedProviders] = useState<Record<string, string>>({});
+  const [scenarioName, setScenarioName] = useState("");
+  const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
 
   const [providers, setProviders] = useState<SimulationProvider[]>([]);
   const [bundles, setBundles] = useState<SimulationBundle[]>([]);
@@ -51,6 +66,22 @@ const BuildMyWedding = () => {
     });
     setSelectedTemplateId((current) => current || defaultTemplate.id);
   }, [event]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const rawScenarios = window.localStorage.getItem(scenarioStorageKey(event?.id));
+    const rawDraft = window.localStorage.getItem(draftStorageKey(event?.id));
+    setSavedScenarios(rawScenarios ? (JSON.parse(rawScenarios) as SavedScenario[]) : []);
+
+    if (rawDraft) {
+      const draft = JSON.parse(rawDraft) as { templateId?: string; selectedProviders?: Record<string, string> };
+      if (draft.templateId) setSelectedTemplateId((current) => current || draft.templateId || "");
+      if (draft.selectedProviders) {
+        setSelectedProviders((current) => (Object.keys(current).length ? current : draft.selectedProviders || {}));
+      }
+    }
+  }, [event?.id]);
 
   useEffect(() => {
     (async () => {
@@ -113,6 +144,17 @@ const BuildMyWedding = () => {
     });
   }, [bookings, compareList, providers]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !selectedTemplateId) return;
+    window.localStorage.setItem(
+      draftStorageKey(event?.id),
+      JSON.stringify({
+        templateId: selectedTemplateId,
+        selectedProviders,
+      }),
+    );
+  }, [event?.id, selectedProviders, selectedTemplateId]);
+
   const applyAutoBuild = () => {
     const autoSelections = buildSimulationSelections({
       providers,
@@ -170,6 +212,38 @@ const BuildMyWedding = () => {
     [bundles, event?.wedding_style, providers],
   );
 
+  const saveScenario = () => {
+    const nextScenario: SavedScenario = {
+      id: `${Date.now()}`,
+      name: scenarioName.trim() || `${activeTemplate.name} build`,
+      eventId: event?.id || null,
+      templateId: selectedTemplateId,
+      selectedProviders,
+      savedAt: new Date().toISOString(),
+    };
+
+    const nextScenarios = [nextScenario, ...savedScenarios].slice(0, 8);
+    setSavedScenarios(nextScenarios);
+    setScenarioName("");
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(scenarioStorageKey(event?.id), JSON.stringify(nextScenarios));
+    }
+  };
+
+  const loadScenario = (scenario: SavedScenario) => {
+    setSelectedTemplateId(scenario.templateId);
+    setSelectedProviders(scenario.selectedProviders);
+  };
+
+  const deleteScenario = (scenarioId: string) => {
+    const nextScenarios = savedScenarios.filter((scenario) => scenario.id !== scenarioId);
+    setSavedScenarios(nextScenarios);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(scenarioStorageKey(event?.id), JSON.stringify(nextScenarios));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <SEOHead title="Build My Wedding | Subhakary" description="Simulate your full wedding plan, budget split, vendor fit, and style consistency." />
@@ -193,7 +267,7 @@ const BuildMyWedding = () => {
                   Simulation summary
                 </CardTitle>
                 <CardDescription>
-                  Built around your current wedding profile{event?.wedding_style ? ` · ${event.wedding_style}` : ""}.
+                  Built around your current wedding profile{event?.wedding_style ? ` - ${event.wedding_style}` : ""}.
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-4">
@@ -254,6 +328,45 @@ const BuildMyWedding = () => {
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Fill with top picks
                   </Button>
+                </div>
+                <div className="rounded-xl border p-4">
+                  <p className="text-sm font-medium">Saved scenarios</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Your current draft auto-saves locally. Save named builds when you want to compare different wedding directions.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <Input
+                      value={scenarioName}
+                      onChange={(event) => setScenarioName(event.target.value)}
+                      placeholder="Name this build"
+                    />
+                    <Button onClick={saveScenario}>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save
+                    </Button>
+                  </div>
+                  {savedScenarios.length ? (
+                    <div className="mt-3 space-y-2">
+                      {savedScenarios.map((scenario) => (
+                        <div key={scenario.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
+                          <div>
+                            <p className="font-medium">{scenario.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Saved {new Date(scenario.savedAt).toLocaleDateString("en-IN")} with {Object.keys(scenario.selectedProviders).length} lanes filled
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => loadScenario(scenario)}>
+                              Load
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteScenario(scenario.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
@@ -324,7 +437,7 @@ const BuildMyWedding = () => {
                           <p className="mt-3 font-medium">{selectedProvider.business_name}</p>
                           <p className="mt-1 text-muted-foreground">
                             Estimated cost: Rs {Math.round(selectedPrice?.estimatedPrice || 0).toLocaleString("en-IN")}
-                            {selectedPrice?.bundleName ? ` · ${selectedPrice.bundleName}` : ""}
+                            {selectedPrice?.bundleName ? ` - ${selectedPrice.bundleName}` : ""}
                           </p>
                           <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
                             <Link to={`/provider/${selectedProvider.url_slug || selectedProvider.id}`}>
@@ -345,7 +458,7 @@ const BuildMyWedding = () => {
               <Card className="border-border/50">
                 <CardHeader>
                   <CardTitle>Budget split</CardTitle>
-                  <CardDescription>Compare the build against the template’s intended shape.</CardDescription>
+                  <CardDescription>Compare the build against the template's intended shape.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {summary.categoryBreakdown.map((row) => (
@@ -353,7 +466,7 @@ const BuildMyWedding = () => {
                       <div className="mb-2 flex items-center justify-between text-sm">
                         <span className="font-medium">{row.lane}</span>
                         <span className="text-muted-foreground">
-                          Rs {Math.round(row.amount).toLocaleString("en-IN")} · target {Math.round(row.targetShare * 100)}%
+                          Rs {Math.round(row.amount).toLocaleString("en-IN")} - target {Math.round(row.targetShare * 100)}%
                         </span>
                       </div>
                       <Progress value={Math.round(Math.min(100, row.share * 100))} className="h-2.5" />

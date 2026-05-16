@@ -40,7 +40,13 @@ import { MobileProviders } from "@/components/mobile/MobileProviders";
 import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { useWeddingEvent } from "@/hooks/useWeddingEvent";
-import { computeBudgetFit, computePriceBenchmark, computeReliabilityInsight, computeTrustInsight } from "@/lib/vendorInsights";
+import {
+  computeBudgetFit,
+  computePriceBenchmark,
+  computeReliabilityInsight,
+  computeResponseHistoryInsight,
+  computeTrustInsight,
+} from "@/lib/vendorInsights";
 import { normalizePlanningCategory } from "@/lib/weddingPlanning";
 
 // Areas for cities (used when a city is selected)
@@ -244,6 +250,40 @@ const DesktopProviders = () => {
     enabled: providerIds.length > 0,
   });
 
+  const { data: providerResponseSignals = {} } = useQuery({
+    queryKey: ["provider-response-signals", providerIds.join(",")],
+    queryFn: async () => {
+      if (!providerIds.length) return {};
+      const { data: conversations, error: conversationError } = await supabase
+        .from("inquiry_conversations")
+        .select("id,provider_id,user_id")
+        .in("provider_id", providerIds);
+      if (conversationError) throw conversationError;
+
+      const conversationIds = (conversations || []).map((conversation) => conversation.id);
+      const { data: messages, error: messageError } = conversationIds.length
+        ? await supabase
+            .from("inquiry_messages")
+            .select("conversation_id,sender_id,created_at")
+            .in("conversation_id", conversationIds)
+        : { data: [], error: null };
+      if (messageError) throw messageError;
+
+      return (conversations || []).reduce<Record<string, ReturnType<typeof computeResponseHistoryInsight>>>((acc, conversation) => {
+        if (acc[conversation.provider_id]) return acc;
+        const providerConversations = (conversations || []).filter((item) => item.provider_id === conversation.provider_id);
+        acc[conversation.provider_id] = computeResponseHistoryInsight({
+          conversations: providerConversations.map((item) => ({ id: item.id, user_id: item.user_id })),
+          messages: (messages || []).filter((message) =>
+            providerConversations.some((item) => item.id === message.conversation_id),
+          ),
+        });
+        return acc;
+      }, {});
+    },
+    enabled: providerIds.length > 0,
+  });
+
   const bookingSignalsMap = useMemo(() => {
     return (providerBookingSignals as Array<any>).reduce<Record<string, Array<any>>>((acc, row) => {
       acc[row.provider_id] = [...(acc[row.provider_id] || []), row];
@@ -288,6 +328,7 @@ const DesktopProviders = () => {
           }),
           reliability: computeReliabilityInsight({
             bookings: bookingSignalsMap[provider.id] || [],
+            responseHistory: (providerResponseSignals as Record<string, ReturnType<typeof computeResponseHistoryInsight>>)[provider.id] || null,
             trust: computeTrustInsight({
               isVerified: provider.is_verified,
               isPremium: provider.is_premium,
@@ -298,7 +339,7 @@ const DesktopProviders = () => {
           }),
         };
       }),
-    [providers, event, budgetTargets, bookingSignalsMap],
+    [providers, event, budgetTargets, bookingSignalsMap, providerResponseSignals],
   );
 
   // Filter and sort providers
@@ -879,6 +920,11 @@ const DesktopProviders = () => {
                                     Premium
                                   </span>
                                 )}
+                                {provider.reliability?.verifiedCompletedCount ? (
+                                  <Badge variant="secondary" className="self-start text-[10px] md:text-xs px-2">
+                                    {provider.reliability.verifiedCompletedCount} verified completions
+                                  </Badge>
+                                ) : null}
                                 {provider.trust?.label ? (
                                   <Badge variant="outline" className="self-start text-[10px] md:text-xs px-2">
                                     {provider.trust.label}
@@ -1021,6 +1067,11 @@ const DesktopProviders = () => {
                           {provider.reliability?.label ? (
                             <Badge variant="secondary" className="text-[10px] md:text-xs">
                               {provider.reliability.label}
+                            </Badge>
+                          ) : null}
+                          {provider.reliability?.responseMedianHours ? (
+                            <Badge variant="outline" className="text-[10px] md:text-xs">
+                              Replies in about {Math.round(provider.reliability.responseMedianHours)}h
                             </Badge>
                           ) : null}
                         </div>

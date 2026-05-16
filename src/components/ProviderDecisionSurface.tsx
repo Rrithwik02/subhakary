@@ -17,7 +17,13 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
 import { useWeddingEvent } from "@/hooks/useWeddingEvent";
-import { computeBudgetFit, computePriceBenchmark, computeReliabilityInsight, computeTrustInsight } from "@/lib/vendorInsights";
+import {
+  computeBudgetFit,
+  computePriceBenchmark,
+  computeReliabilityInsight,
+  computeResponseHistoryInsight,
+  computeTrustInsight,
+} from "@/lib/vendorInsights";
 
 type ProviderDecisionSurfaceProps = {
   provider: {
@@ -93,6 +99,34 @@ export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfacePro
     enabled: !!provider.id,
   });
 
+  const { data: responseHistory } = useQuery({
+    queryKey: ["provider-response-history", provider.id],
+    queryFn: async () => {
+      const { data: conversations, error: conversationError } = await supabase
+        .from("inquiry_conversations")
+        .select("id,user_id")
+        .eq("provider_id", provider.id);
+      if (conversationError) throw conversationError;
+
+      const conversationIds = (conversations || []).map((conversation) => conversation.id);
+      if (!conversationIds.length) {
+        return computeResponseHistoryInsight({ conversations: [], messages: [] });
+      }
+
+      const { data: messages, error: messageError } = await supabase
+        .from("inquiry_messages")
+        .select("conversation_id,sender_id,created_at")
+        .in("conversation_id", conversationIds);
+      if (messageError) throw messageError;
+
+      return computeResponseHistoryInsight({
+        conversations: conversations || [],
+        messages: messages || [],
+      });
+    },
+    enabled: !!provider.id,
+  });
+
   const cheapestBundle = bundles[0];
   const startingPrice =
     formatCurrency(provider.base_price) ||
@@ -148,6 +182,7 @@ export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfacePro
   const reliabilityInsight = computeReliabilityInsight({
     bookings: bookingSignals,
     responseTimeHours,
+    responseHistory,
     trust: trustInsight,
   });
   const weddingProof = [...(provider.real_wedding_stories || []), ...(provider.portfolio_tags || [])].slice(0, 4);
@@ -306,12 +341,25 @@ export const ProviderDecisionSurface = ({ provider }: ProviderDecisionSurfacePro
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Badge variant="secondary">{reliabilityInsight.label}</Badge>
+                  {reliabilityInsight.verifiedCompletedCount > 0 ? (
+                    <Badge variant="secondary">Verified completions: {reliabilityInsight.verifiedCompletedCount}</Badge>
+                  ) : null}
                   <Badge variant="outline">{reliabilityInsight.completedCount} completed</Badge>
                   <Badge variant="outline">{reliabilityInsight.recentSuccessCount} recent wins</Badge>
+                  {reliabilityInsight.responseMedianHours ? (
+                    <Badge variant="outline">
+                      Replies in about {Math.round(reliabilityInsight.responseMedianHours)}h
+                    </Badge>
+                  ) : null}
                   {reliabilityInsight.cancellationRate > 0 ? (
                     <Badge variant="outline">{Math.round(reliabilityInsight.cancellationRate * 100)}% cancellations</Badge>
                   ) : null}
                 </div>
+                {responseHistory?.sampledThreads ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Based on {responseHistory.sampledThreads} inquiry thread{responseHistory.sampledThreads === 1 ? "" : "s"}: {responseHistory.summary}.
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>

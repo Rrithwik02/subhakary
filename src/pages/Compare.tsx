@@ -11,7 +11,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useProviderComparison } from "@/hooks/useProviderComparison";
 import { useWeddingEvent } from "@/hooks/useWeddingEvent";
 import { supabase } from "@/integrations/supabase/client";
-import { buildTradeoffNotes, computeBudgetFit, computePriceBenchmark, computeReliabilityInsight, computeTrustInsight } from "@/lib/vendorInsights";
+import {
+  buildTradeoffNotes,
+  computeBudgetFit,
+  computePriceBenchmark,
+  computeReliabilityInsight,
+  computeResponseHistoryInsight,
+  computeTrustInsight,
+} from "@/lib/vendorInsights";
 import { normalizePlanningCategory } from "@/lib/weddingPlanning";
 
 const COMPARE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-compare`;
@@ -75,6 +82,7 @@ const Compare = () => {
     completion_status: string | null;
     cancelled_at: string | null;
   }>>>({});
+  const [providerResponseHistory, setProviderResponseHistory] = useState<Record<string, ReturnType<typeof computeResponseHistoryInsight>>>({});
   const [peerProviders, setPeerProviders] = useState<Array<{ id: string; city: string | null; category_id: string | null; base_price: number | null }>>([]);
 
   useEffect(() => {
@@ -83,7 +91,7 @@ const Compare = () => {
     (async () => {
       const providerIds = compareList.map((provider) => provider.id);
       const categoryIds = Array.from(new Set(compareList.map((provider) => provider.category_id).filter(Boolean)));
-      const [{ data: detailRows }, { data: bundleRows }, { data: peerRows }, { data: bookingRows }] = await Promise.all([
+      const [{ data: detailRows }, { data: bundleRows }, { data: peerRows }, { data: bookingRows }, { data: conversationRows }] = await Promise.all([
         supabase
           .from("public_service_providers")
           .select("id,business_name,base_price,availability_status,advance_booking_days,advance_payment_percentage,travel_charges_applicable,requires_advance_payment,pricing_info,url_slug")
@@ -102,7 +110,21 @@ const Compare = () => {
           .from("bookings")
           .select("provider_id,status,service_date,completion_confirmed_by_customer,completion_confirmed_by_provider,completion_status,cancelled_at")
           .in("provider_id", providerIds),
+        supabase
+          .from("inquiry_conversations")
+          .select("id,provider_id,user_id")
+          .in("provider_id", providerIds),
       ]);
+
+      const conversationIds = (((conversationRows as Array<{ id: string; provider_id: string; user_id: string }> | null) ?? [])).map(
+        (conversation) => conversation.id,
+      );
+      const { data: messageRows } = conversationIds.length
+        ? await supabase
+            .from("inquiry_messages")
+            .select("conversation_id,sender_id,created_at")
+            .in("conversation_id", conversationIds)
+        : { data: [] };
 
       const detailsMap = ((detailRows as ProviderDetail[] | null) ?? []).reduce<Record<string, ProviderDetail>>((acc, row) => {
         if (row.id) acc[row.id] = row;
@@ -131,10 +153,26 @@ const Compare = () => {
         acc[row.provider_id] = [...(acc[row.provider_id] || []), row];
         return acc;
       }, {});
+      const responseMap = (((conversationRows as Array<{ id: string; provider_id: string; user_id: string }> | null) ?? [])).reduce<
+        Record<string, ReturnType<typeof computeResponseHistoryInsight>>
+      >((acc, conversation) => {
+        const providerConversations = (((conversationRows as Array<{ id: string; provider_id: string; user_id: string }> | null) ?? [])).filter(
+          (item) => item.provider_id === conversation.provider_id,
+        );
+        if (acc[conversation.provider_id]) return acc;
+        acc[conversation.provider_id] = computeResponseHistoryInsight({
+          conversations: providerConversations.map((item) => ({ id: item.id, user_id: item.user_id })),
+          messages: ((messageRows as Array<{ conversation_id: string; sender_id: string; created_at: string }> | null) ?? []).filter(
+            (message) => providerConversations.some((item) => item.id === message.conversation_id),
+          ),
+        });
+        return acc;
+      }, {});
 
       setProviderDetails(detailsMap);
       setProviderBundles(bundlesMap);
       setProviderBookings(bookingMap);
+      setProviderResponseHistory(responseMap);
       setPeerProviders((peerRows as Array<{ id: string; city: string | null; category_id: string | null; base_price: number | null }> | null) ?? []);
     })();
   }, [compareList]);
@@ -215,6 +253,7 @@ const Compare = () => {
       const reliability = computeReliabilityInsight({
         bookings: providerBookings[provider.id] || [],
         responseTimeHours,
+        responseHistory: providerResponseHistory[provider.id] || null,
         trust,
       });
 
@@ -234,7 +273,7 @@ const Compare = () => {
       };
       return acc;
     }, {});
-  }, [enrichedProviders, event, peerProviders, providerBookings]);
+  }, [enrichedProviders, event, peerProviders, providerBookings, providerResponseHistory]);
 
   const spotlightCards = useMemo(() => {
     if (!enrichedProviders.length) return [];
@@ -581,8 +620,18 @@ const Compare = () => {
                       <p className="font-medium">Platform reliability</p>
                       <p className="mt-1 text-muted-foreground">{insight?.reliability.platformProof}</p>
                       <div className="mt-2 flex flex-wrap gap-2">
+                        {insight?.reliability.verifiedCompletedCount ? (
+                          <Badge variant="secondary">
+                            {insight.reliability.verifiedCompletedCount} verified completions
+                          </Badge>
+                        ) : null}
                         <Badge variant="outline">{insight?.reliability.completedCount || 0} completed</Badge>
                         <Badge variant="outline">{insight?.reliability.recentSuccessCount || 0} recent wins</Badge>
+                        {insight?.reliability.responseMedianHours ? (
+                          <Badge variant="outline">
+                            Replies in about {Math.round(insight.reliability.responseMedianHours)}h
+                          </Badge>
+                        ) : null}
                       </div>
                     </div>
 

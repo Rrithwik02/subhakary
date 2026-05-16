@@ -42,14 +42,34 @@ export type ProviderBookingSignal = {
   cancelled_at?: string | null;
 };
 
+export type InquiryConversationSignal = {
+  id: string;
+  user_id: string;
+};
+
+export type InquiryMessageSignal = {
+  conversation_id: string;
+  sender_id: string;
+  created_at: string;
+};
+
+export type ResponseHistoryInsight = {
+  medianHours: number | null;
+  sampledThreads: number;
+  summary: string;
+};
+
 export type ReliabilityInsight = {
   score: number;
   label: "Highly reliable" | "Reliable" | "Emerging";
   summary: string;
   completedCount: number;
+  verifiedCompletedCount: number;
   acceptedCount: number;
   recentSuccessCount: number;
   cancellationRate: number;
+  responseMedianHours: number | null;
+  responseSampledThreads: number;
   platformProof: string;
   strengths: string[];
   cautions: string[];
@@ -309,14 +329,23 @@ export const buildTradeoffNotes = ({
 export const computeReliabilityInsight = ({
   bookings,
   responseTimeHours,
+  responseHistory,
   trust,
 }: {
   bookings?: ProviderBookingSignal[] | null;
   responseTimeHours?: number | null;
+  responseHistory?: ResponseHistoryInsight | null;
   trust?: TrustInsight | null;
 }): ReliabilityInsight => {
   const allBookings = bookings || [];
   const completedCount = allBookings.filter((booking) => booking.status === "completed").length;
+  const verifiedCompletedCount = allBookings.filter(
+    (booking) =>
+      booking.status === "completed" &&
+      (booking.completion_confirmed_by_customer ||
+        booking.completion_status === "completed" ||
+        booking.completion_status === "verified"),
+  ).length;
   const acceptedCount = allBookings.filter((booking) => ["accepted", "completed"].includes(booking.status || "")).length;
   const cancelledCount = allBookings.filter((booking) => booking.status === "cancelled" || booking.cancelled_at).length;
   const recentSuccessCount = allBookings.filter((booking) => {
@@ -327,6 +356,7 @@ export const computeReliabilityInsight = ({
     return daysAgo <= 180;
   }).length;
   const cancellationRate = acceptedCount > 0 ? cancelledCount / Math.max(acceptedCount + cancelledCount, 1) : 0;
+  const effectiveResponseHours = responseHistory?.medianHours ?? responseTimeHours ?? null;
 
   const strengths: string[] = [];
   const cautions: string[] = [];
@@ -334,6 +364,7 @@ export const computeReliabilityInsight = ({
 
   if (acceptedCount >= 5) strengths.push("Healthy volume of tracked bookings");
   if (completedCount >= 10) strengths.push("Substantial completion history");
+  if (verifiedCompletedCount >= 3) strengths.push("Multiple customer-verified completions");
   if (recentSuccessCount >= 3) strengths.push("Recent successful weddings on platform");
 
   if (cancellationRate <= 0.08 && acceptedCount >= 3) {
@@ -344,11 +375,15 @@ export const computeReliabilityInsight = ({
     cautions.push("Cancellation trend is worth checking");
   }
 
-  if (responseTimeHours && responseTimeHours <= 6) {
+  if (effectiveResponseHours && effectiveResponseHours <= 6) {
     score += 6;
-    strengths.push("Fast stated response rhythm");
-  } else if (!responseTimeHours) {
+    strengths.push(responseHistory?.sampledThreads ? "Fast observed reply rhythm" : "Fast stated response rhythm");
+  } else if (effectiveResponseHours && effectiveResponseHours <= 12) {
+    score += 3;
+  } else if (!effectiveResponseHours) {
     cautions.push("Reply expectations are still unclear");
+  } else if (effectiveResponseHours > 24) {
+    cautions.push("Observed reply rhythm looks slow");
   }
 
   if (trust) {
@@ -373,8 +408,10 @@ export const computeReliabilityInsight = ({
         ? "This vendor looks steady, though a couple of operating details may still need confirmation."
         : "This vendor may still be good, but the platform has limited delivery history to prove it yet.";
   const platformProof =
-    completedCount > 0
-      ? `Delivered ${completedCount} tracked booking${completedCount === 1 ? "" : "s"} on Subhakary`
+    verifiedCompletedCount > 0
+      ? `Completed ${verifiedCompletedCount} customer-verified booking${verifiedCompletedCount === 1 ? "" : "s"} on Subhakary`
+      : completedCount > 0
+        ? `Delivered ${completedCount} tracked booking${completedCount === 1 ? "" : "s"} on Subhakary`
       : "No completed platform bookings visible yet";
 
   return {
@@ -382,11 +419,85 @@ export const computeReliabilityInsight = ({
     label,
     summary,
     completedCount,
+    verifiedCompletedCount,
     acceptedCount,
     recentSuccessCount,
     cancellationRate,
+    responseMedianHours: effectiveResponseHours,
+    responseSampledThreads: responseHistory?.sampledThreads || 0,
     platformProof,
     strengths: strengths.slice(0, 4),
     cautions: cautions.slice(0, 3),
+  };
+};
+
+export const computeResponseHistoryInsight = ({
+  conversations,
+  messages,
+}: {
+  conversations?: InquiryConversationSignal[] | null;
+  messages?: InquiryMessageSignal[] | null;
+}): ResponseHistoryInsight => {
+  const allConversations = conversations || [];
+  const allMessages = messages || [];
+
+  if (!allConversations.length || !allMessages.length) {
+    return {
+      medianHours: null,
+      sampledThreads: 0,
+      summary: "No platform reply history yet",
+    };
+  }
+
+  const messageMap = allMessages.reduce<Record<string, InquiryMessageSignal[]>>((acc, message) => {
+    acc[message.conversation_id] = [...(acc[message.conversation_id] || []), message];
+    return acc;
+  }, {});
+
+  const responseWindows = allConversations.flatMap((conversation) => {
+    const convoMessages = (messageMap[conversation.id] || [])
+      .slice()
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    const firstCustomerMessage = convoMessages.find((message) => message.sender_id === conversation.user_id);
+    if (!firstCustomerMessage) return [];
+
+    const firstProviderReply = convoMessages.find(
+      (message) =>
+        message.sender_id !== conversation.user_id &&
+        new Date(message.created_at).getTime() > new Date(firstCustomerMessage.created_at).getTime(),
+    );
+    if (!firstProviderReply) return [];
+
+    const hours =
+      (new Date(firstProviderReply.created_at).getTime() - new Date(firstCustomerMessage.created_at).getTime()) /
+      (1000 * 60 * 60);
+
+    return Number.isFinite(hours) && hours >= 0 ? [hours] : [];
+  });
+
+  if (!responseWindows.length) {
+    return {
+      medianHours: null,
+      sampledThreads: 0,
+      summary: "No observed vendor replies yet",
+    };
+  }
+
+  const sorted = responseWindows.slice().sort((a, b) => a - b);
+  const medianHours = sorted[Math.floor(sorted.length / 2)];
+  const summary =
+    medianHours <= 6
+      ? "Replies quickly in real inquiry threads"
+      : medianHours <= 12
+        ? "Usually replies within the same day"
+        : medianHours <= 24
+          ? "Replies within about a day"
+          : "Reply timing is slower than ideal";
+
+  return {
+    medianHours,
+    sampledThreads: responseWindows.length,
+    summary,
   };
 };
