@@ -82,7 +82,7 @@ const Journey = () => {
           <p className="text-muted-foreground">Move from basics to vendors to checklist actions, one clear step at a time.</p>
         </div>
 
-        <Card className="mb-6">
+        <Card className="mb-8 glass-card border-border/40 shadow-elevated bg-card/80 backdrop-blur-xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -100,7 +100,7 @@ const Journey = () => {
             const Icon = stage.icon;
             const locked = index > 0 && !stages[index - 1].done;
             return (
-              <Card key={stage.title} className={locked ? "opacity-60" : ""}>
+              <Card key={stage.title} className={locked ? "opacity-60 glass-card border-border/40" : "glass-card border-border/40 hover:border-primary/30 hover:shadow-elevated transition-all"}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
                     {stage.done ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Circle className="h-5 w-5 text-muted-foreground" />}

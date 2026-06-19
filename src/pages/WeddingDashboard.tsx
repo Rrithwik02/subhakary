@@ -267,10 +267,12 @@ const WeddingDashboard = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
       <SEOHead title={`${event.name} | Wedding Dashboard`} description="Manage vendors, budget and tasks for your wedding." />
       <Navbar />
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl rounded-full -translate-y-1/2 translate-x-1/3 opacity-50 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-3xl rounded-full translate-y-1/3 -translate-x-1/3 opacity-50 pointer-events-none" />
+      <main className="container mx-auto px-4 py-32 max-w-6xl relative z-10">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{event.name}</h1>
@@ -288,7 +290,10 @@ const WeddingDashboard = () => {
         </div>
 
         {/* Progress hero */}
-        <Card className="mb-8 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+        <Card className="mb-8 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 shadow-elevated relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+             <Heart className="w-48 h-48" />
+          </div>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -304,7 +309,7 @@ const WeddingDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="mb-8 border-primary/20">
+        <Card className="mb-8 border-primary/20 bg-background/50 backdrop-blur shadow-sm">
           <CardContent className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <p className="text-sm text-muted-foreground">What should I do next?</p>
@@ -318,7 +323,7 @@ const WeddingDashboard = () => {
 
         {/* Stats grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
+          <Card className="glass-card shadow-elevated border-border/40 hover:-translate-y-1 transition-transform duration-300">
             <CardHeader className="pb-2">
               <CardDescription>Vendors booked</CardDescription>
               <CardTitle className="text-2xl">{acceptedBookings.length}</CardTitle>
@@ -331,7 +336,7 @@ const WeddingDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card shadow-elevated border-border/40 hover:-translate-y-1 transition-transform duration-300">
             <CardHeader className="pb-2">
               <CardDescription>Budget</CardDescription>
               <CardTitle className="text-2xl flex items-center">
@@ -353,7 +358,7 @@ const WeddingDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card shadow-elevated border-border/40 hover:-translate-y-1 transition-transform duration-300">
             <CardHeader className="pb-2">
               <CardDescription>Tasks remaining</CardDescription>
               <CardTitle className="text-2xl">{tasks.length - completedTasks}</CardTitle>
@@ -368,7 +373,7 @@ const WeddingDashboard = () => {
 
         {/* Two columns: Tasks + Vendors */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
+          <Card className="glass-card shadow-elevated border-border/40 hover:-translate-y-1 transition-transform duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-primary" /> Your checklist</CardTitle>
               <CardDescription>Top tasks to focus on next</CardDescription>
@@ -429,7 +434,7 @@ const WeddingDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card shadow-elevated border-border/40 hover:-translate-y-1 transition-transform duration-300">
             <CardHeader>
               <CardTitle>Your vendors</CardTitle>
               <CardDescription>Bookings tied to this wedding</CardDescription>
@@ -469,7 +474,7 @@ const WeddingDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card shadow-elevated border-border/40 hover:-translate-y-1 transition-transform duration-300">
             <CardHeader>
               <CardTitle>Vendor status tracker</CardTitle>
               <CardDescription>Category-level planning status</CardDescription>
@@ -492,7 +497,7 @@ const WeddingDashboard = () => {
           </Card>
         </div>
 
-        <Card className="mt-6">
+        <Card className="mt-6 glass-card shadow-elevated border-border/40">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
