@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -39,9 +39,12 @@ import { cn } from "@/lib/utils";
 
 const ProviderProfile = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const weddingId = searchParams.get("wedding");
+  const weddingEventId = searchParams.get("event");
   
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -93,11 +96,13 @@ const ProviderProfile = () => {
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         provider_id: id,
+        wedding_id: weddingId,
+        wedding_event_id: weddingEventId,
         service_date: format(selectedDate, "yyyy-MM-dd"),
         service_time: selectedTime || null,
         message: message || null,
         status: "pending",
-      });
+      } as any);
 
       if (error) throw error;
 

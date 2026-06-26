@@ -28,6 +28,8 @@ interface InquiryChatWindowProps {
   providerId: string;
   providerName: string;
   providerAvatar?: string;
+  weddingId?: string;
+  weddingEventId?: string;
   onClose?: () => void;
   onBookingCreated?: () => void;
 }
@@ -37,6 +39,8 @@ export const InquiryChatWindow = ({
   providerId,
   providerName,
   providerAvatar,
+  weddingId,
+  weddingEventId,
   onClose,
   onBookingCreated,
 }: InquiryChatWindowProps) => {
@@ -92,10 +96,10 @@ export const InquiryChatWindow = ({
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (messagesContainerRef.current?.scrollTop !== 0 || isRefreshing) return;
-    
+
     const currentY = e.touches[0].clientY;
     const diff = currentY - touchStartY.current;
-    
+
     if (diff > 0 && touchStartY.current > 0) {
       setIsPulling(true);
       setPullDistance(Math.min(diff * 0.5, PULL_THRESHOLD * 1.5));
@@ -222,12 +226,14 @@ export const InquiryChatWindow = ({
         .insert({
           user_id: user.id,
           provider_id: providerId,
+          wedding_id: weddingId || null,
+          wedding_event_id: weddingEventId || null,
           service_date: format(selectedDate, "yyyy-MM-dd"),
           service_time: selectedTime || null,
           message: bookingMessage || null,
           special_requirements: specialRequirements || null,
           status: "pending",
-        })
+        } as any)
         .select()
         .single();
 
@@ -243,17 +249,18 @@ export const InquiryChatWindow = ({
         title: "Booking request sent!",
         description: "The provider will review your request and respond soon.",
       });
-      
+
       setBookingDialogOpen(false);
       setSelectedDate(undefined);
       setSelectedTime("");
       setBookingMessage("");
       setSpecialRequirements("");
       onBookingCreated?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       toast({
         title: "Booking failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -358,7 +365,7 @@ export const InquiryChatWindow = ({
         </div>
 
         {/* Messages with pull-to-refresh */}
-        <div 
+        <div
           ref={messagesContainerRef}
           className="flex-1 overflow-y-auto p-3 md:p-4 relative"
           onTouchStart={handleTouchStart}
@@ -369,9 +376,9 @@ export const InquiryChatWindow = ({
           <motion.div
             className="absolute top-0 left-0 right-0 flex justify-center items-center pointer-events-none z-10"
             initial={false}
-            animate={{ 
+            animate={{
               height: isPulling || isRefreshing ? Math.max(pullDistance, isRefreshing ? 40 : 0) : 0,
-              opacity: isPulling || isRefreshing ? 1 : 0 
+              opacity: isPulling || isRefreshing ? 1 : 0
             }}
           >
             <motion.div
@@ -550,8 +557,8 @@ export const InquiryChatWindow = ({
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setBookingDialogOpen(false)}
               className="w-full sm:w-auto h-11 md:h-10 touch-manipulation"
             >

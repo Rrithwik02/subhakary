@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard } from "lucide-react";
+import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationsCenter } from "@/components/NotificationsCenter";
 import { useAuth } from "@/hooks/useAuth";
@@ -119,6 +119,12 @@ export const Navbar = () => {
                   Profile
                 </Button>
               </Link>
+              <Link to="/wedding/new">
+                <Button variant="ghost" size="sm" className="font-medium text-primary">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Wedding OS
+                </Button>
+              </Link>
               {isApprovedProvider ? (
                 <Link to="/provider-dashboard">
                   <Button variant="ghost" size="sm" className="font-medium text-green-600 hover:text-green-700 hover:bg-green-50">
@@ -208,6 +214,12 @@ export const Navbar = () => {
                       <Button variant="ghost" size="sm" className="w-full justify-start">
                         <User className="w-4 h-4 mr-2" />
                         My Profile
+                      </Button>
+                    </Link>
+                    <Link to="/wedding/new" className="w-full" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full justify-start text-primary">
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Wedding OS
                       </Button>
                     </Link>
                     {isApprovedProvider ? (

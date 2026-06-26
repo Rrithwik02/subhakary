@@ -24,6 +24,9 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
+import WeddingOnboarding from "./pages/WeddingOnboarding";
+import WeddingDashboard from "./pages/WeddingDashboard";
+import WeddingEventWorkspace from "./pages/WeddingEventWorkspace";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +57,9 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/wedding/new" element={<WeddingOnboarding />} />
+            <Route path="/wedding/:weddingId" element={<WeddingDashboard />} />
+            <Route path="/wedding/:weddingId/events/:eventId" element={<WeddingEventWorkspace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
