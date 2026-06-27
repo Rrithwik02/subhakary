@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
@@ -9,63 +9,102 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle, ArrowRight, MapPin, Users, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useWeddingEvent } from "@/hooks/useWeddingEvent";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-type Task = { id: string; status: string };
-type Booking = { id: string; status: string };
 
 const Journey = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { event, loading: eventLoading } = useWeddingEvent();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth?redirect=/journey");
   }, [authLoading, user, navigate]);
 
-  useEffect(() => {
-    if (!event || !user) return;
-    (async () => {
-      const [{ data: taskData }, { data: bookingData }] = await Promise.all([
-        supabase.from("wedding_tasks").select("id,status").eq("event_id", event.id),
-        supabase.from("bookings").select("id,status").eq("user_id", user.id).eq("event_id", event.id),
-      ]);
-      setTasks((taskData as Task[]) ?? []);
-      setBookings((bookingData as Booking[]) ?? []);
-    })();
-  }, [event, user]);
+  // Query User's Active Wedding from unified schema
+  const { data: wedding, isLoading: weddingLoading } = useQuery({
+    queryKey: ["journey-active-wedding", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("weddings" as any)
+        .select("*")
+        .eq("owner_user_id", user!.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!user,
+  });
+
+  // Query tasks for this wedding
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["journey-tasks", wedding?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wedding_tasks" as any)
+        .select("id, status")
+        .eq("wedding_id", wedding.id);
+
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!wedding,
+  });
+
+  // Query bookings for this wedding
+  const { data: bookings = [] } = useQuery({
+    queryKey: ["journey-bookings", wedding?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, status")
+        .eq("wedding_id", wedding.id);
+
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!wedding,
+  });
 
   const stages = useMemo(() => {
-    const hasBasics = !!event;
+    const hasBasics = !!wedding;
     const hasVenue = bookings.some((booking) => booking.status === "accepted" || booking.status === "completed");
     const hasVendors = bookings.length >= 2 || bookings.some((booking) => booking.status === "pending");
-    const hasTasks = tasks.some((task) => task.status === "completed");
+    const hasTasks = tasks.some((task) => task.status === "done" || task.status === "completed");
+    
     return [
-      { title: "Wedding basics", description: "Date, city, budget, guests, and style", done: hasBasics, href: "/plan-wedding", icon: Sparkles },
+      { title: "Wedding basics", description: "Date, city, budget, guests, and style", done: hasBasics, href: "/wedding/new", icon: Sparkles },
       { title: "Venue and location", description: "Shortlist or book your venue", done: hasVenue, href: "/providers?category=function-halls", icon: MapPin },
       { title: "Vendor team", description: "Book priority vendors and compare options", done: hasVendors, href: "/providers", icon: Users },
-      { title: "Tasks and reminders", description: "Work through your planning checklist", done: hasTasks, href: "/wedding-dashboard", icon: CheckCircle2 },
+      { title: "Tasks and reminders", description: "Work through your planning checklist", done: hasTasks, href: wedding ? `/wedding/${wedding.id}` : "/wedding/new", icon: CheckCircle2 },
     ];
-  }, [bookings, event, tasks]);
+  }, [bookings, wedding, tasks]);
 
   const completed = stages.filter((stage) => stage.done).length;
   const progress = Math.round((completed / stages.length) * 100);
 
-  if (authLoading || eventLoading) {
-    return <div className="min-h-screen bg-background"><Navbar /><main className="container py-16 text-center text-muted-foreground">Loading...</main></div>;
+  if (authLoading || weddingLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container py-16 text-center text-muted-foreground">Loading...</main>
+      </div>
+    );
   }
 
-  if (!event) {
+  if (!wedding) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="container max-w-2xl mx-auto px-4 py-16 text-center">
           <h1 className="text-3xl font-bold mb-3">Start your guided journey</h1>
           <p className="text-muted-foreground mb-6">Create a wedding plan first so we can unlock your planning stages.</p>
-          <Button asChild><Link to="/plan-wedding">Plan Wedding <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+          <Button asChild>
+            <Link to="/wedding/new">
+              Plan Wedding <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </main>
         <Footer />
       </div>

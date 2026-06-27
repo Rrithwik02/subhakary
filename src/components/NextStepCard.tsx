@@ -1,41 +1,73 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { useWeddingEvent } from "@/hooks/useWeddingEvent";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 type Task = { title: string; status: string; due_date: string | null };
 
 export const NextStepCard = ({ className = "" }: { className?: string }) => {
   const { user } = useAuth();
-  const { event } = useWeddingEvent();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [bookingCount, setBookingCount] = useState(0);
 
-  useEffect(() => {
-    if (!user || !event) return;
-    (async () => {
-      const [{ data: taskData }, { count }] = await Promise.all([
-        supabase.from("wedding_tasks").select("title,status,due_date").eq("event_id", event.id).order("due_date"),
-        supabase.from("bookings").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("event_id", event.id),
-      ]);
-      setTasks((taskData as Task[]) ?? []);
-      setBookingCount(count ?? 0);
-    })();
-  }, [event, user]);
+  // Query User's Active Wedding from unified schema
+  const { data: wedding } = useQuery({
+    queryKey: ["next-step-active-wedding", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("weddings" as any)
+        .select("id")
+        .eq("owner_user_id", user!.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!user,
+  });
+
+  // Query tasks for this wedding
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["next-step-tasks", wedding?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wedding_tasks" as any)
+        .select("title, status, due_date")
+        .eq("wedding_id", wedding.id)
+        .order("due_date", { ascending: true, nullsFirst: false });
+
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!wedding,
+  });
+
+  // Query bookings count for this wedding
+  const { data: bookingCount = 0 } = useQuery({
+    queryKey: ["next-step-booking-count", wedding?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("wedding_id", wedding.id);
+
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!wedding,
+  });
 
   if (!user) return null;
 
   const next = (() => {
-    if (!event) return { label: "Create your wedding plan", href: "/plan-wedding" };
+    if (!wedding) return { label: "Create your wedding plan", href: "/wedding/new" };
     if (bookingCount === 0) return { label: "Book your first vendor", href: "/providers" };
-    const overdue = tasks.find((task) => task.status !== "completed" && task.due_date && new Date(task.due_date) < new Date());
-    if (overdue) return { label: `Finish overdue task: ${overdue.title}`, href: "/wedding-dashboard" };
-    const task = tasks.find((item) => item.status !== "completed");
-    if (task) return { label: task.title, href: "/wedding-dashboard" };
+    const overdue = tasks.find((task) => task.status !== "done" && task.status !== "completed" && task.due_date && new Date(task.due_date) < new Date());
+    if (overdue) return { label: `Finish overdue task: ${overdue.title}`, href: `/wedding/${wedding.id}` };
+    const task = tasks.find((item) => item.status !== "done" && item.status !== "completed");
+    if (task) return { label: task.title, href: `/wedding/${wedding.id}` };
     return { label: "Review your guided journey", href: "/journey" };
   })();
 

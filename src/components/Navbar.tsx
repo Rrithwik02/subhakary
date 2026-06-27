@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Sparkles } from "lucide-react";
-import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Bell } from "lucide-react";
+import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Sparkles, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -10,15 +9,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo-brown.png";
+
 const navLinks = [{
   name: "Home",
   href: "/"
 }, {
-  name: "Plan Wedding",
+  name: "Wedding OS",
   href: "/wedding-dashboard"
-}, {
-  name: "Journey",
-  href: "/journey"
 }, {
   name: "Find Providers",
   href: "/providers"
@@ -159,7 +156,10 @@ export const Navbar = () => {
     opacity: 1
   }} transition={{
     duration: 0.6
-  }} className="fixed top-4 left-4 right-4 z-50 flex justify-center">
+  }} 
+  className="fixed left-4 right-4 z-50 flex justify-center"
+  style={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
+  >
       <div className="glass-nav rounded-full px-4 lg:px-6 py-3 flex items-center justify-between gap-4 max-w-7xl w-full">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
@@ -216,12 +216,7 @@ export const Navbar = () => {
                   <span className="hidden xl:inline">Profile</span>
                 </Button>
               </Link>
-              <Link to="/wedding/new">
-                <Button variant="ghost" size="sm" className="font-medium text-primary">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Wedding OS
-                </Button>
-              </Link>
+
               {isApprovedProvider ? (
                 <Link to="/provider-dashboard">
                   <Button variant="ghost" size="sm" className="font-medium text-green-600 hover:text-green-700 hover:bg-green-50">
@@ -330,12 +325,7 @@ export const Navbar = () => {
                         My Profile
                       </Button>
                     </Link>
-                    <Link to="/wedding/new" className="w-full" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" size="sm" className="w-full justify-start text-primary">
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Wedding OS
-                      </Button>
-                    </Link>
+
                     {isApprovedProvider ? (
                       <Link to="/provider-dashboard" className="w-full" onClick={() => setIsOpen(false)}>
                         <Button variant="ghost" size="sm" className="w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50">
