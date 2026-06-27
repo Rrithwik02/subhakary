@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { cn } from "@/lib/utils";
+import { trackMessageSent, trackBookingInquiry } from "@/lib/analytics";
 
 interface InquiryChatWindowProps {
   conversationId: string;
@@ -56,6 +57,8 @@ export const InquiryChatWindow = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const MAX_MESSAGE_LENGTH = 5000;
 
   // Presence tracking for typing indicators and online status
   const { otherUserPresence, handleTypingStart } = useChatPresence({
@@ -170,15 +173,27 @@ export const InquiryChatWindow = ({
 
   const sendMessage = useMutation({
     mutationFn: async (text: string) => {
-      if (!user || !text.trim()) return;
+      const trimmedMessage = text.trim();
+      if (!user || !trimmedMessage) return;
+      
+      // Validate message length (server-side constraint is 5000 chars)
+      if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+        throw new Error(`Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`);
+      }
 
       const { error } = await supabase.from("inquiry_messages").insert({
         conversation_id: conversationId,
         sender_id: user.id,
-        message: text.trim(),
+        message: trimmedMessage,
       });
 
       if (error) throw error;
+      
+      // Track message sent
+      trackMessageSent({
+        providerId,
+        conversationId,
+      });
     },
     onSuccess: () => {
       setMessage("");
@@ -473,12 +488,13 @@ export const InquiryChatWindow = ({
               ref={inputRef}
               value={message}
               onChange={(e) => {
-                setMessage(e.target.value);
+                setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH));
                 handleTypingStart();
               }}
               onKeyDown={handleKeyPress}
               placeholder="Type a message..."
               className="flex-1 h-11 md:h-10 text-base md:text-sm touch-manipulation"
+              maxLength={MAX_MESSAGE_LENGTH}
               disabled={sendMessage.isPending}
               autoComplete="off"
               autoCorrect="on"

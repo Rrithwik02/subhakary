@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Camera, User, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
+import { Camera, User, Mail, Phone, MapPin, Save, Loader2, Trash2, AlertTriangle, LogOut, Briefcase, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TwoFactorSettings } from "@/components/TwoFactorSettings";
+import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileProfile from "@/components/mobile/MobileProfile";
 import { z } from "zod";
 
 const profileSchema = z.object({
@@ -24,7 +27,13 @@ const profileSchema = z.object({
 });
 
 const Profile = () => {
-  const { user, loading: authLoading } = useAuth();
+  const isMobile = useMobileLayout();
+  if (isMobile) return <MobileProfile />;
+  return <DesktopProfile />;
+};
+
+const DesktopProfile = () => {
+  const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -32,6 +41,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -52,6 +62,21 @@ const Profile = () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Check if user is also a provider
+  const { data: providerProfile } = useQuery({
+    queryKey: ["my-provider", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_providers")
+        .select("id, business_name, status")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
@@ -189,6 +214,43 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAccount = async (reason: string) => {
+    if (!user || !profile) return;
+
+    try {
+      // Create deletion request
+      await supabase.from("account_deletion_requests").insert({
+        user_id: profile.id,
+        reason: reason || null,
+        status: "pending",
+      });
+
+      // If user is a provider, delete provider profile first
+      if (providerProfile) {
+        await supabase
+          .from("service_providers")
+          .delete()
+          .eq("id", providerProfile.id);
+      }
+
+      // Sign out
+      await signOut();
+      
+      toast({
+        title: "Account deletion requested",
+        description: "Your account deletion request has been submitted. We'll process it within 7 days.",
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to process deletion request",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -201,32 +263,48 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <section className="pt-32 pb-12 px-4">
+      <section className="pt-24 md:pt-32 pb-12 px-3 md:px-4">
         <div className="container max-w-2xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
-              My Profile
-            </h1>
-            <p className="text-muted-foreground mb-8">
-              Manage your personal information and preferences
-            </p>
+            <div className="flex items-center justify-between mb-6 md:mb-8">
+              <div>
+                <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
+                  My Profile
+                </h1>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  Manage your personal information and preferences
+                </p>
+              </div>
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  await signOut();
+                  navigate("/");
+                }}
+                className="hidden md:flex"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="font-display flex items-center justify-between">
-                  Personal Information
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="font-display text-base md:text-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <span>Personal Information</span>
                   {!isEditing ? (
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setIsEditing(true)}>
                       Edit Profile
                     </Button>
                   ) : (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto">
                       <Button
                         variant="outline"
                         size="sm"
+                        className="flex-1 sm:flex-none"
                         onClick={() => {
                           setIsEditing(false);
                           if (profile) {
@@ -244,7 +322,7 @@ const Profile = () => {
                       </Button>
                       <Button
                         size="sm"
-                        className="gradient-gold text-primary-foreground"
+                        className="flex-1 sm:flex-none gradient-gold text-primary-foreground"
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -259,24 +337,24 @@ const Profile = () => {
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 md:space-y-6 p-4 md:p-6 pt-0 md:pt-0">
                 {/* Avatar */}
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24">
+                <div className="flex items-center gap-4 md:gap-6">
+                  <div className="relative flex-shrink-0">
+                    <Avatar className="h-16 w-16 md:h-24 md:w-24">
                       <AvatarImage src={profile?.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-2xl">
-                        {formData.fullName?.charAt(0)?.toUpperCase() || <User className="h-8 w-8" />}
+                      <AvatarFallback className="bg-primary/10 text-xl md:text-2xl">
+                        {formData.fullName?.charAt(0)?.toUpperCase() || <User className="h-6 w-6 md:h-8 md:w-8" />}
                       </AvatarFallback>
                     </Avatar>
                     <label
                       htmlFor="avatar-upload"
-                      className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+                      className="absolute bottom-0 right-0 h-6 w-6 md:h-8 md:w-8 rounded-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors touch-manipulation"
                     >
                       {isUploading ? (
-                        <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
+                        <Loader2 className="h-3 w-3 md:h-4 md:w-4 text-primary-foreground animate-spin" />
                       ) : (
-                        <Camera className="h-4 w-4 text-primary-foreground" />
+                        <Camera className="h-3 w-3 md:h-4 md:w-4 text-primary-foreground" />
                       )}
                     </label>
                     <input
@@ -288,9 +366,9 @@ const Profile = () => {
                       disabled={isUploading}
                     />
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{formData.fullName || "Your Name"}</h3>
-                    <p className="text-sm text-muted-foreground">{formData.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-sm md:text-base truncate">{formData.fullName || "Your Name"}</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground truncate">{formData.email}</p>
                   </div>
                 </div>
 
@@ -373,9 +451,84 @@ const Profile = () => {
               twoFactorEnabled={profile?.two_factor_enabled || false}
               onUpdate={() => refetch()}
             />
+
+            {/* Become a Provider CTA - shown when user is not a provider */}
+            {!providerProfile && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Briefcase className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold">Become a Service Provider</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Offer your services on our platform and grow your business
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => navigate("/become-provider")}
+                      className="flex-shrink-0"
+                    >
+                      Apply Now
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Sign Out - Mobile */}
+            <Card className="md:hidden">
+              <CardContent className="p-4">
+                <Button 
+                  variant="outline"
+                  onClick={async () => {
+                    await signOut();
+                    navigate("/");
+                  }}
+                  className="w-full"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Danger Zone */}
+            <Card className="border-destructive/50">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="font-display text-base md:text-lg flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+                <p className="text-sm text-muted-foreground mb-4">
+                  {providerProfile 
+                    ? "Deleting your account will also remove your service provider profile and all associated data." 
+                    : "Once you delete your account, there is no going back. Please be certain."}
+                </p>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="w-full sm:w-auto"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Account
+                </Button>
+              </CardContent>
+            </Card>
           </motion.div>
         </div>
       </section>
+
+      <DeleteAccountDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteAccount}
+        willDeleteProvider={!!providerProfile}
+      />
 
       <Footer />
     </div>

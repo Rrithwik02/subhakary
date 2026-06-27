@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, Send, X, Bot, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: "user" | "assistant";
@@ -17,19 +18,18 @@ export const AIChatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Namaste! 🙏 I'm your Subhakary AI assistant. I can help you find:\n\n• Poojari/Priest services\n• Photography & Videography\n• Bridal Makeup & Mehandi\n• Catering & Decoration\n• Function Halls & Event Managers\n\nWhat service are you looking for today?"
-    }
+      content:
+        "Namaste! 🙏 I'm your Subhakary AI assistant. I can help you find:\n\n• Poojari/Priest services\n• Photography & Videography\n• Bridal Makeup & Mehandi\n• Catering & Decoration\n• Function Halls & Event Managers\n\nWhat service are you looking for today?",
+    },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isOpen]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -48,11 +48,22 @@ export const AIChatbot = () => {
     let assistantContent = "";
 
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: "Please sign in to use the AI assistant. You can sign in from the top right corner of the page."
+        }]);
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ 
           messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })),
@@ -117,21 +128,34 @@ export const AIChatbot = () => {
 
   return (
     <>
-      {/* Floating Chat Button */}
+      {/* Floating Chat Button - positioned above mobile nav */}
       <AnimatePresence>
         {!isOpen && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-50"
+            className="fixed bottom-6 right-6 z-40 md:z-50 md:bottom-6"
+            style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
           >
-            <Button
-              onClick={() => setIsOpen(true)}
-              className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
-            >
-              <MessageCircle className="h-6 w-6" />
-            </Button>
+            {/* On mobile, position above the floating nav */}
+            <div className="md:hidden absolute -bottom-2 right-0" style={{ bottom: '5rem' }}>
+              <Button
+                onClick={() => setIsOpen(true)}
+                className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+              >
+                <MessageCircle className="h-6 w-6" />
+              </Button>
+            </div>
+            {/* Desktop position */}
+            <div className="hidden md:block">
+              <Button
+                onClick={() => setIsOpen(true)}
+                className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+              >
+                <MessageCircle className="h-6 w-6" />
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -143,7 +167,7 @@ export const AIChatbot = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-6rem)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] md:w-[380px] max-w-[380px] h-[calc(100vh-8rem)] md:h-[600px] max-h-[calc(100vh-10rem)] md:max-h-[calc(100vh-6rem)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between">
@@ -167,7 +191,7 @@ export const AIChatbot = () => {
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+            <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
                 {messages.map((message, index) => (
                   <motion.div
@@ -211,6 +235,7 @@ export const AIChatbot = () => {
                     </div>
                   </div>
                 )}
+                <div ref={bottomRef} />
               </div>
             </ScrollArea>
 

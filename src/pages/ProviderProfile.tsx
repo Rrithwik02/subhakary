@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, isSameDay, parseISO, differenceInDays } from "date-fns";
+import { DateRange } from "react-day-picker";
 import {
   MapPin,
   Star,
@@ -12,15 +14,23 @@ import {
   Calendar,
   CheckCircle2,
   MessageCircle,
+  Share2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ReviewsList } from "@/components/ReviewsList";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { ProviderBundles } from "@/components/ProviderBundles";
+import { PortfolioGallery } from "@/components/PortfolioGallery";
+import { PricingTiers } from "@/components/PricingTiers";
+import { DateRangePicker } from "@/components/DateRangePicker";
+import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
+import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,12 +45,25 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
+import { trackProviderView, trackProviderContact, trackBookingRequest } from "@/lib/analytics";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileProviderProfile from "@/components/mobile/MobileProviderProfile";
+import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const ProviderProfile = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  const isMobile = useMobileLayout();
+  if (isMobile) return <MobileProviderProfile />;
+  return <DesktopProviderProfile />;
+};
+
+const DesktopProviderProfile = () => {
+  const { id: paramValue } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const weddingId = searchParams.get("wedding");
@@ -48,28 +71,181 @@ const ProviderProfile = () => {
   
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [dateRange, setDateRange] = useState<DateRange>();
+  const [isMultiDay, setIsMultiDay] = useState(false);
   const [selectedTime, setSelectedTime] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  // Fetch provider details
+  const isUUID = paramValue ? UUID_REGEX.test(paramValue) : false;
+
+  const handleShare = async () => {
+    const slug = provider?.url_slug || paramValue;
+    const shareUrl = `${window.location.origin}/provider/${slug}`;
+    
+    // Try native share first (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: provider?.business_name || "Service Provider",
+          text: `Check out ${provider?.business_name} on our platform!`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // User cancelled or share failed, fall back to copy
+      }
+    }
+    
+    // Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast({
+        title: "Link copied!",
+        description: "Share this link with anyone to show this provider.",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the URL manually from the address bar.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Initialize date from URL params
+  useEffect(() => {
+    const dateParam = searchParams.get("date");
+    if (dateParam) {
+      try {
+        const parsedDate = parseISO(dateParam);
+        if (!isNaN(parsedDate.getTime()) && parsedDate >= new Date()) {
+          setSelectedDate(parsedDate);
+        }
+      } catch (e) {
+        // Invalid date format, ignore
+      }
+    }
+  }, [searchParams]);
+
+  // Fetch provider details using public_service_providers view for anonymous access
   const { data: provider, isLoading } = useQuery({
-    queryKey: ["provider", id],
+    queryKey: ["provider", paramValue],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_providers")
+      let query = supabase
+        .from("public_service_providers")
         .select(`
-          *,
+          id,
+          business_name,
+          city,
+          secondary_city,
+          service_cities,
+          description,
+          rating,
+          total_reviews,
+          is_verified,
+          is_premium,
+          experience_years,
+          specializations,
+          languages,
+          portfolio_images,
+          portfolio_tags,
+          real_wedding_stories,
+          portfolio_link,
+          category_id,
+          subcategory,
+          service_type,
+          pricing_info,
+          base_price,
+          requires_advance_payment,
+          advance_payment_percentage,
+          travel_charges_applicable,
+          advance_booking_days,
+          logo_url,
+          facebook_url,
+          instagram_url,
+          youtube_url,
+          website_url,
+          url_slug,
           category:service_categories(name, icon, description)
         `)
-        .eq("id", id)
-        .eq("status", "approved")
-        .maybeSingle();
+        .eq("status", "approved");
+
+      if (isUUID) {
+        query = query.eq("id", paramValue);
+      } else {
+        query = query.eq("url_slug", paramValue);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (error) throw error;
+      
+      // Track provider view when data is loaded
+      if (data) {
+        trackProviderView({
+          providerId: data.id,
+          providerName: data.business_name,
+          category: data.category?.name,
+          city: data.city || undefined,
+        });
+
+        // Redirect UUID URLs to slug URLs for SEO
+        if (isUUID && data.url_slug) {
+          navigate(`/provider/${data.url_slug}`, { replace: true });
+        }
+      }
+      
       return data;
     },
-    enabled: !!id,
+    enabled: !!paramValue,
   });
+
+  const providerId = provider?.id;
+
+  // Fetch verified additional services for this provider
+  const { data: verifiedServices = [] } = useQuery({
+    queryKey: ["provider-verified-services", providerId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("additional_services")
+        .select(`
+          id,
+          service_type,
+          category:service_categories(name, icon)
+        `)
+        .eq("provider_id", providerId!)
+        .eq("verification_status", "verified");
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!providerId,
+  });
+
+  // Fetch blocked dates for this provider
+  const { data: blockedDates = [] } = useQuery({
+    queryKey: ["provider-blocked-dates-public", providerId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_provider_availability")
+        .select("specific_date")
+        .eq("provider_id", providerId!)
+        .eq("is_blocked", true)
+        .not("specific_date", "is", null);
+
+      if (error) throw error;
+      return (data || []).map((b) => new Date(b.specific_date!));
+    },
+    enabled: !!providerId,
+  });
+
+  // Check if a date is blocked
+  const isDateBlocked = (date: Date) => {
+    return blockedDates.some((blockedDate) => isSameDay(blockedDate, date));
+  };
 
   const handleBookingSubmit = async () => {
     if (!user) {
@@ -82,23 +258,46 @@ const ProviderProfile = () => {
       return;
     }
 
-    if (!selectedDate) {
+    const bookingDate = isMultiDay ? dateRange?.from : selectedDate;
+    const endDate = isMultiDay ? dateRange?.to : selectedDate;
+
+    if (!bookingDate) {
       toast({
         title: "Select a date",
-        description: "Please select a date for your booking",
+        description: isMultiDay ? "Please select a date range for your booking" : "Please select a date for your booking",
         variant: "destructive",
       });
       return;
     }
 
+    if (isMultiDay && !endDate) {
+      toast({
+        title: "Select end date",
+        description: "Please select both start and end dates for multi-day booking",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const totalDays = isMultiDay && endDate 
+      ? differenceInDays(endDate, bookingDate) + 1 
+      : 1;
+
     setIsSubmitting(true);
     try {
+      const eventId = await getPrimaryWeddingEventId(user.id);
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         provider_id: id,
         wedding_id: weddingId,
         wedding_event_id: weddingEventId,
         service_date: format(selectedDate, "yyyy-MM-dd"),
+        provider_id: providerId,
+        event_id: eventId,
+        service_date: format(bookingDate, "yyyy-MM-dd"),
+        start_date: format(bookingDate, "yyyy-MM-dd"),
+        end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
+        total_days: totalDays,
         service_time: selectedTime || null,
         message: message || null,
         status: "pending",
@@ -106,12 +305,22 @@ const ProviderProfile = () => {
 
       if (error) throw error;
 
+      // Track successful booking request
+      trackBookingRequest({
+        providerId: providerId!,
+        providerName: provider?.business_name || '',
+        totalDays,
+        serviceDate: format(bookingDate, "yyyy-MM-dd"),
+      });
+
       toast({
         title: "Booking request sent!",
-        description: "The provider will review your request and respond soon.",
+        description: `Your ${totalDays > 1 ? `${totalDays}-day` : ''} booking request has been sent.`,
       });
       setBookingDialogOpen(false);
       setSelectedDate(undefined);
+      setDateRange(undefined);
+      setIsMultiDay(false);
       setSelectedTime("");
       setMessage("");
     } catch (error: any) {
@@ -166,16 +375,17 @@ const ProviderProfile = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <section className="pt-24 md:pt-32 pb-12 px-3 md:px-4">
+      <section className="pt-20 md:pt-32 pb-12 px-3 md:px-4">
         <div className="container max-w-4xl mx-auto">
           {/* Back button */}
           <Button
             variant="ghost"
-            className="mb-4 md:mb-6 h-9 md:h-10 touch-manipulation"
+            size="sm"
+            className="mb-3 md:mb-6 h-8 md:h-10 touch-manipulation -ml-2"
             onClick={() => navigate("/providers")}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Providers
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            <span className="text-sm">Back</span>
           </Button>
 
           <motion.div
@@ -184,79 +394,196 @@ const ProviderProfile = () => {
           >
             {/* Header */}
             <Card className="mb-4 md:mb-6">
-              <CardContent className="p-4 md:p-8">
-                <div className="flex flex-col gap-4 md:gap-6">
-                  {/* Mobile: Horizontal layout */}
-                  <div className="flex items-start gap-3 md:gap-6">
+              <CardContent className="p-3 md:p-8">
+                {/* Desktop Layout */}
+                <div className="hidden md:flex flex-col gap-6">
+                  <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
-                      <div className="h-16 w-16 md:h-24 md:w-24 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center text-3xl md:text-5xl">
-                        {provider.category?.icon || "🙏"}
-                      </div>
+                      {provider.logo_url ? (
+                        <img
+                          src={provider.logo_url}
+                          alt={provider.business_name}
+                          className="h-24 w-24 rounded-2xl object-cover"
+                        />
+                      ) : (
+                        <div className="h-24 w-24 rounded-2xl bg-primary/10 flex items-center justify-center text-5xl">
+                          {provider.category?.icon || "🙏"}
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-2 md:mb-3">
-                        <div className="min-w-0">
-                          <h1 className="font-display text-xl md:text-3xl font-bold text-foreground truncate">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="min-w-0 flex-1">
+                          <h1 className="font-display text-3xl font-bold text-foreground leading-tight">
                             {provider.business_name}
                           </h1>
-                          {provider.category?.name && (
-                            <Badge variant="secondary" className="mt-1 md:mt-2 text-xs">
-                              {provider.category.name}
-                            </Badge>
-                          )}
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
                           {provider.is_verified && (
-                            <span className="verified-badge text-xs">
+                            <span className="verified-badge text-xs px-2 py-1">
                               <CheckCircle2 className="h-3 w-3" />
-                              <span className="hidden sm:inline">Verified</span>
                             </span>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9"
+                            onClick={handleShare}
+                            title="Share profile"
+                          >
+                            {copied ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Share2 className="h-4 w-4" />
+                            )}
+                          </Button>
                           <FavoriteButton providerId={provider.id} variant="button" />
                         </div>
                       </div>
                       
-                      {/* Rating - always visible */}
-                      <div className="flex items-center gap-2 mb-2 md:mb-4">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        {provider.category?.name && (
+                          <Badge variant="secondary" className="text-xs">
+                            {provider.category.name}
+                          </Badge>
+                        )}
+                        {verifiedServices.map((service: any) => (
+                          <Badge key={service.id} variant="outline" className="text-xs border-green-500/50 text-green-600">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            {service.category?.name || service.service_type}
+                          </Badge>
+                        ))}
+                        <AvailabilityStatusBadge status={(provider as any).availability_status as 'online' | 'offline' | 'busy' || 'offline'} />
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 md:h-5 md:w-5 fill-primary text-primary" />
-                          <span className="font-bold text-base md:text-lg">
+                          <Star className="h-5 w-5 fill-primary text-primary" />
+                          <span className="font-bold text-lg">
                             {provider.rating?.toFixed(1) || "New"}
                           </span>
-                          <span className="text-xs md:text-sm text-muted-foreground">
+                          <span className="text-sm text-muted-foreground">
                             ({provider.total_reviews || 0})
                           </span>
                         </div>
-                        {provider.pricing_info && (
+                        {provider.base_price && (
                           <Badge variant="outline" className="text-secondary font-medium text-xs">
-                            {provider.pricing_info}
+                            From ₹{provider.base_price.toLocaleString('en-IN')}
                           </Badge>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Details - collapsible on mobile */}
-                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground">
+                  {/* Details row - Desktop */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground border-t border-border/50 pt-4">
                     {provider.city && (
                       <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <MapPin className="h-4 w-4" />
                         {provider.city}
-                        {provider.address && <span className="hidden md:inline">, {provider.address}</span>}
                       </span>
                     )}
                     {provider.experience_years ? (
                       <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <Clock className="h-4 w-4" />
                         {provider.experience_years}+ yrs
                       </span>
                     ) : null}
                     {provider.languages && provider.languages.length > 0 && (
                       <span className="flex items-center gap-1">
-                        <Languages className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                        <span className="truncate max-w-[100px] md:max-w-none">
-                          {provider.languages.join(", ")}
+                        <Languages className="h-4 w-4" />
+                        {provider.languages.join(", ")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile Layout - Restructured */}
+                <div className="flex flex-col gap-3 md:hidden">
+                  {/* Row 1: Avatar + Full Name */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {provider.logo_url ? (
+                        <img
+                          src={provider.logo_url}
+                          alt={provider.business_name}
+                          className="h-16 w-16 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center text-3xl">
+                          {provider.category?.icon || "🙏"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <h1 className="font-display text-lg font-bold text-foreground leading-tight">
+                          {provider.business_name}
+                        </h1>
+                        {provider.is_verified && (
+                          <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        )}
+                      </div>
+                      {/* Profession/Category + Status */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {provider.category?.name && (
+                          <span className="text-xs text-muted-foreground">
+                            {provider.category.name}
+                            {provider.subcategory && ` • ${provider.subcategory}`}
+                          </span>
+                        )}
+                        {verifiedServices.length > 0 && (
+                          <span className="text-xs text-green-600">
+                            +{verifiedServices.length} more
+                          </span>
+                        )}
+                        <AvailabilityStatusBadge 
+                          status={(provider as any).availability_status as 'online' | 'offline' | 'busy' || 'offline'} 
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Save button, Rating, Price */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FavoriteButton providerId={provider.id} variant="button" />
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-primary text-primary" />
+                        <span className="font-bold text-sm">
+                          {provider.rating?.toFixed(1) || "New"}
                         </span>
+                        <span className="text-xs text-muted-foreground">
+                          ({provider.total_reviews || 0})
+                        </span>
+                      </div>
+                    </div>
+                    {provider.base_price && (
+                      <Badge variant="outline" className="text-secondary font-medium text-xs">
+                        From ₹{provider.base_price.toLocaleString('en-IN')}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Row 3: Experience & Languages */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground border-t border-border/50 pt-2">
+                    {provider.city && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {provider.city}
+                      </span>
+                    )}
+                    {provider.experience_years ? (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {provider.experience_years}+ yrs experience
+                      </span>
+                    ) : null}
+                    {provider.languages && provider.languages.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Languages className="h-3 w-3" />
+                        {provider.languages.join(", ")}
                       </span>
                     )}
                   </div>
@@ -265,36 +592,56 @@ const ProviderProfile = () => {
             </Card>
 
             {/* Mobile action buttons - fixed at bottom */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-3 z-40 safe-area-bottom">
-              <div className="flex gap-2">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t p-2.5 z-40 safe-area-bottom">
+              <div className="flex gap-2 max-w-md mx-auto">
                 <Button
-                  className="flex-1 h-11 touch-manipulation active:scale-[0.98] transition-transform"
                   variant="outline"
-                  onClick={() => navigate(`/inquiry/${provider.id}`)}
+                  size="icon"
+                  className="h-10 w-10 flex-shrink-0 touch-manipulation active:scale-[0.98] transition-transform"
+                  onClick={handleShare}
+                  title="Share profile"
                 >
-                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Share2 className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  className="flex-1 h-10 touch-manipulation active:scale-[0.98] transition-transform text-sm"
+                  variant="outline"
+                  onClick={() => {
+                    trackProviderContact({
+                      providerId: provider.id,
+                      providerName: provider.business_name,
+                      contactMethod: 'chat',
+                    });
+                    navigate(`/inquiry/${provider.id}`);
+                  }}
+                >
+                  <MessageCircle className="mr-1.5 h-4 w-4" />
                   Chat
                 </Button>
                 <Button
-                  className="flex-1 h-11 gradient-gold text-primary-foreground touch-manipulation active:scale-[0.98] transition-transform"
+                  className="flex-1 h-10 gradient-gold text-primary-foreground touch-manipulation active:scale-[0.98] transition-transform text-sm"
                   onClick={() => setBookingDialogOpen(true)}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <Calendar className="mr-1.5 h-4 w-4" />
                   Book Now
                 </Button>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4 md:gap-6 pb-20 md:pb-0">
+            <div className="grid md:grid-cols-3 gap-3 md:gap-6 pb-16 md:pb-0">
               {/* Main content */}
-              <div className="md:col-span-2 space-y-4 md:space-y-6">
+              <div className="md:col-span-2 space-y-3 md:space-y-6">
                 {/* About */}
                 <Card>
-                  <CardHeader className="pb-2 md:pb-4">
-                    <CardTitle className="font-display text-lg md:text-xl">About</CardTitle>
+                  <CardHeader className="pb-2 p-3 md:p-6 md:pb-4">
+                    <CardTitle className="font-display text-base md:text-xl">About</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm md:text-base text-muted-foreground whitespace-pre-line">
+                  <CardContent className="pt-0 px-3 pb-3 md:px-6 md:pb-6">
+                    <p className="text-xs md:text-base text-muted-foreground whitespace-pre-line leading-relaxed">
                       {provider.description || "No description provided."}
                     </p>
                   </CardContent>
@@ -303,19 +650,44 @@ const ProviderProfile = () => {
                 {/* Service details */}
                 {provider.category?.description && (
                   <Card>
-                    <CardHeader className="pb-2 md:pb-4">
-                      <CardTitle className="font-display text-lg md:text-xl">Service Category</CardTitle>
+                    <CardHeader className="pb-2 p-3 md:p-6 md:pb-4">
+                      <CardTitle className="font-display text-base md:text-xl">Service Category</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm md:text-base text-muted-foreground">
+                    <CardContent className="pt-0 px-3 pb-3 md:px-6 md:pb-6">
+                      <p className="text-xs md:text-base text-muted-foreground">
                         {provider.category.description}
                       </p>
                     </CardContent>
                   </Card>
                 )}
 
+                {/* Service Packages */}
+                <ProviderBundles 
+                  providerId={provider.id} 
+                  providerName={provider.business_name}
+                />
+
+                {/* Pricing Tiers */}
+                <PricingTiers providerId={provider.id} />
+
+                {/* Portfolio Gallery */}
+                {provider.portfolio_images && provider.portfolio_images.length > 0 && (
+                  <PortfolioGallery 
+                    images={provider.portfolio_images} 
+                    providerName={provider.business_name}
+                    tags={(provider as any).portfolio_tags}
+                    stories={(provider as any).real_wedding_stories}
+                  />
+                )}
+
                 {/* Reviews */}
                 <ReviewsList providerId={provider.id} />
+
+                {/* Availability Calendar */}
+                <ProviderAvailabilityCalendar 
+                  providerId={provider.id} 
+                  providerName={provider.business_name}
+                />
               </div>
 
               {/* Booking sidebar - hidden on mobile */}
@@ -332,7 +704,14 @@ const ProviderProfile = () => {
                     <Button
                       className="w-full"
                       variant="outline"
-                      onClick={() => navigate(`/inquiry/${provider.id}`)}
+                      onClick={() => {
+                        trackProviderContact({
+                          providerId: provider.id,
+                          providerName: provider.business_name,
+                          contactMethod: 'chat',
+                        });
+                        navigate(`/inquiry/${provider.id}`);
+                      }}
                     >
                       <MessageCircle className="mr-2 h-4 w-4" />
                       Chat Now
@@ -366,16 +745,16 @@ const ProviderProfile = () => {
 
           <div className="space-y-4 py-2 md:py-4">
             <div>
-              <Label className="text-sm">Select Date *</Label>
-              <div className="flex justify-center mt-2 overflow-x-auto">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date()}
-                  className={cn("rounded-md border pointer-events-auto touch-manipulation scale-[0.92] md:scale-100 origin-top")}
-                />
-              </div>
+              <Label className="text-sm mb-2 block">Select Date *</Label>
+              <DateRangePicker
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                singleDate={selectedDate}
+                onSingleDateChange={setSelectedDate}
+                isMultiDay={isMultiDay}
+                onMultiDayToggle={setIsMultiDay}
+                disabledDates={blockedDates}
+              />
             </div>
 
             <div>

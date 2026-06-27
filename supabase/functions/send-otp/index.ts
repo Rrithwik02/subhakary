@@ -83,7 +83,15 @@ const handler = async (req: Request): Promise<Response> => {
       .maybeSingle();
 
     if (profileError || !profile) {
-      // Don't reveal if user exists or not - return generic message
+      // Generate dummy OTP and add delay to prevent timing-based email enumeration
+      // This ensures response time is similar whether user exists or not
+      const dummyArray = new Uint32Array(1);
+      crypto.getRandomValues(dummyArray);
+      const dummyCode = String(100000 + (dummyArray[0] % 900000));
+      
+      // Add artificial delay to match the timing of successful OTP generation/sending
+      await new Promise(resolve => setTimeout(resolve, 150 + Math.random() * 100));
+      
       console.log("Profile not found or error:", profileError?.message || "Not found");
       return new Response(
         JSON.stringify({ success: true, message: "If this email exists, an OTP has been sent" }),

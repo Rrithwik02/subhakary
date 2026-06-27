@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Main Pages -->
+  <url>
+    <loc>https://subhakary.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/providers</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/become-provider</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Service Category Pages -->
+  <url>
+    <loc>https://subhakary.com/services/poojari</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services/photographer</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services/makeup-artist</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services/mehandi-artist</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services/mangala-vadyam</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services/decoration</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services/catering</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services/function-halls</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/services/event-managers</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Poojari Location Pages -->
+  <url><loc>https://subhakary.com/services/poojari/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/new-delhi</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/kolkata</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/pune</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/ahmedabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/poojari/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Photographer Location Pages -->
+  <url><loc>https://subhakary.com/services/photographer/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/new-delhi</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/kolkata</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/pune</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/ahmedabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Makeup Artist Location Pages -->
+  <url><loc>https://subhakary.com/services/makeup-artist/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/new-delhi</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/kolkata</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/pune</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/ahmedabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Mehandi Artist Location Pages -->
+  <url><loc>https://subhakary.com/services/mehandi-artist/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/new-delhi</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/kolkata</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/pune</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/ahmedabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mehandi-artist/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Decoration Location Pages -->
+  <url><loc>https://subhakary.com/services/decoration/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/new-delhi</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/kolkata</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/pune</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/ahmedabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Catering Location Pages -->
+  <url><loc>https://subhakary.com/services/catering/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/new-delhi</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/kolkata</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/pune</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/ahmedabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/catering/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Function Halls Location Pages -->
+  <url><loc>https://subhakary.com/services/function-halls/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/new-delhi</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/kolkata</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/pune</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/ahmedabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/function-halls/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Event Managers Location Pages -->
+  <url><loc>https://subhakary.com/services/event-managers/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/new-delhi</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/kolkata</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/pune</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/ahmedabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/event-managers/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Mangala Vadyam Location Pages -->
+  <url><loc>https://subhakary.com/services/mangala-vadyam/hyderabad</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mangala-vadyam/bengaluru</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mangala-vadyam/chennai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mangala-vadyam/mumbai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mangala-vadyam/vijayawada</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mangala-vadyam/visakhapatnam</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mangala-vadyam/tirupati</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://subhakary.com/services/mangala-vadyam/madurai</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+
+  <!-- Additional Tier 2 & 3 Cities for All Services -->
+  <!-- Jaipur -->
+  <url><loc>https://subhakary.com/services/poojari/jaipur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/jaipur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/jaipur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/catering/jaipur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/jaipur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Lucknow -->
+  <url><loc>https://subhakary.com/services/poojari/lucknow</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/lucknow</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/lucknow</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/catering/lucknow</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/lucknow</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Kochi -->
+  <url><loc>https://subhakary.com/services/poojari/kochi</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/kochi</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/kochi</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/catering/kochi</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/kochi</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Coimbatore -->
+  <url><loc>https://subhakary.com/services/poojari/coimbatore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/coimbatore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/coimbatore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/catering/coimbatore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/decoration/coimbatore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Indore -->
+  <url><loc>https://subhakary.com/services/poojari/indore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/indore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/indore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/catering/indore</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Nagpur -->
+  <url><loc>https://subhakary.com/services/poojari/nagpur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/nagpur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/nagpur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/catering/nagpur</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Surat -->
+  <url><loc>https://subhakary.com/services/poojari/surat</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/photographer/surat</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/makeup-artist/surat</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://subhakary.com/services/catering/surat</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Legal Pages -->
+  <url>
+    <loc>https://subhakary.com/privacy-policy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://subhakary.com/terms-of-service</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

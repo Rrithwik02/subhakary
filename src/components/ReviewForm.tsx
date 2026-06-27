@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Star } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Star, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -24,6 +25,13 @@ interface ReviewFormProps {
   onReviewSubmitted: () => void;
 }
 
+const aspectRatings = [
+  { key: "service_quality_rating", label: "Service Quality" },
+  { key: "communication_rating", label: "Communication" },
+  { key: "value_for_money_rating", label: "Value for Money" },
+  { key: "punctuality_rating", label: "Punctuality" },
+];
+
 export const ReviewForm = ({
   bookingId,
   providerId,
@@ -37,6 +45,100 @@ export const ReviewForm = ({
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [aspectScores, setAspectScores] = useState<Record<string, number>>({});
+  const [aspectHover, setAspectHover] = useState<Record<string, number>>({});
+  const [weddingBudgetRange, setWeddingBudgetRange] = useState("");
+  const [weddingSize, setWeddingSize] = useState("");
+
+  // File validation constants
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+  const handlePhotoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (photos.length + files.length > 5) {
+      toast({
+        title: "Too many photos",
+        description: "You can upload up to 5 photos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate each file
+    const validFiles: File[] = [];
+    for (const file of files) {
+      // Check file type
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: `"${file.name}" is not a valid image. Only JPEG, PNG, WEBP, and GIF are allowed.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "File too large",
+          description: `"${file.name}" exceeds the 5MB size limit.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    const newPhotos = [...photos, ...validFiles].slice(0, 5);
+    setPhotos(newPhotos);
+
+    // Create previews
+    const newPreviews: string[] = [];
+    newPhotos.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        newPreviews.push(e.target?.result as string);
+        if (newPreviews.length === newPhotos.length) {
+          setPhotoPreviews(newPreviews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }, [photos, toast]);
+
+  const removePhoto = (index: number) => {
+    setPhotos(photos.filter((_, i) => i !== index));
+    setPhotoPreviews(photoPreviews.filter((_, i) => i !== index));
+  };
+
+  const uploadPhotos = async (userId: string): Promise<string[]> => {
+    const uploadedUrls: string[] = [];
+    
+    for (const photo of photos) {
+      const fileExt = photo.name.split('.').pop();
+      const fileName = `${userId}/review-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('review-photos')
+        .upload(fileName, photo);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: urlData } = supabase.storage
+        .from('review-photos')
+        .getPublicUrl(fileName);
+      
+      uploadedUrls.push(urlData.publicUrl);
+    }
+    
+    return uploadedUrls;
+  };
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -53,12 +155,25 @@ export const ReviewForm = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Upload photos first
+      let photoUrls: string[] = [];
+      if (photos.length > 0) {
+        photoUrls = await uploadPhotos(user.id);
+      }
+
       const { error } = await supabase.from("reviews").insert({
         user_id: user.id,
         provider_id: providerId,
         booking_id: bookingId,
         rating,
         review_text: reviewText.trim() || null,
+        photos: photoUrls,
+        service_quality_rating: aspectScores.service_quality_rating || null,
+        communication_rating: aspectScores.communication_rating || null,
+        value_for_money_rating: aspectScores.value_for_money_rating || null,
+        punctuality_rating: aspectScores.punctuality_rating || null,
+        wedding_budget_range: weddingBudgetRange || null,
+        wedding_size: weddingSize || null,
       });
 
       if (error) throw error;
@@ -68,8 +183,14 @@ export const ReviewForm = ({
         description: "Thank you for your feedback.",
       });
 
+      // Reset form
       setRating(0);
       setReviewText("");
+      setPhotos([]);
+      setPhotoPreviews([]);
+      setAspectScores({});
+      setWeddingBudgetRange("");
+      setWeddingSize("");
       onOpenChange(false);
       onReviewSubmitted();
     } catch (error: unknown) {
@@ -84,9 +205,49 @@ export const ReviewForm = ({
     }
   };
 
+  const StarRating = ({ 
+    value, 
+    hover, 
+    onChange, 
+    onHover,
+    size = "default"
+  }: { 
+    value: number; 
+    hover: number;
+    onChange: (v: number) => void;
+    onHover: (v: number) => void;
+    size?: "default" | "small";
+  }) => (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          onMouseEnter={() => onHover(star)}
+          onMouseLeave={() => onHover(0)}
+          className={cn(
+            "transition-transform hover:scale-110",
+            size === "small" ? "p-0.5" : "p-1"
+          )}
+        >
+          <Star
+            className={cn(
+              "transition-colors",
+              size === "small" ? "h-5 w-5" : "h-8 w-8",
+              (hover || value) >= star
+                ? "fill-primary text-primary"
+                : "text-muted-foreground"
+            )}
+          />
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             Review {providerName}
@@ -97,29 +258,16 @@ export const ReviewForm = ({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Star Rating */}
+          {/* Overall Rating */}
           <div className="space-y-2">
-            <Label>Your Rating *</Label>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="p-1 transition-transform hover:scale-110"
-                >
-                  <Star
-                    className={cn(
-                      "h-8 w-8 transition-colors",
-                      (hoverRating || rating) >= star
-                        ? "fill-primary text-primary"
-                        : "text-muted-foreground"
-                    )}
-                  />
-                </button>
-              ))}
+            <Label>Overall Rating *</Label>
+            <div className="flex items-center gap-2">
+              <StarRating 
+                value={rating}
+                hover={hoverRating}
+                onChange={setRating}
+                onHover={setHoverRating}
+              />
               {rating > 0 && (
                 <span className="ml-2 text-sm font-medium text-muted-foreground">
                   {rating === 1 && "Poor"}
@@ -129,6 +277,85 @@ export const ReviewForm = ({
                   {rating === 5 && "Excellent"}
                 </span>
               )}
+            </div>
+          </div>
+
+          {/* Aspect Ratings */}
+          <div className="space-y-3">
+            <Label>Rate specific aspects (optional)</Label>
+            <div className="grid gap-3">
+              {aspectRatings.map(({ key, label }) => (
+                <div key={key} className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{label}</span>
+                  <StarRating
+                    value={aspectScores[key] || 0}
+                    hover={aspectHover[key] || 0}
+                    onChange={(v) => setAspectScores({ ...aspectScores, [key]: v })}
+                    onHover={(v) => setAspectHover({ ...aspectHover, [key]: v })}
+                    size="small"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Photo Upload */}
+          <div className="space-y-2">
+            <Label>Add Photos (optional)</Label>
+            <div className="flex flex-wrap gap-2">
+              {photoPreviews.map((preview, i) => (
+                <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border">
+                  <img src={preview} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    className="absolute top-1 right-1 p-0.5 bg-destructive rounded-full text-destructive-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {photos.length < 5 && (
+                <label className="w-20 h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                  <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground mt-1">Add</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handlePhotoUpload}
+                  />
+                </label>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">Up to 5 photos</p>
+          </div>
+
+          {/* Review Text */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="budget_range">Wedding budget range</Label>
+              <Input
+                id="budget_range"
+                placeholder="e.g., Rs 5L-10L"
+                value={weddingBudgetRange}
+                onChange={(e) => setWeddingBudgetRange(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="wedding_size">Wedding size</Label>
+              <select
+                id="wedding_size"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                value={weddingSize}
+                onChange={(e) => setWeddingSize(e.target.value)}
+              >
+                <option value="">Select size</option>
+                <option value="intimate">Intimate</option>
+                <option value="mid">Mid-size</option>
+                <option value="grand">Grand</option>
+              </select>
             </div>
           </div>
 

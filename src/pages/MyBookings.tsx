@@ -14,6 +14,9 @@ import {
   ArrowRight,
   Star,
   MessageCircle,
+  Bell,
+  CreditCard,
+  IndianRupee,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -21,9 +24,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReviewForm } from "@/components/ReviewForm";
+import { CustomerVerificationDialog } from "@/components/CustomerVerificationDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileMyBookings from "@/components/mobile/MobileMyBookings";
 
 const statusConfig = {
   pending: {
@@ -54,11 +60,22 @@ const statusConfig = {
 };
 
 const MyBookings = () => {
+  const isMobile = useMobileLayout();
+  if (isMobile) return <MobileMyBookings />;
+  return <DesktopMyBookings />;
+};
+
+const DesktopMyBookings = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
   const [reviewBooking, setReviewBooking] = useState<{
+    id: string;
+    providerId: string;
+    providerName: string;
+  } | null>(null);
+  
+  const [confirmBooking, setConfirmBooking] = useState<{
     id: string;
     providerId: string;
     providerName: string;
@@ -86,6 +103,7 @@ const MyBookings = () => {
             id,
             business_name,
             city,
+            logo_url,
             category:service_categories(name, icon)
           )
         `)
@@ -111,21 +129,34 @@ const MyBookings = () => {
       const conversationsByBookingId = new Map(
         conversationsData?.map(c => [c.booking_id, c]) || []
       );
+
+      // Fetch pending payments for these bookings
+      const { data: paymentsData } = await supabase
+        .from("payments")
+        .select("id, booking_id, amount, status, is_provider_requested")
+        .in("booking_id", bookingIds)
+        .eq("status", "pending")
+        .eq("is_provider_requested", true);
+
+      const pendingPaymentsByBookingId = new Map(
+        paymentsData?.map(p => [p.booking_id, p]) || []
+      );
       
       return bookingsData.map(booking => ({
         ...booking,
         hasReview: reviewedBookingIds.has(booking.id),
         inquiryConversation: conversationsByBookingId.get(booking.id),
+        pendingPayment: pendingPaymentsByBookingId.get(booking.id),
       }));
     },
     enabled: !!user,
   });
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates for bookings and payments
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
+    const bookingsChannel = supabase
       .channel("my-bookings")
       .on(
         "postgres_changes",
@@ -141,8 +172,24 @@ const MyBookings = () => {
       )
       .subscribe();
 
+    const paymentsChannel = supabase
+      .channel("my-bookings-payments")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "payments",
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(bookingsChannel);
+      supabase.removeChannel(paymentsChannel);
     };
   }, [user, refetch]);
 
@@ -188,12 +235,23 @@ const MyBookings = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
-              My Bookings
-            </h1>
-            <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">
-              Track and manage your service booking requests
-            </p>
+            <div className="flex items-start justify-between gap-4 mb-6 md:mb-8">
+              <div>
+                <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground mb-1 md:mb-2">
+                  My Bookings
+                </h1>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  Track and manage your service booking requests
+                </p>
+              </div>
+              <Link to="/payment-history">
+                <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                  <IndianRupee className="h-4 w-4" />
+                  <span className="hidden sm:inline">Payment History</span>
+                  <span className="sm:hidden">Payments</span>
+                </Button>
+              </Link>
+            </div>
 
             {isLoading ? (
               <div className="space-y-3 md:space-y-4">
@@ -243,10 +301,18 @@ const MyBookings = () => {
                       >
                         <CardContent className="p-3 md:p-6">
                           <div className="flex flex-col gap-3 md:gap-4">
-                            {/* Top section: Icon + Info */}
+                            {/* Top section: Logo + Info */}
                             <div className="flex items-start gap-3">
-                              <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
-                                {booking.provider?.category?.icon || "🙏"}
+                              <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl md:text-2xl flex-shrink-0 overflow-hidden">
+                                {booking.provider?.logo_url ? (
+                                  <img 
+                                    src={booking.provider.logo_url} 
+                                    alt={booking.provider?.business_name || "Provider"}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  booking.provider?.category?.icon || "🙏"
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between gap-2">
@@ -292,7 +358,41 @@ const MyBookings = () => {
 
                             {/* Action buttons - mobile optimized */}
                             <div className="flex items-center gap-2 flex-wrap pl-0 md:pl-14">
-                              {booking.status === "accepted" && (
+                              {/* Pending payment request - Pay Now button */}
+                              {booking.pendingPayment && (
+                                <Link 
+                                  to={`/checkout/${booking.pendingPayment.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex-1 sm:flex-none"
+                                >
+                                  <Button
+                                    size="sm"
+                                    className="w-full sm:w-auto h-9 gradient-gold text-primary-foreground touch-manipulation animate-pulse"
+                                  >
+                                    <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                                    Pay ₹{booking.pendingPayment.amount?.toLocaleString()}
+                                  </Button>
+                                </Link>
+                              )}
+                              {/* Completion confirmation alert */}
+                              {booking.status === "accepted" && booking.completion_confirmed_by_provider && !booking.completion_confirmed_by_customer && (
+                                <Button
+                                  size="sm"
+                                  className="flex-1 sm:flex-none h-9 gradient-gold text-primary-foreground touch-manipulation animate-pulse"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setConfirmBooking({
+                                      id: booking.id,
+                                      providerId: booking.provider?.id || "",
+                                      providerName: booking.provider?.business_name || "Provider",
+                                    });
+                                  }}
+                                >
+                                  <Bell className="h-3.5 w-3.5 mr-1.5" />
+                                  Verify & Confirm
+                                </Button>
+                              )}
+                              {booking.status === "accepted" && !booking.completion_confirmed_by_provider && (
                                 <Link 
                                   to={booking.inquiryConversation 
                                     ? `/inquiry/${booking.provider?.id}?conversation=${booking.inquiryConversation.id}`
@@ -370,6 +470,18 @@ const MyBookings = () => {
           open={!!reviewBooking}
           onOpenChange={(open) => !open && setReviewBooking(null)}
           onReviewSubmitted={() => refetch()}
+        />
+      )}
+
+      {/* Customer Verification Dialog */}
+      {confirmBooking && (
+        <CustomerVerificationDialog
+          bookingId={confirmBooking.id}
+          providerId={confirmBooking.providerId}
+          providerName={confirmBooking.providerName}
+          open={!!confirmBooking}
+          onOpenChange={(open) => !open && setConfirmBooking(null)}
+          onVerified={() => refetch()}
         />
       )}
 

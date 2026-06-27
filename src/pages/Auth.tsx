@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
+import { trackSignup, trackLogin } from "@/lib/analytics";
 
 const signUpSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -138,6 +139,7 @@ const Auth = () => {
 
       if (error) throw error;
 
+      trackLogin('email');
       toast({
         title: "Welcome back!",
         description: "You've been signed in successfully",
@@ -181,6 +183,7 @@ const Auth = () => {
             });
           }
         } else {
+          trackSignup('email');
           toast({
             title: "Welcome to Subhakary!",
             description: "Your account has been created successfully.",
@@ -210,6 +213,9 @@ const Auth = () => {
             // If OTP failed to send, sign out the user
             await signOut();
           }
+        } else {
+          // No 2FA, track successful login
+          trackLogin('email');
         }
       }
     } finally {
@@ -394,6 +400,34 @@ const Auth = () => {
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password}</p>
             )}
+            {!isSignUp && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!formData.email) {
+                      toast({ title: "Enter your email", description: "Please enter your email address first", variant: "destructive" });
+                      return;
+                    }
+                    setLoading(true);
+                    try {
+                      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+                        redirectTo: `${window.location.origin}/reset-password`,
+                      });
+                      if (error) throw error;
+                      toast({ title: "Reset link sent!", description: "Check your email for the password reset link." });
+                    } catch (error: any) {
+                      toast({ title: "Failed to send reset link", description: error.message, variant: "destructive" });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="text-sm text-primary hover:underline font-medium"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
           </div>
 
           <Button
@@ -427,6 +461,8 @@ const Auth = () => {
                   description: error.message,
                   variant: "destructive",
                 });
+              } else {
+                trackLogin('google');
               }
               setLoading(false);
             }}

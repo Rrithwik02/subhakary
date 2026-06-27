@@ -14,8 +14,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileChat from "@/components/mobile/MobileChat";
 
 const Chat = () => {
+  const isMobile = useMobileLayout();
+  if (isMobile) return <MobileChat />;
+  return <DesktopChat />;
+};
+
+const DesktopChat = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const bookingIdFromUrl = searchParams.get("booking");
@@ -51,7 +59,16 @@ const Chat = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      // Get bookings where user is either customer or provider
+      // First get the user's profile ID
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!userProfile) return [];
+
+      // Get bookings where user is the customer (using user_id directly from auth)
       const { data: userBookings, error: userError } = await supabase
         .from("bookings")
         .select(`
@@ -62,14 +79,16 @@ const Chat = () => {
             id,
             business_name,
             user_id,
-            profile:profiles!service_providers_user_id_fkey(full_name, profile_image)
+            logo_url
           )
         `)
         .eq("user_id", user.id)
-        .eq("status", "accepted")
+        .in("status", ["accepted", "completed"])
         .order("created_at", { ascending: false });
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error("Error fetching user bookings:", userError);
+      }
 
       // Get bookings where user is the provider
       const { data: providerProfile } = await supabase
@@ -86,29 +105,45 @@ const Chat = () => {
             id,
             service_date,
             status,
-            user_id,
-            customer:profiles!bookings_user_id_fkey(full_name, profile_image)
+            user_id
           `)
           .eq("provider_id", providerProfile.id)
-          .eq("status", "accepted")
+          .in("status", ["accepted", "completed"])
           .order("created_at", { ascending: false });
 
         if (!error && data) {
+          // Fetch customer profiles separately
+          // Use SECURITY DEFINER function to get customer info
+          const bookingIds = data.map(b => b.id);
+          const { data: customerInfo } = await supabase
+            .rpc('get_booking_customer_chat_info', { booking_ids: bookingIds });
+
+          const profileMap = new Map(
+            customerInfo?.map((p: any) => [p.customer_user_id, {
+              user_id: p.customer_user_id,
+              full_name: p.customer_name,
+              profile_image: p.customer_profile_image
+            }]) || []
+          );
+
           providerBookings = data.map((b) => ({
             ...b,
             isProvider: true,
-            otherUser: b.customer,
+            otherUser: {
+              full_name: profileMap.get(b.user_id)?.full_name || "Customer",
+              profile_image: profileMap.get(b.user_id)?.profile_image,
+            },
           }));
         }
       }
 
-      // Combine and format
+      // Combine and format user bookings
       const formattedUserBookings = (userBookings || []).map((b: any) => ({
         ...b,
         isProvider: false,
         otherUser: {
           full_name: b.provider?.business_name,
-          profile_image: (b.provider?.profile as any)?.profile_image,
+          profile_image: b.provider?.logo_url,
         },
       }));
 
@@ -213,9 +248,16 @@ const Chat = () => {
                               {format(new Date(booking.service_date), "MMM d, yyyy")}
                             </div>
                           </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {booking.isProvider ? "Customer" : "Provider"}
-                          </Badge>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {booking.isProvider ? "Customer" : "Provider"}
+                            </Badge>
+                            {booking.status === "completed" && (
+                              <Badge variant="outline" className="text-xs text-muted-foreground">
+                                Completed
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -233,6 +275,7 @@ const Chat = () => {
                       otherUserAvatar={
                         selectedBookingData.otherUser?.profile_image
                       }
+                      isCompleted={selectedBookingData.status === "completed"}
                     />
                   ) : (
                     <Card className="h-full flex items-center justify-center">

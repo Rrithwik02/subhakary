@@ -9,7 +9,8 @@ import {
   Flower2, 
   UtensilsCrossed, 
   Building2, 
-  CalendarCheck 
+  CalendarCheck,
+  Video
 } from "lucide-react";
 
 const services = [
@@ -26,6 +27,13 @@ const services = [
     description: "Capture every precious moment",
     color: "from-rose-500 to-pink-600",
     filter: "photography",
+  },
+  {
+    icon: Video,
+    name: "Videography",
+    description: "Professional video coverage",
+    color: "from-fuchsia-500 to-pink-600",
+    filter: "videography",
   },
   {
     icon: Brush,

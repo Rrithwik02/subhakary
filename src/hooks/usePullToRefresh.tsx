@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, TouchEvent } from "react";
+import { useHaptics } from "@/hooks/useHaptics";
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -11,10 +12,13 @@ export const usePullToRefresh = ({ onRefresh, threshold = 80 }: UsePullToRefresh
   const [pullDistance, setPullDistance] = useState(0);
   const startY = useRef(0);
   const scrollTop = useRef(0);
+  const hasTriggeredHaptic = useRef(false);
+  const { mediumImpact, successNotification } = useHaptics();
 
   const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>, currentScrollTop: number) => {
     startY.current = e.touches[0].clientY;
     scrollTop.current = currentScrollTop;
+    hasTriggeredHaptic.current = false;
   }, []);
 
   const handleTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
@@ -25,22 +29,33 @@ export const usePullToRefresh = ({ onRefresh, threshold = 80 }: UsePullToRefresh
     
     if (diff > 0) {
       setIsPulling(true);
-      setPullDistance(Math.min(diff * 0.5, threshold * 1.5));
+      const newDistance = Math.min(diff * 0.5, threshold * 1.5);
+      setPullDistance(newDistance);
+      
+      // Trigger haptic when crossing the threshold
+      if (newDistance >= threshold && !hasTriggeredHaptic.current) {
+        hasTriggeredHaptic.current = true;
+        mediumImpact();
+      } else if (newDistance < threshold && hasTriggeredHaptic.current) {
+        hasTriggeredHaptic.current = false;
+      }
     }
-  }, [isRefreshing, threshold]);
+  }, [isRefreshing, threshold, mediumImpact]);
 
   const handleTouchEnd = useCallback(async () => {
     if (pullDistance >= threshold && !isRefreshing) {
       setIsRefreshing(true);
       try {
         await onRefresh();
+        successNotification();
       } finally {
         setIsRefreshing(false);
       }
     }
     setIsPulling(false);
     setPullDistance(0);
-  }, [pullDistance, threshold, isRefreshing, onRefresh]);
+    hasTriggeredHaptic.current = false;
+  }, [pullDistance, threshold, isRefreshing, onRefresh, successNotification]);
 
   return {
     isPulling,

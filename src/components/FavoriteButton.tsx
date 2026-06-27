@@ -4,7 +4,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
+import { trackFavoriteAdded, trackFavoriteRemoved } from "@/lib/analytics";
 interface FavoriteButtonProps {
   providerId: string;
   variant?: "icon" | "button";
@@ -29,6 +29,13 @@ export const FavoriteButton = ({
     if (!user) {
       navigate("/auth");
       return;
+    }
+    
+    // Track favorite action
+    if (favorited) {
+      trackFavoriteRemoved({ providerId });
+    } else {
+      trackFavoriteAdded({ providerId });
     }
     
     toggleFavorite.mutate(providerId);

@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
-import { ChevronDown, Calendar, MapPin, Search, Sparkles } from "lucide-react";
+import { ChevronDown, Calendar, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AISearch } from "@/components/AISearch";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { AISearch } from "@/components/AISearch";
 import heroWedding from "@/assets/hero-wedding.jpg";
 import heroPuja from "@/assets/hero-puja.jpg";
 import heroCelebration from "@/assets/hero-celebration.jpg";
@@ -54,7 +54,6 @@ const heroSlides = [
 
 export const HeroSection = () => {
   const navigate = useNavigate();
-  const [showAISearch, setShowAISearch] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedService, setSelectedService] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -138,45 +137,13 @@ export const HeroSection = () => {
             {heroSlides[selectedIndex].description}
           </motion.p>
 
-          {/* Search Toggle */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="flex justify-center gap-2 mb-6"
-          >
-            <Button
-              variant={!showAISearch ? "gold" : "outline"}
-              size="sm"
-              onClick={() => setShowAISearch(false)}
-              className={!showAISearch ? "" : "bg-background/20 border-cream/30 text-cream hover:bg-background/30"}
-            >
-              <Search className="w-4 h-4 mr-2" />
-              Quick Search
-            </Button>
-            <Button
-              variant={showAISearch ? "gold" : "outline"}
-              size="sm"
-              onClick={() => setShowAISearch(true)}
-              className={showAISearch ? "" : "bg-background/20 border-cream/30 text-cream hover:bg-background/30"}
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Search
-            </Button>
-          </motion.div>
-
           {/* Search Bar */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            {showAISearch ? (
-              <div className="glass-card rounded-2xl p-6 max-w-3xl mx-auto">
-                <AISearch />
-              </div>
-            ) : (
-              <>
+            <>
                 {/* Mobile Layout */}
                 <div className="lg:hidden glass-card rounded-2xl p-4 max-w-4xl mx-auto flex flex-col gap-3">
                   {/* Service Dropdown */}
@@ -201,13 +168,21 @@ export const HeroSection = () => {
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                       <Calendar className="w-4 h-4 text-primary" />
                     </div>
-                    <input 
-                      type="date" 
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      className="flex-1 bg-transparent border-none outline-none text-foreground text-sm font-medium"
-                      placeholder="Date of the Event"
-                    />
+                    <div className="flex-1 relative">
+                      <input 
+                        type="date" 
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full bg-transparent border-none outline-none text-foreground text-sm font-medium appearance-none [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        style={{ colorScheme: 'light' }}
+                      />
+                      {!selectedDate && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 text-foreground/50 text-sm font-medium pointer-events-none">
+                          Event Date
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Location */}
@@ -261,7 +236,8 @@ export const HeroSection = () => {
                       type="date" 
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      className="flex-1 bg-transparent border-none outline-none text-cream/90 text-sm font-medium [color-scheme:dark]"
+                      min={new Date().toISOString().split('T')[0]}
+                      className="flex-1 bg-transparent border-none outline-none text-cream/90 text-sm font-medium [color-scheme:dark] cursor-pointer"
                       placeholder="Date of the Event"
                     />
                   </div>
@@ -291,8 +267,22 @@ export const HeroSection = () => {
                     <Search className="w-4 h-4" />
                   </Button>
                 </div>
-              </>
-            )}
+            </>
+          </motion.div>
+
+          {/* AI Search Divider + Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="mt-6"
+          >
+            <div className="flex items-center gap-3 max-w-2xl mx-auto mb-4">
+              <div className="flex-1 h-px bg-cream/20" />
+              <span className="text-cream/50 text-xs font-medium uppercase tracking-wider">or search with AI</span>
+              <div className="flex-1 h-px bg-cream/20" />
+            </div>
+            <AISearch />
           </motion.div>
         </div>
 

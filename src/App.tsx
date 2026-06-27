@@ -4,7 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ComparisonProvider } from "@/hooks/useProviderComparison";
 import { AdminRoute } from "@/components/AdminRoute";
+import { CompareBar } from "@/components/CompareBar";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeProvider from "./pages/BecomeProvider";
@@ -13,6 +16,7 @@ import ProviderProfile from "./pages/ProviderProfile";
 import MyBookings from "./pages/MyBookings";
 import BookingDetails from "./pages/BookingDetails";
 import ProviderDashboard from "./pages/ProviderDashboard";
+import ProviderSettings from "./pages/ProviderSettings";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
@@ -23,11 +27,25 @@ import BlogPost from "./pages/BlogPost";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Services from "./pages/Services";
+import ServiceCategory from "./pages/ServiceCategory";
+import ServiceLocation from "./pages/ServiceLocation";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import WeddingOnboarding from "./pages/WeddingOnboarding";
 import WeddingDashboard from "./pages/WeddingDashboard";
 import WeddingEventWorkspace from "./pages/WeddingEventWorkspace";
 import WeddingJoin from "./pages/WeddingJoin";
+import Notifications from "./pages/Notifications";
+import Compare from "./pages/Compare";
+import Install from "./pages/Install";
+import Checkout from "./pages/Checkout";
+import PaymentHistory from "./pages/PaymentHistory";
+import ResetPassword from "./pages/ResetPassword";
+import SearchResults from "./pages/SearchResults";
+import WeddingDashboard from "./pages/WeddingDashboard";
+import PlanWedding from "./pages/PlanWedding";
+import Journey from "./pages/Journey";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +84,53 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      <ComparisonProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/become-provider" element={<BecomeProvider />} />
+              <Route path="/providers" element={<Providers />} />
+              <Route path="/provider/:id" element={<ProviderProfile />} />
+              <Route path="/providers/:id" element={<ProviderProfile />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/booking/:bookingId" element={<BookingDetails />} />
+              <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+              <Route path="/provider-settings" element={<ProviderSettings />} />
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/inquiry/:providerId" element={<InquiryChat />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/services/:service" element={<ServiceCategory />} />
+              <Route path="/services/:service/:city" element={<ServiceLocation />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="/install" element={<Install />} />
+              <Route path="/checkout/:paymentId" element={<Checkout />} />
+              <Route path="/payment-history" element={<PaymentHistory />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/search" element={<SearchResults />} />
+              <Route path="/wedding-dashboard" element={<WeddingDashboard />} />
+              <Route path="/plan-wedding" element={<PlanWedding />} />
+              <Route path="/journey" element={<Journey />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <CompareBar />
+            <PWAInstallPrompt />
+          </BrowserRouter>
+        </TooltipProvider>
+      </ComparisonProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
