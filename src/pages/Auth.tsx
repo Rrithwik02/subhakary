@@ -46,7 +46,13 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !show2FAStep) {
-      navigate("/");
+      const pendingInviteCode = localStorage.getItem("pending_invite_code");
+      if (pendingInviteCode) {
+        localStorage.removeItem("pending_invite_code");
+        navigate(`/wedding/join/${pendingInviteCode}`);
+      } else {
+        navigate("/");
+      }
     }
   }, [user, navigate, show2FAStep]);
 
