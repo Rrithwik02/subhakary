@@ -27,7 +27,7 @@ const ServiceLocation = () => {
     queryFn: async () => {
       if (!serviceData) return [];
       
-      let query = supabase
+      const query = supabase
         .from("service_providers")
         .select("*")
         .eq("status", "approved")

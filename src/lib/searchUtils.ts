@@ -288,7 +288,7 @@ export async function fetchProviders(params: SearchParams): Promise<SearchProvid
 
   // Location fallback: if no results with location, retry without location
   if ((!data || data.length === 0) && location && categoryId) {
-    let fallbackQb = supabase
+    const fallbackQb = supabase
       .from('public_service_providers')
       .select('id, business_name, service_type, city, rating, total_reviews, base_price')
       .eq('status', 'approved')

@@ -173,21 +173,7 @@ export const ChatWindow = ({
       const { data: participantData, error: rpcError } = await supabase
         .rpc('get_booking_participant_profile_ids', { p_booking_id: bookingId });
 
-      // Determine receiver based on who is sending
-      let receiverId: string;
-      if (user?.id === booking.user_id) {
-        // Current user is the customer, receiver is provider
-        const providerData = booking.provider as unknown as { profile: { id: string } | null };
-        const providerProfile = providerData?.profile;
-        receiverId = providerProfile?.id || "";
-      } else {
-        // Current user is the provider, get customer profile
-        const { data: customerProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("user_id", booking.user_id)
-          .single();
-        receiverId = customerProfile?.id;
+
       if (rpcError || !participantData || participantData.length === 0) {
         setPendingMessages(prev => 
           prev.map(p => p.id === tempId ? { ...p, status: 'failed' } : p)

@@ -757,22 +757,6 @@ const BecomeProvider = () => {
         <Navbar />
         <div className="min-h-screen bg-background pt-24 pb-12 px-4">
           <div className="max-w-2xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-card rounded-2xl p-8 text-center"
-            >
-              {existingApplication.status === "pending" && (
-                <>
-                  <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                    <Clock className="w-10 h-10 text-primary" />
-                  </div>
-                  <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
-                    Application Under Review
-                  </h1>
-                  <p className="text-muted-foreground mb-6">
-                    Your application for "{existingApplication.business_name}" is currently being reviewed by our team.
-                    We'll notify you via email once a decision has been made.
             <StatusContent />
           </div>
         </div>
@@ -991,20 +975,6 @@ const BecomeProvider = () => {
                       </p>
                     )}
                   </div>
-                </>
-              )}
-
-              {existingApplication.status === "approved" && (
-                <>
-                  <div className="w-20 h-20 mx-auto rounded-full gradient-gold flex items-center justify-center mb-6">
-                    <Check className="w-10 h-10 text-brown-dark" />
-                  </div>
-                  <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
-                    Congratulations! 🎉
-                  </h1>
-                  <p className="text-muted-foreground mb-6">
-                    Your provider application has been approved! You can now access your provider dashboard
-                    to manage your services and bookings.
                 )}
 
                 <div className="space-y-2">
@@ -1145,28 +1115,9 @@ const BecomeProvider = () => {
                     Continue
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
-                </>
-              )}
-
-              {existingApplication.status === "rejected" && (
-                <>
-                  <div className="w-20 h-20 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-6">
-                    <AlertCircle className="w-10 h-10 text-destructive" />
-                  </div>
-                  <h1 className="font-display text-2xl font-semibold text-foreground mb-4">
-                    Application Not Approved
-                  </h1>
-                  <p className="text-muted-foreground mb-4">
-                    Unfortunately, your application was not approved at this time.
-                  </p>
-                  {existingApplication.rejection_reason && (
-                    <div className="bg-destructive/10 rounded-lg p-4 mb-6 text-left">
-                      <p className="text-sm font-medium text-destructive mb-1">Reason:</p>
-                      <p className="text-sm text-foreground">{existingApplication.rejection_reason}</p>
                 </div>
               </div>
             )}
-
             {step === 3 && (
               <div className="space-y-6">
                 {isDocumentRequired ? (

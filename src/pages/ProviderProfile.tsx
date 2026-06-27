@@ -288,11 +288,9 @@ const DesktopProviderProfile = () => {
       const eventId = await getPrimaryWeddingEventId(user.id);
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
-        provider_id: id,
+        provider_id: providerId,
         wedding_id: weddingId,
         wedding_event_id: weddingEventId,
-        service_date: format(selectedDate, "yyyy-MM-dd"),
-        provider_id: providerId,
         event_id: eventId,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),

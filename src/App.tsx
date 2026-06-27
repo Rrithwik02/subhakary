@@ -8,6 +8,7 @@ import { ComparisonProvider } from "@/hooks/useProviderComparison";
 import { AdminRoute } from "@/components/AdminRoute";
 import { CompareBar } from "@/components/CompareBar";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import BecomeProvider from "./pages/BecomeProvider";
@@ -43,7 +44,6 @@ import Checkout from "./pages/Checkout";
 import PaymentHistory from "./pages/PaymentHistory";
 import ResetPassword from "./pages/ResetPassword";
 import SearchResults from "./pages/SearchResults";
-import WeddingDashboard from "./pages/WeddingDashboard";
 import PlanWedding from "./pages/PlanWedding";
 import Journey from "./pages/Journey";
 
@@ -52,78 +52,69 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/become-provider" element={<BecomeProvider />} />
-            <Route path="/providers" element={<Providers />} />
-            <Route path="/provider/:id" element={<ProviderProfile />} />
-            <Route path="/providers/:id" element={<ProviderProfile />} />
-            <Route path="/my-bookings" element={<MyBookings />} />
-            <Route path="/booking/:bookingId" element={<BookingDetails />} />
-            <Route path="/provider-dashboard" element={<ProviderDashboard />} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/inquiry/:providerId" element={<InquiryChat />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/wedding/new" element={<WeddingOnboarding />} />
-            <Route path="/wedding/:weddingId" element={<WeddingDashboard />} />
-            <Route path="/wedding/join/:inviteCode" element={<WeddingJoin />} />
-            <Route path="/wedding/:weddingId/events/:eventId" element={<WeddingEventWorkspace />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
       <ComparisonProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Core & Auth */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              
+              {/* Provider Flow */}
               <Route path="/become-provider" element={<BecomeProvider />} />
-              <Route path="/providers" element={<Providers />} />
-              <Route path="/provider/:id" element={<ProviderProfile />} />
-              <Route path="/providers/:id" element={<ProviderProfile />} />
-              <Route path="/my-bookings" element={<MyBookings />} />
-              <Route path="/booking/:bookingId" element={<BookingDetails />} />
               <Route path="/provider-dashboard" element={<ProviderDashboard />} />
               <Route path="/provider-settings" element={<ProviderSettings />} />
+              <Route path="/provider/:id" element={<ProviderProfile />} />
+              <Route path="/providers/:id" element={<ProviderProfile />} />
+              <Route path="/providers" element={<Providers />} />
+
+              {/* Booking & Payments */}
+              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/booking/:bookingId" element={<BookingDetails />} />
+              <Route path="/checkout/:paymentId" element={<Checkout />} />
+              <Route path="/payment-history" element={<PaymentHistory />} />
+
+              {/* Admin */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/profile" element={<Profile />} />
+
+              {/* Discovery & Search */}
+              <Route path="/services" element={<Services />} />
+              <Route path="/services/:service" element={<ServiceCategory />} />
+              <Route path="/services/:service/:city" element={<ServiceLocation />} />
+              <Route path="/search" element={<SearchResults />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/compare" element={<Compare />} />
+
+              {/* Communication */}
               <Route path="/chat" element={<Chat />} />
               <Route path="/inquiry/:providerId" element={<InquiryChat />} />
+              <Route path="/notifications" element={<Notifications />} />
+
+              {/* Content Pages */}
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/services/:service" element={<ServiceCategory />} />
-              <Route path="/services/:service/:city" element={<ServiceLocation />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/compare" element={<Compare />} />
-              <Route path="/install" element={<Install />} />
-              <Route path="/checkout/:paymentId" element={<Checkout />} />
-              <Route path="/payment-history" element={<PaymentHistory />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/search" element={<SearchResults />} />
+
+              {/* Wedding OS (V2 Core) */}
+              <Route path="/wedding/new" element={<WeddingOnboarding />} />
+              <Route path="/wedding/:weddingId" element={<WeddingDashboard />} />
+              <Route path="/wedding/join/:inviteCode" element={<WeddingJoin />} />
+              <Route path="/wedding/:weddingId/events/:eventId" element={<WeddingEventWorkspace />} />
+
+              {/* Legacy/Redirect paths */}
               <Route path="/wedding-dashboard" element={<WeddingDashboard />} />
               <Route path="/plan-wedding" element={<PlanWedding />} />
               <Route path="/journey" element={<Journey />} />
+              <Route path="/install" element={<Install />} />
+
+              {/* Fallback */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <CompareBar />
