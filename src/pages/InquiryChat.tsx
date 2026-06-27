@@ -20,6 +20,8 @@ const InquiryChat = () => {
   const [conversationId, setConversationId] = useState<string | null>(
     searchParams.get("conversation")
   );
+  const weddingId = searchParams.get("wedding");
+  const weddingEventId = searchParams.get("event");
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -175,6 +177,8 @@ const InquiryChat = () => {
                 providerId={provider.id}
                 providerName={provider.business_name}
                 providerAvatar={provider.logo_url || undefined}
+                weddingId={weddingId || undefined}
+                weddingEventId={weddingEventId || undefined}
                 onBookingCreated={() => {
                   toast({
                     title: "Booking created!",

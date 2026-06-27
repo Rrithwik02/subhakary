@@ -26,6 +26,18 @@ interface PendingMessage {
   status: 'sending' | 'sent' | 'failed';
 }
 
+interface ChatMessage {
+  id: string;
+  message: string;
+  sender_id: string;
+  created_at: string;
+  read: boolean;
+  sender: {
+    full_name: string | null;
+    profile_image: string | null;
+  } | null;
+}
+
 export const ChatWindow = ({
   bookingId,
   otherUserName,
@@ -77,7 +89,8 @@ export const ChatWindow = ({
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      if (error) throw error;
+      return (data as unknown as ChatMessage[]) || [];
     },
     enabled: !!bookingId,
   });
@@ -124,11 +137,11 @@ export const ChatWindow = ({
     if (!currentProfile || messages.length === 0) return;
 
     const unreadMessages = messages.filter(
-      (m: any) => !m.read && m.sender_id !== currentProfile.id
+      (m) => !m.read && m.sender_id !== currentProfile.id
     );
 
     if (unreadMessages.length > 0) {
-      const ids = unreadMessages.map((m: any) => m.id);
+      const ids = unreadMessages.map((m) => m.id);
       supabase
         .from("chat_messages")
         .update({ read: true, delivery_status: 'read' })
@@ -160,6 +173,21 @@ export const ChatWindow = ({
       const { data: participantData, error: rpcError } = await supabase
         .rpc('get_booking_participant_profile_ids', { p_booking_id: bookingId });
 
+      // Determine receiver based on who is sending
+      let receiverId: string;
+      if (user?.id === booking.user_id) {
+        // Current user is the customer, receiver is provider
+        const providerData = booking.provider as unknown as { profile: { id: string } | null };
+        const providerProfile = providerData?.profile;
+        receiverId = providerProfile?.id || "";
+      } else {
+        // Current user is the provider, get customer profile
+        const { data: customerProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", booking.user_id)
+          .single();
+        receiverId = customerProfile?.id;
       if (rpcError || !participantData || participantData.length === 0) {
         setPendingMessages(prev => 
           prev.map(p => p.id === tempId ? { ...p, status: 'failed' } : p)
@@ -279,7 +307,7 @@ export const ChatWindow = ({
         ) : (
           <div className="space-y-4">
             <AnimatePresence>
-              {messages.map((msg: any) => {
+              {messages.map((msg) => {
                 const isOwn = msg.sender_id === currentProfile?.id;
                 return (
                   <motion.div

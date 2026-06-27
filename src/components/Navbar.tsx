@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Sparkles } from "lucide-react";
 import { Search, Menu, X, LogOut, User, Heart, MessageSquare, Shield, LayoutDashboard, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -215,6 +216,12 @@ export const Navbar = () => {
                   <span className="hidden xl:inline">Profile</span>
                 </Button>
               </Link>
+              <Link to="/wedding/new">
+                <Button variant="ghost" size="sm" className="font-medium text-primary">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Wedding OS
+                </Button>
+              </Link>
               {isApprovedProvider ? (
                 <Link to="/provider-dashboard">
                   <Button variant="ghost" size="sm" className="font-medium text-green-600 hover:text-green-700 hover:bg-green-50">
@@ -321,6 +328,12 @@ export const Navbar = () => {
                           </AvatarFallback>
                         </Avatar>
                         My Profile
+                      </Button>
+                    </Link>
+                    <Link to="/wedding/new" className="w-full" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full justify-start text-primary">
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Wedding OS
                       </Button>
                     </Link>
                     {isApprovedProvider ? (

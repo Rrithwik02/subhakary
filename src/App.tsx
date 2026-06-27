@@ -32,6 +32,10 @@ import ServiceLocation from "./pages/ServiceLocation";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
+import WeddingOnboarding from "./pages/WeddingOnboarding";
+import WeddingDashboard from "./pages/WeddingDashboard";
+import WeddingEventWorkspace from "./pages/WeddingEventWorkspace";
+import WeddingJoin from "./pages/WeddingJoin";
 import Notifications from "./pages/Notifications";
 import Compare from "./pages/Compare";
 import Install from "./pages/Install";
@@ -48,6 +52,38 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/become-provider" element={<BecomeProvider />} />
+            <Route path="/providers" element={<Providers />} />
+            <Route path="/provider/:id" element={<ProviderProfile />} />
+            <Route path="/providers/:id" element={<ProviderProfile />} />
+            <Route path="/my-bookings" element={<MyBookings />} />
+            <Route path="/booking/:bookingId" element={<BookingDetails />} />
+            <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/inquiry/:providerId" element={<InquiryChat />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/wedding/new" element={<WeddingOnboarding />} />
+            <Route path="/wedding/:weddingId" element={<WeddingDashboard />} />
+            <Route path="/wedding/join/:inviteCode" element={<WeddingJoin />} />
+            <Route path="/wedding/:weddingId/events/:eventId" element={<WeddingEventWorkspace />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
       <ComparisonProvider>
         <TooltipProvider>
           <Toaster />

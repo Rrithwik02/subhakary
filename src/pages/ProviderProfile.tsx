@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -52,6 +53,8 @@ import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const ProviderProfile = () => {
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const isMobile = useMobileLayout();
   if (isMobile) return <MobileProviderProfile />;
   return <DesktopProviderProfile />;
@@ -63,6 +66,8 @@ const DesktopProviderProfile = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const weddingId = searchParams.get("wedding");
+  const weddingEventId = searchParams.get("event");
   
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -283,6 +288,10 @@ const DesktopProviderProfile = () => {
       const eventId = await getPrimaryWeddingEventId(user.id);
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
+        provider_id: id,
+        wedding_id: weddingId,
+        wedding_event_id: weddingEventId,
+        service_date: format(selectedDate, "yyyy-MM-dd"),
         provider_id: providerId,
         event_id: eventId,
         service_date: format(bookingDate, "yyyy-MM-dd"),
@@ -292,7 +301,7 @@ const DesktopProviderProfile = () => {
         service_time: selectedTime || null,
         message: message || null,
         status: "pending",
-      });
+      } as any);
 
       if (error) throw error;
 

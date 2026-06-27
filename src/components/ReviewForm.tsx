@@ -193,10 +193,11 @@ export const ReviewForm = ({
       setWeddingSize("");
       onOpenChange(false);
       onReviewSubmitted();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       toast({
         title: "Failed to submit review",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

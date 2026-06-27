@@ -22,6 +22,16 @@ const notificationIcons: Record<string, React.ReactNode> = {
   alert: <AlertCircle className="h-4 w-4" />,
 };
 
+interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
 export const NotificationsCenter = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -48,7 +58,8 @@ export const NotificationsCenter = () => {
         .limit(20);
 
       if (error) throw error;
-      return data || [];
+      if (error) throw error;
+      return (data as Notification[]) || [];
     },
     enabled: !!user,
   });
@@ -114,7 +125,7 @@ export const NotificationsCenter = () => {
     },
   });
 
-  const unreadCount = notifications.filter((n: any) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   if (!user) return null;
 
@@ -173,7 +184,7 @@ export const NotificationsCenter = () => {
             </div>
           ) : (
             <div className="divide-y">
-              {notifications.map((notification: any) => (
+              {notifications.map((notification) => (
                 <motion.div
                   key={notification.id}
                   initial={{ opacity: 0, x: -20 }}
