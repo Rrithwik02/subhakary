@@ -42,11 +42,12 @@ export const TwoFactorSettings = ({ email, twoFactorEnabled, onUpdate }: TwoFact
         description: "Please check your email for the 6-digit code",
       });
       setShowOtpDialog(true);
-    } catch (error: any) {
-      console.error("Failed to send OTP:", error);
+    } catch (error: unknown) {
+      console.error("Failed to sent OTP:", error);
+      const errorMessage = error instanceof Error ? error.message : "Please try again";
       toast({
         title: "Failed to send code",
-        description: error.message || "Please try again",
+        description: errorMessage,
         variant: "destructive",
       });
       setPendingAction(null);
@@ -89,11 +90,12 @@ export const TwoFactorSettings = ({ email, twoFactorEnabled, onUpdate }: TwoFact
       setOtpCode("");
       setPendingAction(null);
       onUpdate();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to verify OTP:", error);
+      const errorMessage = error instanceof Error ? error.message : "Invalid or expired code";
       toast({
         title: "Verification failed",
-        description: error.message || "Invalid or expired code",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -119,10 +121,11 @@ export const TwoFactorSettings = ({ email, twoFactorEnabled, onUpdate }: TwoFact
         title: "Code resent",
         description: "A new verification code has been sent to your email",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       toast({
         title: "Failed to resend code",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

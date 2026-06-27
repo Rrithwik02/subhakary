@@ -18,6 +18,18 @@ interface ChatWindowProps {
   onClose?: () => void;
 }
 
+interface ChatMessage {
+  id: string;
+  message: string;
+  sender_id: string;
+  created_at: string;
+  read: boolean;
+  sender: {
+    full_name: string | null;
+    profile_image: string | null;
+  } | null;
+}
+
 export const ChatWindow = ({
   bookingId,
   otherUserName,
@@ -63,7 +75,8 @@ export const ChatWindow = ({
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      if (error) throw error;
+      return (data as unknown as ChatMessage[]) || [];
     },
     enabled: !!bookingId,
   });
@@ -103,11 +116,11 @@ export const ChatWindow = ({
     if (!currentProfile || messages.length === 0) return;
 
     const unreadMessages = messages.filter(
-      (m: any) => !m.read && m.sender_id !== currentProfile.id
+      (m) => !m.read && m.sender_id !== currentProfile.id
     );
 
     if (unreadMessages.length > 0) {
-      const ids = unreadMessages.map((m: any) => m.id);
+      const ids = unreadMessages.map((m) => m.id);
       supabase
         .from("chat_messages")
         .update({ read: true })
@@ -139,8 +152,9 @@ export const ChatWindow = ({
       let receiverId: string;
       if (user?.id === booking.user_id) {
         // Current user is the customer, receiver is provider
-        const providerProfile = (booking.provider as any)?.profile;
-        receiverId = providerProfile?.id;
+        const providerData = booking.provider as unknown as { profile: { id: string } | null };
+        const providerProfile = providerData?.profile;
+        receiverId = providerProfile?.id || "";
       } else {
         // Current user is the provider, get customer profile
         const { data: customerProfile } = await supabase
@@ -220,7 +234,7 @@ export const ChatWindow = ({
         ) : (
           <div className="space-y-4">
             <AnimatePresence>
-              {messages.map((msg: any) => {
+              {messages.map((msg) => {
                 const isOwn = msg.sender_id === currentProfile?.id;
                 return (
                   <motion.div

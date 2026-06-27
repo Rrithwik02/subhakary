@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
+
+interface Favorite {
+  id: string;
+  provider_id: string;
+  created_at: string;
+}
+
 export const useFavorites = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -12,7 +19,7 @@ export const useFavorites = () => {
     queryKey: ["favorites", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
@@ -41,7 +48,8 @@ export const useFavorites = () => {
         .eq("user_id", profile.id);
 
       if (error) throw error;
-      return data || [];
+      if (error) throw error;
+      return (data as unknown as Favorite[]) || [];
     },
     enabled: !!user,
   });
@@ -87,8 +95,8 @@ export const useFavorites = () => {
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
       toast({
         title: result.action === "added" ? "Added to favorites" : "Removed from favorites",
-        description: result.action === "added" 
-          ? "Provider saved to your favorites" 
+        description: result.action === "added"
+          ? "Provider saved to your favorites"
           : "Provider removed from your favorites",
       });
     },
@@ -102,7 +110,7 @@ export const useFavorites = () => {
   });
 
   const isFavorite = (providerId: string) => {
-    return favorites.some((f: any) => f.provider_id === providerId);
+    return favorites.some((f) => f.provider_id === providerId);
   };
 
   return {

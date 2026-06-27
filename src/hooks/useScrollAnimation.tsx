@@ -49,6 +49,7 @@ interface ScrollAnimateProps {
   triggerOnce?: boolean;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ScrollAnimate = ({
   children,
   className = "",

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  Upload, 
-  FileText, 
-  Check, 
-  Clock, 
+import {
+  Upload,
+  FileText,
+  Check,
+  Clock,
   AlertCircle,
   ChevronRight,
   X
@@ -45,7 +45,7 @@ const BecomeProvider = () => {
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [existingApplication, setExistingApplication] = useState<ProviderApplication | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  
+
   const [formData, setFormData] = useState({
     businessName: "",
     categoryId: "",
@@ -67,6 +67,20 @@ const BecomeProvider = () => {
 
   useEffect(() => {
     fetchCategories();
+    const checkExistingApplication = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("service_providers")
+        .select("id, status, rejection_reason, business_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data && !error) {
+        setExistingApplication(data as ProviderApplication);
+      }
+    };
+
     if (user) {
       checkExistingApplication();
     }
@@ -77,25 +91,13 @@ const BecomeProvider = () => {
       .from("service_categories")
       .select("*")
       .order("name");
-    
+
     if (data && !error) {
       setCategories(data);
     }
   };
 
-  const checkExistingApplication = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from("service_providers")
-      .select("id, status, rejection_reason, business_name")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    
-    if (data && !error) {
-      setExistingApplication(data as ProviderApplication);
-    }
-  };
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -125,7 +127,7 @@ const BecomeProvider = () => {
 
   const handleSubmit = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       // Create provider application
@@ -223,7 +225,7 @@ const BecomeProvider = () => {
                     Application Under Review
                   </h1>
                   <p className="text-muted-foreground mb-6">
-                    Your application for "{existingApplication.business_name}" is currently being reviewed by our team. 
+                    Your application for "{existingApplication.business_name}" is currently being reviewed by our team.
                     We'll notify you via email once a decision has been made.
                   </p>
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
@@ -232,7 +234,7 @@ const BecomeProvider = () => {
                   </div>
                 </>
               )}
-              
+
               {existingApplication.status === "approved" && (
                 <>
                   <div className="w-20 h-20 mx-auto rounded-full gradient-gold flex items-center justify-center mb-6">
@@ -242,7 +244,7 @@ const BecomeProvider = () => {
                     Congratulations! 🎉
                   </h1>
                   <p className="text-muted-foreground mb-6">
-                    Your provider application has been approved! You can now access your provider dashboard 
+                    Your provider application has been approved! You can now access your provider dashboard
                     to manage your services and bookings.
                   </p>
                   <Button variant="gold" className="rounded-full" onClick={() => navigate("/provider/dashboard")}>
@@ -251,7 +253,7 @@ const BecomeProvider = () => {
                   </Button>
                 </>
               )}
-              
+
               {existingApplication.status === "rejected" && (
                 <>
                   <div className="w-20 h-20 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-6">
@@ -302,11 +304,10 @@ const BecomeProvider = () => {
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center gap-2">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${
-                    step >= s
-                      ? "gradient-gold text-brown-dark"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${step >= s
+                    ? "gradient-gold text-brown-dark"
+                    : "bg-muted text-muted-foreground"
+                    }`}
                 >
                   {step > s ? <Check className="w-5 h-5" /> : s}
                 </div>
@@ -328,7 +329,7 @@ const BecomeProvider = () => {
             {step === 1 && (
               <div className="space-y-6">
                 <h2 className="font-display text-xl font-semibold">Basic Information</h2>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="businessName">Business Name *</Label>
                   <Input
@@ -375,11 +376,10 @@ const BecomeProvider = () => {
                         key={lang}
                         type="button"
                         onClick={() => toggleLanguage(lang)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                          formData.languages.includes(lang)
-                            ? "gradient-gold text-brown-dark"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        }`}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${formData.languages.includes(lang)
+                          ? "gradient-gold text-brown-dark"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}
                       >
                         {lang}
                       </button>

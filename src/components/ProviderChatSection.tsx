@@ -202,10 +202,11 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
       setNewMessage("");
       refetchMessages();
       refetchConversations();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
       toast({
         title: "Error",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -257,11 +258,10 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
                 key={conv.booking_id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                  selectedConversation?.booking_id === conv.booking_id
+                className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedConversation?.booking_id === conv.booking_id
                     ? "bg-primary/10 border border-primary/20"
                     : "hover:bg-muted"
-                }`}
+                  }`}
                 onClick={() => setSelectedConversation(conv)}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -332,17 +332,15 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
                         className={`flex ${isProvider ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                            isProvider
+                          className={`max-w-[80%] rounded-2xl px-4 py-2 ${isProvider
                               ? "bg-primary text-primary-foreground rounded-br-md"
                               : "bg-muted rounded-bl-md"
-                          }`}
+                            }`}
                         >
                           <p className="text-sm">{msg.message}</p>
                           <p
-                            className={`text-xs mt-1 ${
-                              isProvider ? "text-primary-foreground/70" : "text-muted-foreground"
-                            }`}
+                            className={`text-xs mt-1 ${isProvider ? "text-primary-foreground/70" : "text-muted-foreground"
+                              }`}
                           >
                             {format(new Date(msg.created_at), "h:mm a")}
                           </p>

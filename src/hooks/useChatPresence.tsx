@@ -5,6 +5,13 @@ interface PresenceState {
   isOnline: boolean;
   isTyping: boolean;
   lastSeen?: string;
+  online_at?: string;
+}
+
+interface SupabasePresence {
+  is_typing?: boolean;
+  online_at?: string;
+  [key: string]: any;
 }
 
 interface UseChatPresenceOptions {
@@ -29,7 +36,7 @@ export const useChatPresence = ({
   // Track own typing status
   const setTyping = useCallback((typing: boolean) => {
     setIsTyping(typing);
-    
+
     if (channelRef.current && userId) {
       channelRef.current.track({
         user_id: userId,
@@ -44,9 +51,9 @@ export const useChatPresence = ({
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
-    
+
     setTyping(true);
-    
+
     typingTimeoutRef.current = setTimeout(() => {
       setTyping(false);
     }, 2000);
@@ -68,11 +75,11 @@ export const useChatPresence = ({
     channel
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
-        
+
         // Find other user's presence
         Object.entries(state).forEach(([key, presences]) => {
           if (key !== userId && presences.length > 0) {
-            const presence = presences[0] as any;
+            const presence = presences[0] as unknown as SupabasePresence;
             setOtherUserPresence({
               isOnline: true,
               isTyping: presence.is_typing || false,
@@ -83,7 +90,7 @@ export const useChatPresence = ({
       })
       .on("presence", { event: "join" }, ({ key, newPresences }) => {
         if (key !== userId && newPresences.length > 0) {
-          const presence = newPresences[0] as any;
+          const presence = newPresences[0] as unknown as SupabasePresence;
           setOtherUserPresence({
             isOnline: true,
             isTyping: presence.is_typing || false,
