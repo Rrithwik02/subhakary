@@ -191,7 +191,7 @@ export const Navbar = () => {
           {user ? <>
               <Link to="/notifications" className="relative">
                 <Button variant="ghost" size="icon" title="Notifications" className="h-9 w-9">
-                  <Bell className="h-4.5 w-4.5" />
+                  <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <Badge 
                       className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
@@ -204,17 +204,17 @@ export const Navbar = () => {
               </Link>
               <Link to="/chat">
                 <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <MessageSquare className="h-4.5 w-4.5" />
+                  <MessageSquare className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/favorites">
                 <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Heart className="h-4.5 w-4.5" />
+                  <Heart className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/profile">
                 <Button variant="ghost" size="sm" className="font-medium gap-1.5 h-9">
-                  <Avatar className="h-5.5 w-5.5">
+                  <Avatar className="h-6 w-6">
                     <AvatarImage src={userProfile?.avatar_url || undefined} />
                     <AvatarFallback className="text-[10px] bg-primary/10">
                       {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-2.5 w-2.5" />}
