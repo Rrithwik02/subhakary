@@ -163,34 +163,34 @@ export const Navbar = () => {
   className="fixed left-4 right-4 z-50 flex items-center justify-center gap-4"
   style={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
   >
-      <div className="glass-nav rounded-full px-4 lg:px-6 py-3 flex items-center justify-between gap-4 max-w-7xl w-full">
-        {/* Logo */}
+      <div className="glass-nav rounded-full px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4 max-w-7xl w-full flex-grow">
+        {/* Group 1: Logo */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
           <img src={logo} alt="Subhakary" className="h-10 w-auto" />
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-          {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="text-sm font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
+        {/* Group 2: Desktop Navigation Links */}
+        <div className="hidden lg:flex items-center gap-3 xl:gap-5 flex-shrink text-xs xl:text-sm">
+          {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
                 {link.name}
-              </Link> : <a key={link.name} href={link.href} className="text-sm font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
+              </Link> : <a key={link.name} href={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
                 {link.name}
               </a>)}
-          <Link to="/my-bookings" className="flex items-center gap-2 text-sm font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
-            <Search className="w-4 h-4" />
+          <Link to="/my-bookings" className="flex items-center gap-1.5 font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
+            <Search className="w-3.5 h-3.5" />
             Track Booking
           </Link>
         </div>
 
-        {/* Desktop Buttons */}
-        <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
+        {/* Group 3: Desktop User Actions inside the Gold Pill */}
+        <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 flex-shrink-0">
           {user ? <>
               <Link to="/notifications" className="relative">
-                <Button variant="ghost" size="icon" title="Notifications">
-                  <Bell className="h-5 w-5" />
+                <Button variant="ghost" size="icon" title="Notifications" className="h-9 w-9">
+                  <Bell className="h-4.5 w-4.5" />
                   {unreadCount > 0 && (
                     <Badge 
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
                       variant="destructive"
                     >
                       {unreadCount > 9 ? "9+" : unreadCount}
@@ -199,34 +199,34 @@ export const Navbar = () => {
                 </Button>
               </Link>
               <Link to="/chat">
-                <Button variant="ghost" size="icon">
-                  <MessageSquare className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <MessageSquare className="h-4.5 w-4.5" />
                 </Button>
               </Link>
               <Link to="/favorites">
-                <Button variant="ghost" size="icon">
-                  <Heart className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Heart className="h-4.5 w-4.5" />
                 </Button>
               </Link>
               <Link to="/profile">
-                <Button variant="ghost" size="sm" className="font-medium gap-2">
-                  <Avatar className="h-6 w-6">
+                <Button variant="ghost" size="sm" className="font-medium gap-1.5 h-9">
+                  <Avatar className="h-5.5 w-5.5">
                     <AvatarImage src={userProfile?.avatar_url || undefined} />
-                    <AvatarFallback className="text-xs bg-primary/10">
-                      {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-3 w-3" />}
+                    <AvatarFallback className="text-[10px] bg-primary/10">
+                      {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-2.5 w-2.5" />}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium">Profile</span>
+                  <span className="text-xs xl:text-sm">Profile</span>
                 </Button>
               </Link>
             </> : <>
               <Link to="/auth">
-                <Button variant="ghost" size="sm" className="font-medium">
+                <Button variant="ghost" size="sm" className="font-medium text-xs xl:text-sm h-9">
                   Sign In
                 </Button>
               </Link>
               <Link to="/auth">
-                <Button variant="gold" size="sm" className="font-medium rounded-full px-5">
+                <Button variant="gold" size="sm" className="font-medium rounded-full px-4 text-xs xl:text-sm h-9">
                   Join Us
                 </Button>
               </Link>
@@ -239,32 +239,32 @@ export const Navbar = () => {
         </button>
       </div>
 
-      {/* Desktop Buttons OUTSIDE the Gold Pill */}
+      {/* Group 4: Desktop Buttons OUTSIDE the Gold Pill */}
       {user && (
-        <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+        <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0">
           {isApprovedProvider ? (
             <Link to="/provider-dashboard">
-              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-2 h-9">
+              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
                 <LayoutDashboard className="w-4 h-4" />
                 My Dashboard
               </Button>
             </Link>
           ) : (
             <Link to="/become-provider">
-              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary h-9">
+              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary h-9 text-xs xl:text-sm">
                 Become a Provider
               </Button>
             </Link>
           )}
           {isAdmin && (
             <Link to="/admin">
-              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-2 h-9">
+              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
                 <Shield className="w-4 h-4" />
                 Admin
               </Button>
             </Link>
           )}
-          <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-2 h-9" onClick={handleSignOut}>
+          <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm" onClick={handleSignOut}>
             <LogOut className="w-4 h-4" />
             Sign Out
           </Button>
