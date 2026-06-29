@@ -160,9 +160,13 @@ export const Navbar = () => {
   }} transition={{
     duration: 0.6
   }} 
-  className="fixed left-4 right-4 z-50 flex items-center justify-center gap-4"
+  className="fixed left-4 right-4 z-50 flex items-center justify-between gap-4"
   style={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
   >
+      {/* Left spacer to balance Group 4 width */}
+      <div className="hidden xl:block w-[260px] flex-shrink-0" />
+
+      {/* Gold Pill Container */}
       <div className="glass-nav rounded-full px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4 max-w-7xl w-full flex-grow">
         {/* Group 1: Logo */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
@@ -170,7 +174,7 @@ export const Navbar = () => {
         </Link>
 
         {/* Group 2: Desktop Navigation Links */}
-        <div className="hidden lg:flex items-center gap-3 xl:gap-5 flex-shrink text-xs xl:text-sm">
+        <div className="hidden xl:flex items-center gap-3 xl:gap-5 flex-shrink text-xs xl:text-sm">
           {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
                 {link.name}
               </Link> : <a key={link.name} href={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
@@ -183,11 +187,11 @@ export const Navbar = () => {
         </div>
 
         {/* Group 3: Desktop User Actions inside the Gold Pill */}
-        <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 flex-shrink-0">
+        <div className="hidden xl:flex items-center gap-1.5 xl:gap-2 flex-shrink-0">
           {user ? <>
               <Link to="/notifications" className="relative">
                 <Button variant="ghost" size="icon" title="Notifications" className="h-9 w-9">
-                  <Bell className="h-4.5 w-4.5" />
+                  <Bell className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <Badge 
                       className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
@@ -200,17 +204,17 @@ export const Navbar = () => {
               </Link>
               <Link to="/chat">
                 <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <MessageSquare className="h-4.5 w-4.5" />
+                  <MessageSquare className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/favorites">
                 <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Heart className="h-4.5 w-4.5" />
+                  <Heart className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/profile">
                 <Button variant="ghost" size="sm" className="font-medium gap-1.5 h-9">
-                  <Avatar className="h-5.5 w-5.5">
+                  <Avatar className="h-6 w-6">
                     <AvatarImage src={userProfile?.avatar_url || undefined} />
                     <AvatarFallback className="text-[10px] bg-primary/10">
                       {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-2.5 w-2.5" />}
@@ -234,14 +238,14 @@ export const Navbar = () => {
         </div>
 
         {/* Mobile Menu Button */}
-        <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden p-2 text-foreground">
+        <button onClick={() => setIsOpen(!isOpen)} className="xl:hidden p-2 text-foreground">
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
       {/* Group 4: Desktop Buttons OUTSIDE the Gold Pill */}
-      {user && (
-        <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0">
+      {user ? (
+        <div className="hidden xl:flex items-center justify-end gap-2 xl:gap-3 w-[260px] flex-shrink-0">
           {isApprovedProvider ? (
             <Link to="/provider-dashboard">
               <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
@@ -269,6 +273,8 @@ export const Navbar = () => {
             Sign Out
           </Button>
         </div>
+      ) : (
+        <div className="hidden xl:block w-[260px] flex-shrink-0" />
       )}
 
       {/* Mobile Menu */}
@@ -284,7 +290,7 @@ export const Navbar = () => {
         y: -20
       }} transition={{
         duration: 0.2
-      }} className="lg:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-nav rounded-2xl p-4 shadow-lg">
+      }} className="xl:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-nav rounded-2xl p-4 shadow-lg">
             <div className="flex flex-col gap-4">
               {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="text-sm font-medium hover:text-brown transition-colors py-2" onClick={() => setIsOpen(false)}>
                   {link.name}
