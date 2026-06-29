@@ -14,8 +14,11 @@ const navLinks = [{
   name: "Home",
   href: "/"
 }, {
-  name: "Wedding OS",
+  name: "Plan Wedding",
   href: "/wedding-dashboard"
+}, {
+  name: "Journey",
+  href: "/journey"
 }, {
   name: "Find Providers",
   href: "/providers"
@@ -157,7 +160,7 @@ export const Navbar = () => {
   }} transition={{
     duration: 0.6
   }} 
-  className="fixed left-4 right-4 z-50 flex justify-center"
+  className="fixed left-4 right-4 z-50 flex items-center justify-center gap-4"
   style={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
   >
       <div className="glass-nav rounded-full px-4 lg:px-6 py-3 flex items-center justify-between gap-4 max-w-7xl w-full">
@@ -213,36 +216,9 @@ export const Navbar = () => {
                       {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-3 w-3" />}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden xl:inline">Profile</span>
+                  <span className="text-sm font-medium">Profile</span>
                 </Button>
               </Link>
-
-              {isApprovedProvider ? (
-                <Link to="/provider-dashboard">
-                  <Button variant="ghost" size="sm" className="font-medium text-green-600 hover:text-green-700 hover:bg-green-50">
-                    <LayoutDashboard className="w-4 h-4 mr-2" />
-                    My Dashboard
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/become-provider">
-                  <Button variant="ghost" size="sm" className="font-medium">
-                    Become a Provider
-                  </Button>
-                </Link>
-              )}
-              {isAdmin && (
-                <Link to="/admin">
-                  <Button variant="ghost" size="sm" className="font-medium text-primary">
-                    <Shield className="w-4 h-4 mr-2" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
-              <Button variant="ghost" size="sm" className="font-medium" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
             </> : <>
               <Link to="/auth">
                 <Button variant="ghost" size="sm" className="font-medium">
@@ -262,6 +238,38 @@ export const Navbar = () => {
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
+
+      {/* Desktop Buttons OUTSIDE the Gold Pill */}
+      {user && (
+        <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+          {isApprovedProvider ? (
+            <Link to="/provider-dashboard">
+              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-2 h-9">
+                <LayoutDashboard className="w-4 h-4" />
+                My Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/become-provider">
+              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary h-9">
+                Become a Provider
+              </Button>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/admin">
+              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-2 h-9">
+                <Shield className="w-4 h-4" />
+                Admin
+              </Button>
+            </Link>
+          )}
+          <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-2 h-9" onClick={handleSignOut}>
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
+        </div>
+      )}
 
       {/* Mobile Menu */}
       <AnimatePresence>
