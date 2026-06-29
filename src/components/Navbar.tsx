@@ -168,22 +168,25 @@ export const Navbar = () => {
 
       {/* Gold Pill Container */}
       <div className="glass-nav rounded-full px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4 max-w-7xl w-full flex-grow">
-        {/* Group 1: Logo */}
-        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <img src={logo} alt="Subhakary" className="h-10 w-auto" />
-        </Link>
-
-        {/* Group 2: Desktop Navigation Links */}
-        <div className="hidden xl:flex items-center gap-3 xl:gap-5 flex-shrink text-xs xl:text-sm">
-          {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
-                {link.name}
-              </Link> : <a key={link.name} href={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
-                {link.name}
-              </a>)}
-          <Link to="/my-bookings" className="flex items-center gap-1.5 font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
-            <Search className="w-3.5 h-3.5" />
-            Track Booking
+        {/* Left Side Group: Logo + Desktop Links */}
+        <div className="flex items-center gap-6 xl:gap-8 flex-grow">
+          {/* Group 1: Logo */}
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <img src={logo} alt="Subhakary" className="h-10 w-auto" />
           </Link>
+
+          {/* Group 2: Desktop Navigation Links */}
+          <div className="hidden xl:flex items-center gap-3 xl:gap-5 flex-shrink text-xs xl:text-sm">
+            {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
+                  {link.name}
+                </Link> : <a key={link.name} href={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
+                  {link.name}
+                </a>)}
+            <Link to="/my-bookings" className="flex items-center gap-1.5 font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
+              <Search className="w-3.5 h-3.5" />
+              Track Booking
+            </Link>
+          </div>
         </div>
 
         {/* Group 3: Desktop User Actions inside the Gold Pill */}
