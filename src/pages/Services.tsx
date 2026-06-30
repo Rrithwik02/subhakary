@@ -13,7 +13,10 @@ import {
   ArrowLeft,
   ArrowRight
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -121,6 +124,67 @@ const getAllServicesKeywords = (): string => {
 
 const Services = () => {
   const pageKeywords = getAllServicesKeywords();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Fetch categories with real provider counts from database
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ["service-categories-with-counts"],
+    queryFn: async () => {
+      // Fetch categories
+      const { data: cats, error: catsError } = await supabase
+        .from("service_categories")
+        .select("id, name, slug");
+      if (catsError) throw catsError;
+
+      // Fetch approved providers count grouped by category_id
+      const { data: providers, error: providersError } = await supabase
+        .from("service_providers")
+        .select("category_id")
+        .eq("status", "approved");
+      if (providersError) throw providersError;
+
+      const counts: Record<string, number> = {};
+      providers.forEach((p) => {
+        if (p.category_id) {
+          counts[p.category_id] = (counts[p.category_id] || 0) + 1;
+        }
+      });
+
+      return cats.map((cat) => ({
+        ...cat,
+        providerCount: counts[cat.id] || 0,
+      }));
+    }
+  });
+
+  const getProviderCountForCategory = (slug: string) => {
+    const dbCat = dbCategories.find(
+      (c) =>
+        c.slug?.toLowerCase() === slug.toLowerCase() ||
+        c.name.toLowerCase().includes(slug.toLowerCase()) ||
+        slug.toLowerCase().includes(c.slug?.toLowerCase() || "")
+    );
+    return dbCat?.providerCount ?? 0;
+  };
+
+  const handleCategoryClick = (categorySlug: string) => {
+    const targetUrl = `/providers?category=${categorySlug}`;
+    if (!user) {
+      navigate(`/auth?redirect=${encodeURIComponent(targetUrl)}`);
+    } else {
+      navigate(targetUrl);
+    }
+  };
+
+  const handleBrowseAllClick = () => {
+    const targetUrl = "/providers";
+    if (!user) {
+      navigate(`/auth?redirect=${encodeURIComponent(targetUrl)}`);
+    } else {
+      navigate(targetUrl);
+    }
+  };
 
   return (
     <>
@@ -192,7 +256,8 @@ const Services = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="group bg-card rounded-2xl p-8 border border-border hover:border-gold/30 transition-all duration-300 hover:shadow-lg"
+                  className="group bg-card rounded-2xl p-8 border border-border hover:border-gold/30 transition-all duration-300 hover:shadow-lg cursor-pointer"
+                  onClick={() => handleCategoryClick(service.slug)}
                 >
                   {/* Icon */}
                   <div
@@ -203,7 +268,7 @@ const Services = () => {
 
                   {/* Content */}
                   <h3 className="font-display text-2xl font-semibold text-brown mb-3 group-hover:text-gold transition-colors">
-                    {service.name}
+                    {service.name} ({getProviderCountForCategory(service.slug)} Providers)
                   </h3>
                   <p className="text-muted-foreground mb-6">
                     {service.description}
@@ -222,12 +287,17 @@ const Services = () => {
                   </div>
 
                   {/* CTA */}
-                  <Link to="/providers">
-                    <Button variant="outline" className="w-full border-brown/20 hover:bg-brown hover:text-cream group-hover:border-gold">
-                      Find Providers
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-brown/20 hover:bg-brown hover:text-cream group-hover:border-gold cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCategoryClick(service.slug);
+                    }}
+                  >
+                    Find Providers
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </motion.div>
               ))}
             </div>
@@ -250,12 +320,13 @@ const Services = () => {
                 Browse our verified service providers and book with confidence. 
                 Every provider is vetted for quality and reliability.
               </p>
-              <Link to="/providers">
-                <Button className="bg-gold hover:bg-gold/90 text-brown px-8 py-6 rounded-full text-lg">
-                  Browse All Providers
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
+              <Button 
+                className="bg-gold hover:bg-gold/90 text-brown px-8 py-6 rounded-full text-lg cursor-pointer animate-pulse"
+                onClick={handleBrowseAllClick}
+              >
+                Browse All Providers
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
             </motion.div>
           </div>
         </section>

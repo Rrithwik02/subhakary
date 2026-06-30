@@ -9,32 +9,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo-brown.png";
-
-const navLinks = [{
-  name: "Home",
-  href: "/"
-}, {
-  name: "Plan Wedding",
-  href: "/wedding-dashboard"
-}, {
-  name: "Journey",
-  href: "/journey"
-}, {
-  name: "Find Providers",
-  href: "/providers"
-}, {
-  name: "Services",
-  href: "/services"
-}, {
-  name: "About Us",
-  href: "/about"
-}, {
-  name: "Blog",
-  href: "/blog"
-}, {
-  name: "Contact",
-  href: "/contact"
-}];
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -78,6 +52,39 @@ export const Navbar = () => {
     staleTime: 0,
     refetchOnMount: "always",
   });
+
+  // Dynamically build nav links based on role
+  const getNavLinks = () => {
+    if (!user) {
+      return [
+        { name: "Home", href: "/" },
+        { name: "Services", href: "/services" },
+        { name: "About Us", href: "/about" },
+        { name: "Blog", href: "/blog" },
+        { name: "Contact", href: "/contact" }
+      ];
+    }
+
+    if (isApprovedProvider) {
+      return [
+        { name: "Dashboard", href: "/dashboard" },
+        { name: "Notifications", href: "/notifications" },
+        { name: "Profile", href: "/profile" }
+      ];
+    }
+
+    // Customer
+    return [
+      { name: "Find Providers", href: "/providers" },
+      { name: "Plan Wedding", href: "/plan-wedding" },
+      { name: "My Bookings", href: "/my-bookings" },
+      { name: "Wishlist", href: "/favorites" },
+      { name: "Notifications", href: "/notifications" },
+      { name: "Profile", href: "/profile" }
+    ];
+  };
+
+  const activeLinks = getNavLinks();
 
   // Fetch user profile for avatar
   const { data: userProfile } = useQuery({
@@ -177,15 +184,15 @@ export const Navbar = () => {
 
           {/* Group 2: Desktop Navigation Links */}
           <div className="hidden xl:flex items-center gap-3 xl:gap-5 flex-shrink text-xs xl:text-sm">
-            {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
-                  {link.name}
-                </Link> : <a key={link.name} href={link.href} className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
-                  {link.name}
-                </a>)}
-            <Link to="/my-bookings" className="flex items-center gap-1.5 font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap">
-              <Search className="w-3.5 h-3.5" />
-              Track Booking
-            </Link>
+            {activeLinks.map(link => (
+              <Link 
+                key={link.name} 
+                to={link.href} 
+                className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap"
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
         </div>
 
@@ -250,7 +257,7 @@ export const Navbar = () => {
       {user ? (
         <div className="hidden xl:flex items-center justify-end gap-2 xl:gap-3 w-[260px] flex-shrink-0">
           {isApprovedProvider ? (
-            <Link to="/provider-dashboard">
+            <Link to="/dashboard">
               <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
                 <LayoutDashboard className="w-4 h-4" />
                 My Dashboard
@@ -295,15 +302,16 @@ export const Navbar = () => {
         duration: 0.2
       }} className="xl:hidden absolute top-full left-0 right-0 mt-2 mx-4 glass-nav rounded-2xl p-4 shadow-lg">
             <div className="flex flex-col gap-4">
-              {navLinks.map(link => link.href.startsWith("/") ? <Link key={link.name} to={link.href} className="text-sm font-medium hover:text-brown transition-colors py-2" onClick={() => setIsOpen(false)}>
+              {activeLinks.map(link => (
+                <Link 
+                  key={link.name} 
+                  to={link.href} 
+                  className="text-sm font-medium hover:text-brown transition-colors py-2" 
+                  onClick={() => setIsOpen(false)}
+                >
                   {link.name}
-                </Link> : <a key={link.name} href={link.href} className="text-sm font-medium hover:text-brown transition-colors py-2" onClick={() => setIsOpen(false)}>
-                  {link.name}
-                </a>)}
-              <Link to="/my-bookings" className="flex items-center gap-2 text-sm font-medium hover:text-brown py-2" onClick={() => setIsOpen(false)}>
-                <Search className="w-4 h-4" />
-                Track Booking
-              </Link>
+                </Link>
+              ))}
               <div className="flex flex-col gap-3 pt-2 border-t border-border">
                 {user ? <>
                     <div className="flex items-center gap-2 pb-2">
@@ -344,7 +352,7 @@ export const Navbar = () => {
                     </Link>
 
                     {isApprovedProvider ? (
-                      <Link to="/provider-dashboard" className="w-full" onClick={() => setIsOpen(false)}>
+                      <Link to="/dashboard" className="w-full" onClick={() => setIsOpen(false)}>
                         <Button variant="ghost" size="sm" className="w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50">
                           <LayoutDashboard className="w-4 h-4 mr-2" />
                           My Dashboard

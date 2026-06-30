@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEOHead, generateServiceSchema, generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
@@ -15,6 +16,7 @@ import { motion } from "framer-motion";
 const ServiceLocation = () => {
   const { service, city } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const serviceData = getServiceFromSlug(service || "");
   const cityName = getCityFromSlug(city || "");
@@ -78,6 +80,24 @@ const ServiceLocation = () => {
     .filter(c => c.state === stateName && c.name !== cityName)
     .slice(0, 6);
 
+  const handleViewAllClick = () => {
+    const targetUrl = `/providers?category=${serviceData?.slug || ""}&city=${cityName}`;
+    if (!user) {
+      navigate(`/auth?redirect=${encodeURIComponent(targetUrl)}`);
+    } else {
+      navigate(targetUrl);
+    }
+  };
+
+  const handleViewProfileClick = (providerSlugOrId: string) => {
+    const targetUrl = `/provider/${providerSlugOrId}`;
+    if (!user) {
+      navigate(`/auth?redirect=${encodeURIComponent(targetUrl)}`);
+    } else {
+      navigate(targetUrl);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <SEOHead
@@ -129,7 +149,7 @@ const ServiceLocation = () => {
             <div className="flex flex-wrap gap-4">
               <Button 
                 size="lg" 
-                onClick={() => navigate(`/providers?service=${serviceData.filter}&city=${cityName}`)}
+                onClick={handleViewAllClick}
               >
                 View All {serviceData.pluralName}
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -202,7 +222,7 @@ const ServiceLocation = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => navigate(`/provider/${provider.url_slug || provider.id}`)}
+                        onClick={() => handleViewProfileClick(provider.url_slug || provider.id)}
                       >
                         View Profile
                       </Button>
@@ -218,7 +238,7 @@ const ServiceLocation = () => {
               <p className="text-muted-foreground mb-4">
                 No {serviceData.pluralName.toLowerCase()} found in {cityName} yet.
               </p>
-              <Button onClick={() => navigate(`/providers?service=${serviceData.filter}`)}>
+              <Button onClick={handleViewAllClick}>
                 Browse All {serviceData.pluralName}
               </Button>
             </CardContent>
@@ -229,7 +249,7 @@ const ServiceLocation = () => {
           <div className="text-center mt-8">
             <Button 
               size="lg"
-              onClick={() => navigate(`/providers?service=${serviceData.filter}&city=${cityName}`)}
+              onClick={handleViewAllClick}
             >
               View All {serviceData.pluralName} in {cityName}
               <ArrowRight className="w-4 h-4 ml-2" />
