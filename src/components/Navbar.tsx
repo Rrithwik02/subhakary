@@ -167,72 +167,98 @@ export const Navbar = () => {
   }} transition={{
     duration: 0.6
   }} 
-  className="fixed left-4 right-4 z-50 flex items-center justify-between gap-4"
+  className="fixed left-0 right-0 z-50 flex justify-center px-4"
   style={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
   >
-      {/* Left spacer to balance Group 4 width */}
-      <div className="hidden xl:block w-[260px] flex-shrink-0" />
-
       {/* Gold Pill Container */}
-      <div className="glass-nav rounded-full px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4 max-w-7xl w-full flex-grow">
-        {/* Left Side Group: Logo + Desktop Links */}
-        <div className="flex items-center gap-6 xl:gap-8 flex-grow">
-          {/* Group 1: Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <img src={logo} alt="Subhakary" className="h-10 w-auto" />
-          </Link>
+      <div className="glass-nav rounded-full px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4 max-w-7xl w-full">
+        {/* Left Side: Logo */}
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+          <img src={logo} alt="Subhakary" className="h-10 w-auto" />
+        </Link>
 
-          {/* Group 2: Desktop Navigation Links */}
-          <div className="hidden xl:flex items-center gap-3 xl:gap-5 flex-shrink text-xs xl:text-sm">
-            {activeLinks.map(link => (
-              <Link 
-                key={link.name} 
-                to={link.href} 
-                className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
+        {/* Center: Desktop Navigation Links (Centered) */}
+        <div className="hidden xl:flex items-center justify-center gap-4 xl:gap-6 flex-grow">
+          {activeLinks.map(link => (
+            <Link 
+              key={link.name} 
+              to={link.href} 
+              className="font-medium hover:text-brown transition-colors duration-200 whitespace-nowrap text-xs xl:text-sm"
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
 
-        {/* Group 3: Desktop User Actions inside the Gold Pill */}
-        <div className="hidden xl:flex items-center gap-1.5 xl:gap-2 flex-shrink-0">
+        {/* Right Side: Desktop User Actions inside the Gold Pill */}
+        <div className="hidden xl:flex items-center gap-3 xl:gap-4 flex-shrink-0">
           {user ? <>
-              <Link to="/notifications" className="relative">
-                <Button variant="ghost" size="icon" title="Notifications" className="h-9 w-9">
-                  <Bell className="h-4 w-4" />
-                  {unreadCount > 0 && (
-                    <Badge 
-                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
-                      variant="destructive"
-                    >
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </Badge>
-                  )}
+              <div className="flex items-center gap-1.5 xl:gap-2">
+                <Link to="/notifications" className="relative">
+                  <Button variant="ghost" size="icon" title="Notifications" className="h-9 w-9">
+                    <Bell className="h-4 w-4" />
+                    {unreadCount > 0 && (
+                      <Badge 
+                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+                        variant="destructive"
+                      >
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+                <Link to="/chat">
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/favorites">
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/profile">
+                  <Button variant="ghost" size="sm" className="font-medium gap-1.5 h-9">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={userProfile?.avatar_url || undefined} />
+                      <AvatarFallback className="text-[10px] bg-primary/10">
+                        {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-2.5 w-2.5" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs xl:text-sm">Profile</span>
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Action buttons inside the gold pill */}
+              <div className="flex items-center gap-2 border-l border-brown/20 pl-3 xl:pl-4">
+                {isApprovedProvider ? (
+                  <Link to="/dashboard">
+                    <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
+                      <LayoutDashboard className="w-4 h-4" />
+                      My Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/become-provider">
+                    <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary h-9 text-xs xl:text-sm">
+                      Become a Provider
+                    </Button>
+                  </Link>
+                )}
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+                <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
                 </Button>
-              </Link>
-              <Link to="/chat">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <MessageSquare className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/favorites">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Heart className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/profile">
-                <Button variant="ghost" size="sm" className="font-medium gap-1.5 h-9">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={userProfile?.avatar_url || undefined} />
-                    <AvatarFallback className="text-[10px] bg-primary/10">
-                      {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-2.5 w-2.5" />}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs xl:text-sm">Profile</span>
-                </Button>
-              </Link>
+              </div>
             </> : <>
               <Link to="/auth">
                 <Button variant="ghost" size="sm" className="font-medium text-xs xl:text-sm h-9">
@@ -252,40 +278,6 @@ export const Navbar = () => {
           {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
-
-      {/* Group 4: Desktop Buttons OUTSIDE the Gold Pill */}
-      {user ? (
-        <div className="hidden xl:flex items-center justify-end gap-2 xl:gap-3 w-[260px] flex-shrink-0">
-          {isApprovedProvider ? (
-            <Link to="/dashboard">
-              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
-                <LayoutDashboard className="w-4 h-4" />
-                My Dashboard
-              </Button>
-            </Link>
-          ) : (
-            <Link to="/become-provider">
-              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary h-9 text-xs xl:text-sm">
-                Become a Provider
-              </Button>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link to="/admin">
-              <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
-                <Shield className="w-4 h-4" />
-                Admin
-              </Button>
-            </Link>
-          )}
-          <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </Button>
-        </div>
-      ) : (
-        <div className="hidden xl:block w-[260px] flex-shrink-0" />
-      )}
 
       {/* Mobile Menu */}
       <AnimatePresence>
