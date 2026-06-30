@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEOHead, generateServiceSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
@@ -12,6 +13,7 @@ import { motion } from "framer-motion";
 const ServiceCategory = () => {
   const { service } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const serviceData = getServiceFromSlug(service || "");
 
@@ -100,7 +102,14 @@ const ServiceCategory = () => {
             <div className="flex flex-wrap justify-center gap-4">
               <Button 
                 size="lg" 
-                onClick={() => navigate(`/providers?service=${serviceData.filter}`)}
+                onClick={() => {
+                  const targetUrl = `/providers?category=${serviceData.slug}`;
+                  if (!user) {
+                    navigate(`/auth?redirect=${encodeURIComponent(targetUrl)}`);
+                  } else {
+                    navigate(targetUrl);
+                  }
+                }}
               >
                 Browse All {serviceData.pluralName}
                 <ArrowRight className="w-4 h-4 ml-2" />

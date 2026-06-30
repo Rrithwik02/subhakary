@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ComparisonProvider } from "@/hooks/useProviderComparison";
 import { AdminRoute } from "@/components/AdminRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CompareBar } from "@/components/CompareBar";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
@@ -58,61 +59,54 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Core & Auth */}
+              {/* Public Marketing Website / Guest Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/profile" element={<Profile />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              
-              {/* Provider Flow */}
-              <Route path="/become-provider" element={<BecomeProvider />} />
-              <Route path="/provider-dashboard" element={<ProviderDashboard />} />
-              <Route path="/provider-settings" element={<ProviderSettings />} />
-              <Route path="/provider/:id" element={<ProviderProfile />} />
-              <Route path="/providers/:id" element={<ProviderProfile />} />
-              <Route path="/providers" element={<Providers />} />
-
-              {/* Booking & Payments */}
-              <Route path="/my-bookings" element={<MyBookings />} />
-              <Route path="/booking/:bookingId" element={<BookingDetails />} />
-              <Route path="/checkout/:paymentId" element={<Checkout />} />
-              <Route path="/payment-history" element={<PaymentHistory />} />
-
-              {/* Admin */}
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-
-              {/* Discovery & Search */}
               <Route path="/services" element={<Services />} />
               <Route path="/services/:service" element={<ServiceCategory />} />
               <Route path="/services/:service/:city" element={<ServiceLocation />} />
               <Route path="/search" element={<SearchResults />} />
-              <Route path="/favorites" element={<Favorites />} />
-              <Route path="/compare" element={<Compare />} />
-
-              {/* Communication */}
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/inquiry/:providerId" element={<InquiryChat />} />
-              <Route path="/notifications" element={<Notifications />} />
-
-              {/* Content Pages */}
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
-
-              {/* Wedding OS (V2 Core) */}
-              <Route path="/wedding/new" element={<WeddingOnboarding />} />
-              <Route path="/wedding/:weddingId" element={<WeddingDashboard />} />
-              <Route path="/wedding/join/:inviteCode" element={<WeddingJoin />} />
-              <Route path="/wedding/:weddingId/events/:eventId" element={<WeddingEventWorkspace />} />
-
-              {/* Legacy/Redirect paths */}
-              <Route path="/wedding-dashboard" element={<WeddingDashboard />} />
-              <Route path="/plan-wedding" element={<PlanWedding />} />
-              <Route path="/journey" element={<Journey />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/become-provider" element={<BecomeProvider />} />
+
+              {/* Authenticated Customer Routes */}
+              <Route path="/profile" element={<ProtectedRoute allowedRole="customer"><Profile /></ProtectedRoute>} />
+              <Route path="/providers" element={<ProtectedRoute allowedRole="customer"><Providers /></ProtectedRoute>} />
+              <Route path="/provider/:id" element={<ProtectedRoute allowedRole="customer"><ProviderProfile /></ProtectedRoute>} />
+              <Route path="/providers/:id" element={<ProtectedRoute allowedRole="customer"><ProviderProfile /></ProtectedRoute>} />
+              <Route path="/my-bookings" element={<ProtectedRoute allowedRole="customer"><MyBookings /></ProtectedRoute>} />
+              <Route path="/booking/:bookingId" element={<ProtectedRoute allowedRole="customer"><BookingDetails /></ProtectedRoute>} />
+              <Route path="/checkout/:paymentId" element={<ProtectedRoute allowedRole="customer"><Checkout /></ProtectedRoute>} />
+              <Route path="/payment-history" element={<ProtectedRoute allowedRole="customer"><PaymentHistory /></ProtectedRoute>} />
+              <Route path="/favorites" element={<ProtectedRoute allowedRole="customer"><Favorites /></ProtectedRoute>} />
+              <Route path="/compare" element={<ProtectedRoute allowedRole="customer"><Compare /></ProtectedRoute>} />
+              <Route path="/chat" element={<ProtectedRoute allowedRole="customer"><Chat /></ProtectedRoute>} />
+              <Route path="/inquiry/:providerId" element={<ProtectedRoute allowedRole="customer"><InquiryChat /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute allowedRole="customer"><Notifications /></ProtectedRoute>} />
+
+              {/* Wedding OS (Customer Wedding Planner) */}
+              <Route path="/wedding/new" element={<ProtectedRoute allowedRole="customer"><WeddingOnboarding /></ProtectedRoute>} />
+              <Route path="/wedding/:weddingId" element={<ProtectedRoute allowedRole="customer"><WeddingDashboard /></ProtectedRoute>} />
+              <Route path="/wedding/join/:inviteCode" element={<ProtectedRoute allowedRole="customer"><WeddingJoin /></ProtectedRoute>} />
+              <Route path="/wedding/:weddingId/events/:eventId" element={<ProtectedRoute allowedRole="customer"><WeddingEventWorkspace /></ProtectedRoute>} />
+              <Route path="/wedding-dashboard" element={<ProtectedRoute allowedRole="customer"><WeddingDashboard /></ProtectedRoute>} />
+              <Route path="/plan-wedding" element={<ProtectedRoute allowedRole="customer"><PlanWedding /></ProtectedRoute>} />
+              <Route path="/journey" element={<ProtectedRoute allowedRole="customer"><Journey /></ProtectedRoute>} />
+
+              {/* Authenticated Provider Routes */}
+              <Route path="/dashboard" element={<ProtectedRoute allowedRole="provider"><ProviderDashboard /></ProtectedRoute>} />
+              <Route path="/provider-dashboard" element={<ProtectedRoute allowedRole="provider"><ProviderDashboard /></ProtectedRoute>} />
+              <Route path="/provider-settings" element={<ProtectedRoute allowedRole="provider"><ProviderSettings /></ProtectedRoute>} />
+
+              {/* Admin */}
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<NotFound />} />

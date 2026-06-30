@@ -51,9 +51,37 @@ const Auth = () => {
       if (pendingInviteCode) {
         localStorage.removeItem("pending_invite_code");
         navigate(`/wedding/join/${pendingInviteCode}`);
-      } else {
-        navigate("/");
+        return;
       }
+
+      // Check if user is a provider or customer to decide redirect destination
+      const handleRoleRedirect = async () => {
+        try {
+          const { data: provider } = await supabase
+            .from("service_providers")
+            .select("id, status")
+            .eq("user_id", user.id)
+            .eq("status", "approved")
+            .maybeSingle();
+
+          if (provider) {
+            navigate("/dashboard");
+          } else {
+            // Check for redirect param in URL
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirectUrl = searchParams.get("redirect");
+            if (redirectUrl) {
+              navigate(redirectUrl);
+            } else {
+              navigate("/providers");
+            }
+          }
+        } catch (err) {
+          navigate("/providers");
+        }
+      };
+
+      handleRoleRedirect();
     }
   }, [user, navigate, show2FAStep]);
 
