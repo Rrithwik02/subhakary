@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Calendar, Users, LayoutDashboard } from "lucide-react";
+import { Calendar, Users, LayoutDashboard, IndianRupee, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useCallback } from "react";
@@ -58,7 +58,7 @@ export const HeroSection = () => {
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#121110] via-[#221e1a] to-[#0f0e0d] text-cream pt-28 pb-16">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-cream text-brown-dark pt-28 pb-16">
       {/* Background radial gradient overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-60 z-0 pointer-events-none" />
 
@@ -67,7 +67,7 @@ export const HeroSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Column: Heading, Slides & Call-to-Action Buttons */}
-          <div className="lg:col-span-7 flex flex-col justify-center space-y-6">
+          <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
             
             {/* Title & Carousel Text */}
             <div className="space-y-4">
@@ -76,7 +76,7 @@ export const HeroSection = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="font-display text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight text-cream"
+                className="font-display text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight text-brown-dark"
               >
                 {heroSlides[selectedIndex].title}{" "}
                 <span className="text-gold">{heroSlides[selectedIndex].highlight}</span>
@@ -89,7 +89,7 @@ export const HeroSection = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="font-body text-base sm:text-lg text-cream/80 max-w-xl leading-relaxed"
+                className="font-body text-base sm:text-lg text-brown/70 max-w-xl leading-relaxed"
               >
                 {heroSlides[selectedIndex].description}
               </motion.p>
@@ -102,7 +102,7 @@ export const HeroSection = () => {
                   key={index}
                   onClick={() => emblaApi && emblaApi.scrollTo(index)}
                   className={`h-1.5 transition-all duration-300 rounded-full ${
-                    selectedIndex === index ? "w-6 bg-gold" : "w-2 bg-cream/30"
+                    selectedIndex === index ? "w-6 bg-gold" : "w-2 bg-brown/20"
                   }`}
                   aria-label={`Slide ${index + 1}`}
                 />
@@ -114,7 +114,7 @@ export const HeroSection = () => {
               <Button
                 variant="gold"
                 size="lg"
-                className="rounded-full px-8 py-6 font-semibold text-brown hover:scale-105 transition-transform cursor-pointer shadow-lg"
+                className="rounded-full px-8 py-6 font-semibold text-brown-dark hover:scale-105 transition-transform cursor-pointer shadow-lg"
                 onClick={() => navigate("/auth?redirect=/providers")}
               >
                 Book a Service Provider
@@ -122,7 +122,7 @@ export const HeroSection = () => {
               <Button
                 variant="outline"
                 size="lg"
-                className="rounded-full px-8 py-6 font-semibold text-cream border-cream/30 hover:bg-cream/10 hover:text-cream hover:scale-105 transition-transform cursor-pointer"
+                className="rounded-full px-8 py-6 font-semibold text-brown-dark border-brown/30 hover:bg-brown/5 hover:scale-105 transition-transform cursor-pointer"
                 onClick={() => navigate("/become-provider")}
               >
                 Register as a Provider
@@ -131,92 +131,110 @@ export const HeroSection = () => {
 
           </div>
 
-          {/* Right Column: Webapp Browser Mockup */}
-          <div className="lg:col-span-5 relative w-full h-[450px] lg:h-[500px] flex items-center justify-center">
+          {/* Right Column: Wedding Planning Quiz Mockup (1st Image Product Representation) */}
+          <div className="lg:col-span-6 relative w-full h-[480px] flex items-center justify-center">
             {/* Outer Browser Frame */}
-            <div className="w-full max-w-[480px] bg-[#1E1C1A]/95 border border-cream/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[420px] relative z-10 transition-transform hover:scale-[1.02] duration-300">
+            <div className="w-full max-w-[520px] bg-white border border-brown/15 rounded-3xl shadow-xl overflow-hidden flex flex-col h-[440px] relative z-10 transition-transform hover:scale-[1.01] duration-300">
               {/* Browser Title Bar */}
-              <div className="bg-[#2D2A26] px-4 py-3 flex items-center justify-between border-b border-cream/10">
+              <div className="bg-cream/45 px-4 py-3 flex items-center justify-between border-b border-brown/10">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#E6A085]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#EAD8A7]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#A2D3C2]" />
                 </div>
-                <div className="bg-background/40 px-6 py-0.5 rounded-md text-[9px] text-cream/40 font-mono w-44 text-center truncate">
-                  subhakary.com/workspace
+                <div className="bg-white border border-brown/10 px-6 py-0.5 rounded-md text-[9px] text-brown/50 font-mono w-44 text-center truncate">
+                  subhakary.com/quiz
                 </div>
                 <div className="w-10" />
               </div>
 
-              {/* Webapp Content Grid */}
-              <div className="flex-1 flex overflow-hidden text-cream/90 text-xs">
-                {/* Left Sidebar */}
-                <div className="w-16 bg-[#171514] border-r border-cream/10 flex flex-col items-center py-4 gap-4 flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-sm">
-                    S
+              {/* Quiz UI Mockup Content Area */}
+              <div className="flex-1 flex overflow-hidden text-brown-dark text-[11px] bg-[#FCFBF9] p-4 gap-4">
+                {/* Left Side: Form Mockup */}
+                <div className="flex-grow space-y-3 overflow-y-auto pr-1">
+                  <h3 className="font-display text-sm font-bold text-brown-dark border-b border-brown/10 pb-1">
+                    Wedding Planning Quiz
+                  </h3>
+
+                  {/* Input Rows */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-0.5">
+                      <span className="text-[9px] font-semibold text-brown/60">Bride Name</span>
+                      <div className="bg-white border border-brown/15 px-2 py-1.5 rounded-lg text-brown-dark font-medium">Priya</div>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[9px] font-semibold text-brown/60">Groom Name</span>
+                      <div className="bg-white border border-brown/15 px-2 py-1.5 rounded-lg text-brown-dark font-medium">Rohan</div>
+                    </div>
                   </div>
-                  <div className="w-8 h-8 rounded-lg bg-gold/20 flex items-center justify-center text-gold">
-                    <LayoutDashboard className="w-4 h-4" />
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-0.5">
+                      <span className="text-[9px] font-semibold text-brown/60">Wedding Date</span>
+                      <div className="bg-white border border-brown/15 px-2 py-1.5 rounded-lg text-brown-dark font-medium flex justify-between items-center">
+                        <span>28-11-2026</span>
+                        <Calendar className="w-3.5 h-3.5 text-gold" />
+                      </div>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[9px] font-semibold text-brown/60">Number of Guests</span>
+                      <div className="bg-white border border-brown/15 px-2 py-1.5 rounded-lg text-brown-dark font-medium">300</div>
+                    </div>
                   </div>
-                  <div className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-cream/40">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-cream/40">
-                    <Calendar className="w-4 h-4" />
+
+                  {/* Events Checklist Cards */}
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[9px] font-semibold text-brown/60 block">Events Required</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white border border-gold p-2 rounded-xl flex items-center justify-between shadow-sm">
+                        <div>
+                          <p className="font-bold text-[10px] text-brown-dark">Engagement</p>
+                          <p className="text-[8px] text-brown/50">10% default allocation</p>
+                        </div>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-gold fill-gold/10" />
+                      </div>
+                      <div className="bg-white border border-gold p-2 rounded-xl flex items-center justify-between shadow-sm">
+                        <div>
+                          <p className="font-bold text-[10px] text-brown-dark">Wedding</p>
+                          <p className="text-[8px] text-brown/50">40% default allocation</p>
+                        </div>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-gold fill-gold/10" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Main Dashboard Content */}
-                <div className="flex-1 bg-[#121110] p-4 space-y-4 overflow-y-auto">
-                  {/* Header */}
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="font-bold text-cream text-xs sm:text-sm">Ceremony Workspace</h4>
-                      <p className="text-[9px] text-cream/50">Muhurtham Planning OS</p>
+                {/* Right Side: "What you will get" Mockup Card */}
+                <div className="w-48 bg-white border border-brown/15 rounded-2xl p-3 flex flex-col justify-between shadow-sm flex-shrink-0">
+                  <div className="space-y-3">
+                    <h4 className="font-display text-[11px] font-bold text-brown-dark pb-1 border-b border-brown/10">
+                      What you will get
+                    </h4>
+
+                    {/* Stat box */}
+                    <div className="bg-cream/40 p-2.5 rounded-xl border border-gold/25 space-y-0.5">
+                      <span className="text-[8px] text-brown/60 block">Projected total budget</span>
+                      <span className="font-bold text-brown-dark text-[13px]">₹12,00,000</span>
                     </div>
-                    <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px]">Live</Badge>
+
+                    {/* Bullet lists */}
+                    <ul className="space-y-1.5 text-[9px] text-brown/70 leading-normal">
+                      <li className="flex items-start gap-1">
+                        <span className="text-gold font-bold">•</span>
+                        <span>Budget buckets generated automatically</span>
+                      </li>
+                      <li className="flex items-start gap-1">
+                        <span className="text-gold font-bold">•</span>
+                        <span>Timeline & event workspaces</span>
+                      </li>
+                    </ul>
                   </div>
 
-                  {/* Stats Widget */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#1E1C1A] p-2.5 rounded-xl border border-cream/10">
-                      <span className="text-[9px] text-cream/50 block">Guest RSVP</span>
-                      <span className="font-bold text-gold text-xs">245 / 310</span>
-                    </div>
-                    <div className="bg-[#1E1C1A] p-2.5 rounded-xl border border-cream/10">
-                      <span className="text-[9px] text-cream/50 block">Budget Spent</span>
-                      <span className="font-bold text-gold text-xs">78%</span>
-                    </div>
-                  </div>
-
-                  {/* Booking Progress List */}
-                  <div className="space-y-2">
-                    <span className="text-[9px] font-bold text-cream/40 uppercase tracking-wider block">Upcoming Bookings</span>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-cream/5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-gold/10 flex items-center justify-center text-[9px] text-gold font-bold">
-                            PR
-                          </div>
-                          <div>
-                            <p className="font-semibold text-[9px]">Pandit Ramaswamy</p>
-                            <p className="text-[8px] text-cream/50">Vedic Priest • Hyderabad</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-gold/20 text-gold border border-gold/30 text-[8px] px-1 py-0">Approved</Badge>
-                      </div>
-                      <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-cream/5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-gold/10 flex items-center justify-center text-[9px] text-gold font-bold">
-                            SC
-                          </div>
-                          <div>
-                            <p className="font-semibold text-[9px]">Sai Catering Services</p>
-                            <p className="text-[8px] text-cream/50">Traditional Food • Hyderabad</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[8px] px-1.5 py-0">Pending</Badge>
-                      </div>
+                  <div className="bg-cream/20 p-2 rounded-xl border border-dashed border-gold/30">
+                    <p className="text-[8px] font-bold text-brown/50 uppercase tracking-wide block mb-1">Starter tasks</p>
+                    <div className="space-y-0.5 text-[8px] text-brown/80 font-medium">
+                      <p>✓ Finalize photographer</p>
+                      <p>✓ Book puja items</p>
                     </div>
                   </div>
                 </div>
