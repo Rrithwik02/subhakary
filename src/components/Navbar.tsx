@@ -58,6 +58,7 @@ export const Navbar = () => {
     if (!user) {
       return [
         { name: "Home", href: "/" },
+        { name: "Planning OS", href: "/planning-os" },
         { name: "Services", href: "/services" },
         { name: "About Us", href: "/about" },
         { name: "Blog", href: "/blog" },

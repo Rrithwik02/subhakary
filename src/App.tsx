@@ -47,6 +47,7 @@ import ResetPassword from "./pages/ResetPassword";
 import SearchResults from "./pages/SearchResults";
 import PlanWedding from "./pages/PlanWedding";
 import Journey from "./pages/Journey";
+import SaaSLanding from "./pages/SaaSLanding";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const App = () => (
             <Routes>
               {/* Public Marketing Website / Guest Routes */}
               <Route path="/" element={<Index />} />
+              <Route path="/planning-os" element={<SaaSLanding />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/services" element={<Services />} />
