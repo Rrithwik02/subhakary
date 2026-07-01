@@ -145,13 +145,15 @@ const Services = () => {
       if (providersError) throw providersError;
 
       const counts: Record<string, number> = {};
-      providers.forEach((p) => {
+      const safeProviders = providers || [];
+      safeProviders.forEach((p) => {
         if (p.category_id) {
           counts[p.category_id] = (counts[p.category_id] || 0) + 1;
         }
       });
 
-      return cats.map((cat) => ({
+      const safeCats = cats || [];
+      return safeCats.map((cat) => ({
         ...cat,
         providerCount: counts[cat.id] || 0,
       }));
