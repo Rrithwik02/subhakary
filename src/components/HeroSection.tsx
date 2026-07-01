@@ -49,7 +49,7 @@ export const HeroSection = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("service_categories")
-        .select("slug, name")
+        .select("id, slug, name")
         .order("name");
       return data || [];
     }

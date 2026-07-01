@@ -46,7 +46,7 @@ export const AuthenticatedHome = () => {
         .select("id, name, slug")
         .order("name");
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -73,9 +73,12 @@ export const AuthenticatedHome = () => {
         .limit(6);
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
+
+  const categoriesList = categories || [];
+  const providersList = featuredProviders || [];
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -130,7 +133,7 @@ export const AuthenticatedHome = () => {
                   style={{ colorScheme: 'dark' }}
                 >
                   <option value="" className="text-foreground">Choose a Service</option>
-                  {categories.map((cat) => (
+                  {categoriesList.map((cat) => (
                     <option key={cat.id} value={cat.slug} className="text-foreground">{cat.name}</option>
                   ))}
                 </select>
@@ -179,7 +182,7 @@ export const AuthenticatedHome = () => {
                   style={{ colorScheme: 'dark' }}
                 >
                   <option value="" className="text-foreground bg-background">Choose a Service</option>
-                  {categories.map((cat) => (
+                  {categoriesList.map((cat) => (
                     <option key={cat.id} value={cat.slug} className="text-foreground bg-background">{cat.name}</option>
                   ))}
                 </select>
@@ -268,10 +271,10 @@ export const AuthenticatedHome = () => {
                 </Card>
               ))}
             </div>
-          ) : featuredProviders.length > 0 ? (
+          ) : providersList.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                {featuredProviders.map((provider, index) => (
+                {providersList.map((provider, index) => (
                   <motion.div
                     key={provider.id}
                     initial={{ opacity: 0, y: 20 }}
