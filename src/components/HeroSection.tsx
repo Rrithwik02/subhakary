@@ -1,17 +1,14 @@
 import { motion } from "framer-motion";
-import { ChevronDown, Calendar, MapPin, Search, Star, Sparkles, CheckCircle2, IndianRupee, Users } from "lucide-react";
+import { Calendar, Users, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import { AISearch } from "@/components/AISearch";
 import heroWedding from "@/assets/hero-wedding.jpg";
 import heroPuja from "@/assets/hero-puja.jpg";
 import heroCelebration from "@/assets/hero-celebration.jpg";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 const heroSlides = [
   {
@@ -19,50 +16,27 @@ const heroSlides = [
     title: "Sacred Ceremonies &",
     highlight: "Traditional",
     subtitle: "Indian Services",
-    description: "Book trusted pandits, photographers, caterers & decorators for authentic Indian weddings, pooja rituals & traditional events."
+    description: "Connect with experienced pandits, catering services, photographers, and decorators - all reviewed and vetted by families like yours."
   },
   {
     image: heroPuja,
     title: "Celebrate Your",
     highlight: "Special",
     subtitle: "Moments",
-    description: "From intimate pujas to grand weddings, find verified professionals who understand your traditions and deliver exceptional service."
+    description: "From intimate home pujas to grand wedding celebrations, find professionals who understand your regional traditions and rituals."
   },
   {
     image: heroCelebration,
-    title: "Trusted",
-    highlight: "Professionals",
-    subtitle: "Near You",
-    description: "Connect with experienced pandits, photographers, makeup artists and more - all verified and reviewed by families like yours."
+    title: "Your Event",
+    highlight: "Planning OS",
+    subtitle: "Simplified",
+    description: "Budget tracking, guest RSVPs, and checklist management - everything you need to organize your auspicious events in one place."
   }
 ];
 
 export const HeroSection = () => {
   const navigate = useNavigate();
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [selectedService, setSelectedService] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [locationInput, setLocationInput] = useState("");
-
-  // Fetch categories dynamically
-  const { data: categories = [] } = useQuery({
-    queryKey: ["service-categories-hero"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("service_categories")
-        .select("id, slug, name")
-        .order("name");
-      return data || [];
-    }
-  });
-
-  const handleSearch = () => {
-    const params = new URLSearchParams();
-    if (selectedService) params.set("category", selectedService);
-    if (locationInput) params.set("city", locationInput);
-    if (selectedDate) params.set("date", selectedDate);
-    navigate(`/providers${params.toString() ? `?${params.toString()}` : ""}`);
-  };
   
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true },
@@ -84,7 +58,7 @@ export const HeroSection = () => {
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-brown text-cream pt-28 pb-16">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#121110] via-[#221e1a] to-[#0f0e0d] text-cream pt-28 pb-16">
       {/* Background radial gradient overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-60 z-0 pointer-events-none" />
 
@@ -92,7 +66,7 @@ export const HeroSection = () => {
       <div className="relative z-10 container mx-auto px-4 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* Left Column: Heading, Slides & Search Controls */}
+          {/* Left Column: Heading, Slides & Call-to-Action Buttons */}
           <div className="lg:col-span-7 flex flex-col justify-center space-y-6">
             
             {/* Title & Carousel Text */}
@@ -135,212 +109,119 @@ export const HeroSection = () => {
               ))}
             </div>
 
-            {/* Standard Search Bar (Image 3 Mockup) */}
-            <div className="w-full">
-              {/* Mobile layout */}
-              <div className="lg:hidden flex flex-col gap-3 bg-background/5 p-4 rounded-2xl border border-cream/20 backdrop-blur-md">
-                <div className="flex items-center gap-3 px-4 py-3 border border-cream/20 rounded-xl bg-background/20">
-                  <Search className="w-4 h-4 text-gold flex-shrink-0" />
-                  <select 
-                    value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-cream cursor-pointer text-sm font-medium appearance-none"
-                    style={{ colorScheme: 'dark' }}
-                  >
-                    <option value="" className="text-foreground">Choose a Service</option>
-                    {categories.map((cat) => (
-                      <option key={cat.slug} value={cat.slug} className="text-foreground">{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-3 px-4 py-3 border border-cream/20 rounded-xl bg-background/20">
-                  <Calendar className="w-4 h-4 text-gold flex-shrink-0" />
-                  <input 
-                    type="date" 
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="flex-1 bg-transparent border-none outline-none text-cream text-sm font-medium [color-scheme:dark] cursor-pointer"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 px-4 py-3 border border-cream/20 rounded-xl bg-background/20">
-                  <MapPin className="w-4 h-4 text-gold flex-shrink-0" />
-                  <input 
-                    type="text" 
-                    placeholder="Location of the Event" 
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-cream placeholder:text-cream/50 text-sm font-medium"
-                  />
-                </div>
-
-                <Button
-                  variant="gold"
-                  className="w-full h-12 rounded-xl gap-2 mt-2 font-semibold text-brown cursor-pointer"
-                  onClick={handleSearch}
-                >
-                  <Search className="w-5 h-5" />
-                  <span>Search</span>
-                </Button>
-              </div>
-
-              {/* Desktop layout */}
-              <div className="hidden lg:flex items-center rounded-full border border-cream/30 bg-background/10 backdrop-blur-md p-1.5 shadow-xl">
-                <div className="flex-1 flex items-center justify-between gap-2 px-5 py-2.5 hover:bg-white/5 rounded-full transition-colors cursor-pointer relative">
-                  <select 
-                    value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-cream/90 cursor-pointer text-sm font-medium appearance-none focus:ring-0 focus:outline-none"
-                    style={{ colorScheme: 'dark' }}
-                  >
-                    <option value="" className="text-foreground bg-background">Choose a Service</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.slug} className="text-foreground bg-background">{cat.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-cream/70 flex-shrink-0 pointer-events-none" />
-                </div>
-
-                <div className="w-px h-8 bg-cream/25" />
-
-                <div className="flex-1 flex items-center gap-2 px-5 py-2.5 hover:bg-white/5 rounded-full transition-colors">
-                  <input 
-                    type="date" 
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="flex-1 bg-transparent border-none outline-none text-cream/90 text-sm font-medium [color-scheme:dark] cursor-pointer"
-                  />
-                </div>
-
-                <div className="w-px h-8 bg-cream/25" />
-
-                <div className="flex-1 flex items-center justify-between gap-2 px-5 py-2.5 hover:bg-white/5 rounded-full transition-colors">
-                  <input 
-                    type="text" 
-                    placeholder="Location of the Event" 
-                    value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-cream/95 placeholder:text-cream/50 text-sm font-medium"
-                  />
-                  <MapPin className="w-4 h-4 text-cream/75 flex-shrink-0" />
-                </div>
-
-                <Button
-                  variant="gold"
-                  size="icon"
-                  className="w-12 h-12 rounded-full flex-shrink-0 ml-2 cursor-pointer shadow-lg hover:scale-105 transition-transform"
-                  onClick={handleSearch}
-                >
-                  <Search className="w-5 h-5 text-brown" />
-                </Button>
-              </div>
-            </div>
-
-            {/* AI Search Section */}
-            <div className="w-full">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex-1 h-px bg-cream/20" />
-                <span className="text-cream/40 text-xs font-semibold uppercase tracking-wider">or search with AI</span>
-                <div className="flex-1 h-px bg-cream/20" />
-              </div>
-              <div className="bg-background rounded-2xl p-2 shadow-xl border border-cream/10">
-                <AISearch />
-              </div>
+            {/* CTA Action Buttons */}
+            <div className="flex flex-wrap gap-4 pt-4">
+              <Button
+                variant="gold"
+                size="lg"
+                className="rounded-full px-8 py-6 font-semibold text-brown hover:scale-105 transition-transform cursor-pointer shadow-lg"
+                onClick={() => navigate("/auth?redirect=/providers")}
+              >
+                Book a Service Provider
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full px-8 py-6 font-semibold text-cream border-cream/30 hover:bg-cream/10 hover:text-cream hover:scale-105 transition-transform cursor-pointer"
+                onClick={() => navigate("/become-provider")}
+              >
+                Register as a Provider
+              </Button>
             </div>
 
           </div>
 
-          {/* Right Column: Wedding OS Interactive Mockup & Image display display */}
+          {/* Right Column: Webapp Browser Mockup */}
           <div className="lg:col-span-5 relative w-full h-[450px] lg:h-[500px] flex items-center justify-center">
-            
-            {/* Carousel images in the background of the mockup */}
-            <div className="absolute inset-0 z-0 rounded-3xl overflow-hidden shadow-2xl border-4 border-gold/10" ref={emblaRef}>
-              <div className="flex h-full">
-                {heroSlides.map((slide, index) => (
-                  <div key={index} className="flex-[0_0_100%] min-w-0 relative h-full">
-                    <img
-                      src={slide.image}
-                      alt={`Traditional Indian ceremony slide`}
-                      className="w-full h-full object-cover filter brightness-[0.4]"
-                    />
+            {/* Outer Browser Frame */}
+            <div className="w-full max-w-[480px] bg-[#1E1C1A]/95 border border-cream/20 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[420px] relative z-10 transition-transform hover:scale-[1.02] duration-300">
+              {/* Browser Title Bar */}
+              <div className="bg-[#2D2A26] px-4 py-3 flex items-center justify-between border-b border-cream/10">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                </div>
+                <div className="bg-background/40 px-6 py-0.5 rounded-md text-[9px] text-cream/40 font-mono w-44 text-center truncate">
+                  subhakary.com/workspace
+                </div>
+                <div className="w-10" />
+              </div>
+
+              {/* Webapp Content Grid */}
+              <div className="flex-1 flex overflow-hidden text-cream/90 text-xs">
+                {/* Left Sidebar */}
+                <div className="w-16 bg-[#171514] border-r border-cream/10 flex flex-col items-center py-4 gap-4 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-sm">
+                    S
                   </div>
-                ))}
+                  <div className="w-8 h-8 rounded-lg bg-gold/20 flex items-center justify-center text-gold">
+                    <LayoutDashboard className="w-4 h-4" />
+                  </div>
+                  <div className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-cream/40">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-cream/40">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {/* Main Dashboard Content */}
+                <div className="flex-1 bg-[#121110] p-4 space-y-4 overflow-y-auto">
+                  {/* Header */}
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-bold text-cream text-xs sm:text-sm">Ceremony Workspace</h4>
+                      <p className="text-[9px] text-cream/50">Muhurtham Planning OS</p>
+                    </div>
+                    <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px]">Live</Badge>
+                  </div>
+
+                  {/* Stats Widget */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-[#1E1C1A] p-2.5 rounded-xl border border-cream/10">
+                      <span className="text-[9px] text-cream/50 block">Guest RSVP</span>
+                      <span className="font-bold text-gold text-xs">245 / 310</span>
+                    </div>
+                    <div className="bg-[#1E1C1A] p-2.5 rounded-xl border border-cream/10">
+                      <span className="text-[9px] text-cream/50 block">Budget Spent</span>
+                      <span className="font-bold text-gold text-xs">78%</span>
+                    </div>
+                  </div>
+
+                  {/* Booking Progress List */}
+                  <div className="space-y-2">
+                    <span className="text-[9px] font-bold text-cream/40 uppercase tracking-wider block">Upcoming Bookings</span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-cream/5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gold/10 flex items-center justify-center text-[9px] text-gold font-bold">
+                            PR
+                          </div>
+                          <div>
+                            <p className="font-semibold text-[9px]">Pandit Ramaswamy</p>
+                            <p className="text-[8px] text-cream/50">Vedic Priest • Hyderabad</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-gold/20 text-gold border border-gold/30 text-[8px] px-1 py-0">Approved</Badge>
+                      </div>
+                      <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-cream/5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gold/10 flex items-center justify-center text-[9px] text-gold font-bold">
+                            SC
+                          </div>
+                          <div>
+                            <p className="font-semibold text-[9px]">Sai Catering Services</p>
+                            <p className="text-[8px] text-cream/50">Traditional Food • Hyderabad</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[8px] px-1.5 py-0">Pending</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* Wedding OS Glassmorphic Dashboard Card */}
-            <div className="relative z-10 w-[90%] max-w-[360px] bg-background/25 backdrop-blur-lg border border-cream/20 rounded-3xl p-5 shadow-2xl space-y-4">
-              
-              {/* Card Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-cream/15">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gold animate-pulse" />
-                  <span className="text-xs font-bold text-cream">Wedding OS Active</span>
-                </div>
-                <Badge className="bg-gold/25 text-gold border border-gold/30 hover:bg-gold/25 text-[10px]">v2.1</Badge>
-              </div>
-
-              {/* Budget Widget */}
-              <div className="bg-background/20 p-3 rounded-2xl border border-cream/10 space-y-2">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <IndianRupee className="w-3.5 h-3.5 text-gold" />
-                    <span className="text-[11px] text-cream/70">Budget Spent</span>
-                  </div>
-                  <span className="text-xs font-bold text-cream">78%</span>
-                </div>
-                <div className="w-full bg-cream/10 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-gold h-full rounded-full" style={{ width: "78%" }} />
-                </div>
-                <div className="flex justify-between text-[10px] text-cream/60">
-                  <span>Spent: ₹11,70,000</span>
-                  <span>Goal: ₹15,00,000</span>
-                </div>
-              </div>
-
-              {/* Guest RSVP Widget */}
-              <div className="bg-background/20 p-3 rounded-2xl border border-cream/10 space-y-2">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5 text-gold" />
-                    <span className="text-[11px] text-cream/70">RSVP Confirmed</span>
-                  </div>
-                  <span className="text-xs font-bold text-cream">245 / 310</span>
-                </div>
-                <div className="w-full bg-cream/10 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-gold h-full rounded-full" style={{ width: "79%" }} />
-                </div>
-              </div>
-
-              {/* Checklist Widget */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold text-cream/50 uppercase tracking-wider">Pending tasks</span>
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-[11px] text-cream/80 bg-background/10 p-2 rounded-lg border border-cream/5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
-                    <span className="line-through text-cream/40">Book Poojari for Muhurtham</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] text-cream/80 bg-background/10 p-2 rounded-lg border border-cream/5">
-                    <div className="w-3.5 h-3.5 rounded-full border border-cream/35 flex-shrink-0" />
-                    <span>Finalize Catering Menu selections</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Rating Badges decoration */}
-              <div className="flex items-center justify-between text-[11px] text-cream/70 pt-2 border-t border-cream/10">
-                <span className="flex items-center gap-1">
-                  <Star className="w-3 h-3 text-gold fill-gold" />
-                  4.9 Rating
-                </span>
-                <span>500+ Verified Vendors</span>
-              </div>
-
-            </div>
-
           </div>
 
         </div>
