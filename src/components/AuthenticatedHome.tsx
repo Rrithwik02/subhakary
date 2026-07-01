@@ -95,7 +95,7 @@ export const AuthenticatedHome = () => {
       <Navbar />
 
       {/* Main Search & Welcome Banner */}
-      <section className="relative pt-36 pb-20 bg-gradient-to-b from-brown/95 via-brown/90 to-background overflow-hidden text-cream">
+      <section className="relative pt-36 pb-20 bg-gradient-to-b from-cream to-background overflow-hidden text-brown-dark">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-60 z-0 pointer-events-none" />
         
         <div className="relative z-10 container mx-auto px-4 text-center max-w-4xl">
@@ -107,10 +107,10 @@ export const AuthenticatedHome = () => {
             <span className="inline-block px-4 py-1.5 rounded-full bg-gold/10 text-gold text-sm font-semibold mb-4 tracking-wide uppercase border border-gold/20">
               Ceremony Dashboard
             </span>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-cream mb-4">
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-brown-dark mb-4">
               Welcome back, <span className="text-gold">{displayName}</span>!
             </h1>
-            <p className="text-lg text-cream/70 max-w-xl mx-auto mb-10">
+            <p className="text-lg text-brown/70 max-w-xl mx-auto mb-10">
               Find and book verified professionals for your special events and traditional ceremonies.
             </p>
           </motion.div>
@@ -123,47 +123,46 @@ export const AuthenticatedHome = () => {
             className="w-full max-w-4xl mx-auto mb-8"
           >
             {/* Mobile Layout */}
-            <div className="lg:hidden flex flex-col gap-3 bg-background/5 p-4 rounded-2xl border border-cream/20 backdrop-blur-md">
-              <div className="flex items-center gap-3 px-4 py-3 border border-cream/20 rounded-xl bg-background/20">
+            <div className="lg:hidden flex flex-col gap-3 bg-white p-4 rounded-2xl border border-brown/15 shadow-sm">
+              <div className="flex items-center gap-3 px-4 py-3 border border-brown/15 rounded-xl bg-white">
                 <Search className="w-4 h-4 text-gold flex-shrink-0" />
                 <select 
                   value={selectedService}
                   onChange={(e) => setSelectedService(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-cream cursor-pointer text-sm font-medium appearance-none"
-                  style={{ colorScheme: 'dark' }}
+                  className="flex-1 bg-transparent border-none outline-none text-brown-dark cursor-pointer text-sm font-medium appearance-none"
                 >
-                  <option value="" className="text-foreground">Choose a Service</option>
+                  <option value="">Choose a Service</option>
                   {categoriesList.map((cat) => (
-                    <option key={cat.id} value={cat.slug} className="text-foreground">{cat.name}</option>
+                    <option key={cat.id} value={cat.slug}>{cat.name}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="flex items-center gap-3 px-4 py-3 border border-cream/20 rounded-xl bg-background/20">
+              <div className="flex items-center gap-3 px-4 py-3 border border-brown/15 rounded-xl bg-white">
                 <Calendar className="w-4 h-4 text-gold flex-shrink-0" />
                 <input 
                   type="date" 
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="flex-1 bg-transparent border-none outline-none text-cream text-sm font-medium [color-scheme:dark] cursor-pointer"
+                  className="flex-1 bg-transparent border-none outline-none text-brown-dark text-sm font-medium cursor-pointer"
                 />
               </div>
 
-              <div className="flex items-center gap-3 px-4 py-3 border border-cream/20 rounded-xl bg-background/20">
+              <div className="flex items-center gap-3 px-4 py-3 border border-brown/15 rounded-xl bg-white">
                 <MapPin className="w-4 h-4 text-gold flex-shrink-0" />
                 <input 
                   type="text" 
                   placeholder="Location of the Event" 
                   value={locationInput}
                   onChange={(e) => setLocationInput(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-cream placeholder:text-cream/50 text-sm font-medium"
+                  className="flex-1 bg-transparent border-none outline-none text-brown-dark placeholder:text-brown/40 text-sm font-medium"
                 />
               </div>
 
               <Button
                 variant="gold"
-                className="w-full h-12 rounded-xl gap-2 mt-2 font-semibold text-brown cursor-pointer"
+                className="w-full h-12 rounded-xl gap-2 mt-2 font-semibold text-brown-dark cursor-pointer"
                 onClick={handleSearch}
               >
                 <Search className="w-5 h-5" />
@@ -172,58 +171,57 @@ export const AuthenticatedHome = () => {
             </div>
 
             {/* Desktop Layout (Horizontal Pill Bar) */}
-            <div className="hidden lg:flex items-center max-w-4xl mx-auto rounded-full border border-cream/30 bg-background/10 backdrop-blur-md p-1.5 shadow-xl">
+            <div className="hidden lg:flex items-center max-w-4xl mx-auto rounded-full border border-brown/15 bg-white p-1.5 shadow-md">
               {/* Choose Service */}
-              <div className="flex-1 flex items-center justify-between gap-2 px-5 py-2.5 hover:bg-white/5 rounded-full transition-colors cursor-pointer relative">
+              <div className="flex-1 flex items-center justify-between gap-2 px-5 py-2.5 hover:bg-cream/20 rounded-full transition-colors cursor-pointer relative">
                 <select 
                   value={selectedService}
                   onChange={(e) => setSelectedService(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-cream/90 cursor-pointer text-sm font-medium appearance-none focus:ring-0 focus:outline-none"
-                  style={{ colorScheme: 'dark' }}
+                  className="flex-1 bg-transparent border-none outline-none text-brown-dark cursor-pointer text-sm font-medium appearance-none focus:ring-0 focus:outline-none"
                 >
-                  <option value="" className="text-foreground bg-background">Choose a Service</option>
+                  <option value="">Choose a Service</option>
                   {categoriesList.map((cat) => (
-                    <option key={cat.id} value={cat.slug} className="text-foreground bg-background">{cat.name}</option>
+                    <option key={cat.id} value={cat.slug}>{cat.name}</option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-cream/70 flex-shrink-0 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-brown/50 flex-shrink-0 pointer-events-none" />
               </div>
 
-              <div className="w-px h-8 bg-cream/25" />
+              <div className="w-px h-8 bg-brown/15" />
 
               {/* Event Date */}
-              <div className="flex-1 flex items-center gap-2 px-5 py-2.5 hover:bg-white/5 rounded-full transition-colors">
+              <div className="flex-1 flex items-center gap-2 px-5 py-2.5 hover:bg-cream/20 rounded-full transition-colors">
                 <input 
                   type="date" 
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="flex-1 bg-transparent border-none outline-none text-cream/90 text-sm font-medium [color-scheme:dark] cursor-pointer"
+                  className="flex-1 bg-transparent border-none outline-none text-brown-dark text-sm font-medium cursor-pointer"
                 />
               </div>
 
-              <div className="w-px h-8 bg-cream/25" />
+              <div className="w-px h-8 bg-brown/15" />
 
               {/* Location */}
-              <div className="flex-1 flex items-center justify-between gap-2 px-5 py-2.5 hover:bg-white/5 rounded-full transition-colors">
+              <div className="flex-1 flex items-center justify-between gap-2 px-5 py-2.5 hover:bg-cream/20 rounded-full transition-colors">
                 <input 
                   type="text" 
                   placeholder="Location of the Event" 
                   value={locationInput}
                   onChange={(e) => setLocationInput(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-cream/95 placeholder:text-cream/50 text-sm font-medium"
+                  className="flex-1 bg-transparent border-none outline-none text-brown-dark placeholder:text-brown/40 text-sm font-medium"
                 />
-                <MapPin className="w-4 h-4 text-cream/75 flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-brown/50 flex-shrink-0" />
               </div>
 
               {/* Search Button */}
               <Button
                 variant="gold"
                 size="icon"
-                className="w-12 h-12 rounded-full flex-shrink-0 ml-2 cursor-pointer shadow-lg hover:scale-105 transition-transform"
+                className="w-12 h-12 rounded-full flex-shrink-0 ml-2 cursor-pointer shadow-lg hover:scale-105 transition-transform text-brown-dark"
                 onClick={handleSearch}
               >
-                <Search className="w-5 h-5 text-brown" />
+                <Search className="w-5 h-5 text-brown-dark" />
               </Button>
             </div>
           </motion.div>
@@ -236,11 +234,11 @@ export const AuthenticatedHome = () => {
             className="w-full max-w-2xl mx-auto"
           >
             <div className="flex items-center gap-4 mb-5">
-              <div className="flex-1 h-px bg-cream/20" />
-              <span className="text-cream/40 text-xs font-semibold uppercase tracking-wider">or search with AI</span>
-              <div className="flex-1 h-px bg-cream/20" />
+              <div className="flex-1 h-px bg-brown/15" />
+              <span className="text-brown/50 text-xs font-semibold uppercase tracking-wider">or search with AI</span>
+              <div className="flex-1 h-px bg-brown/15" />
             </div>
-            <div className="bg-background rounded-2xl p-2 shadow-xl border border-cream/10">
+            <div className="bg-white rounded-2xl p-2 shadow-md border border-brown/15">
               <AISearch />
             </div>
           </motion.div>
