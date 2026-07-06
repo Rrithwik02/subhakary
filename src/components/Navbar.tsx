@@ -57,9 +57,6 @@ export const Navbar = () => {
     { name: "Find Providers", href: "/providers" },
     { name: "Plan Wedding", href: "/plan-wedding" },
     { name: "My Bookings", href: "/my-bookings" },
-    { name: "Wishlist", href: "/favorites" },
-    { name: "Notifications", href: "/notifications" },
-    { name: "Profile", href: "/profile" }
   ];
 
   // Dynamically build nav links based on role.
@@ -217,14 +214,13 @@ export const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/profile">
-                  <Button variant="ghost" size="sm" className="font-medium gap-1.5 h-9">
+                  <Button variant="ghost" size="icon" className="h-9 w-9" title="Profile">
                     <Avatar className="h-6 w-6">
                       <AvatarImage src={userProfile?.avatar_url || undefined} />
                       <AvatarFallback className="text-[10px] bg-primary/10">
                         {userProfile?.full_name?.charAt(0)?.toUpperCase() || <User className="h-2.5 w-2.5" />}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-xs xl:text-sm">Profile</span>
                   </Button>
                 </Link>
               </div>

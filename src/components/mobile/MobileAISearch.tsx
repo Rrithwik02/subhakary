@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Search, Sparkles, Loader2 } from "lucide-react";
@@ -30,6 +30,7 @@ export const MobileAISearch = () => {
   const [query, setQuery] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: trendingChips } = useQuery({
     queryKey: ["trending-categories"],
@@ -57,6 +58,10 @@ export const MobileAISearch = () => {
     "Wedding decorators in Hyderabad",
   ];
   const [placeholderIndex] = useState(0);
+
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [location.search]);
 
   const handleSearch = (searchQuery: string) => {
     if (!searchQuery.trim()) return;
