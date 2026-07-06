@@ -226,7 +226,7 @@ const Auth = () => {
         if (error) {
           toast({
             title: "Sign in failed",
-            description: "Invalid email or password. Please try again.",
+            description: "Invalid email or password. If this account was created with Google, use Continue with Google or reset the password first.",
             variant: "destructive",
           });
           return;

@@ -79,7 +79,7 @@ const App = () => (
               <Route path="/become-provider" element={<BecomeProvider />} />
 
               {/* Authenticated Customer Routes */}
-              <Route path="/profile" element={<ProtectedRoute allowedRole="customer"><Profile /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/providers" element={<ProtectedRoute allowedRole="customer"><Providers /></ProtectedRoute>} />
               <Route path="/provider/:id" element={<ProtectedRoute allowedRole="customer"><ProviderProfile /></ProtectedRoute>} />
               <Route path="/providers/:id" element={<ProtectedRoute allowedRole="customer"><ProviderProfile /></ProtectedRoute>} />
