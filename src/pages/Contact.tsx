@@ -244,7 +244,7 @@ const Contact = () => {
       </section>
 
       {/* FAQ CTA */}
-      <section className="py-16 bg-brown">
+      <section id="faq" className="py-16 bg-brown">
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
