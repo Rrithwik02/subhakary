@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,11 @@ export const AISearch = ({ initialQuery = "", onSearch }: AISearchProps) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState(initialQuery);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    setQuery(initialQuery);
+    setIsNavigating(false);
+  }, [initialQuery]);
 
   const handleSearch = () => {
     if (!query.trim()) return;
