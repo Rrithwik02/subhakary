@@ -9,6 +9,7 @@ import { AdminRoute } from "@/components/AdminRoute";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CompareBar } from "@/components/CompareBar";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -59,6 +60,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               {/* Public Marketing Website / Guest Routes */}
               <Route path="/" element={<Index />} />

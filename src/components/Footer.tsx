@@ -15,16 +15,16 @@ const footerLinks = {
   ],
   company: [
     { label: "About Us", href: "/about" },
-    { label: "How It Works", href: "/about" },
+    { label: "Planning OS", href: "/planning-os" },
     { label: "Become a Provider", href: "/become-provider" },
     { label: "Blog", href: "/blog" },
-    { label: "Contact", href: "/contact" },
+    { label: "FAQ", href: "/contact#faq" },
   ],
   support: [
     { label: "Contact Us", href: "/contact" },
-    { label: "FAQ", href: "/contact" },
     { label: "Privacy Policy", href: "/privacy-policy" },
     { label: "Terms of Service", href: "/terms-of-service" },
+    { label: "Install App", href: "/install" },
   ],
 };
 

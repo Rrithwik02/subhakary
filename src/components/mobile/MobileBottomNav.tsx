@@ -38,12 +38,12 @@ export const MobileBottomNav = () => {
   const navItems: NavItem[] = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Heart, label: "Favorites", path: "/favorites", requiresAuth: true },
-    { icon: Plus, label: "New Booking", path: "/providers", requiresAuth: false },
     { icon: MessageSquare, label: "Messages", path: "/chat", requiresAuth: true },
-    ...(isApprovedProvider 
+    ...(isApprovedProvider
       ? [{ icon: LayoutDashboard, label: "Dashboard", path: "/provider-dashboard", requiresAuth: true, providerOnly: true }]
-      : [{ icon: User, label: "Profile", path: user ? "/profile" : "/auth", requiresAuth: false }]
+      : [{ icon: Plus, label: "New Booking", path: "/providers", requiresAuth: false }]
     ),
+    { icon: User, label: "Profile", path: user ? "/profile" : "/auth", requiresAuth: false },
   ];
 
   const isActive = (path: string) => {

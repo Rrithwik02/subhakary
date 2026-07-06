@@ -17,7 +17,22 @@ export async function fetchAIRecommendations(
   query: string
 ): Promise<AIRecommendationResult> {
   const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData.session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const token = sessionData.session?.access_token || null;
+
+  if (!token) {
+    const params = extractSearchParams(query);
+    const results = await fetchProviders(params);
+    return {
+      query,
+      detected_categories: [],
+      summary: results.length
+        ? `Found ${results.length} providers matching "${query}".`
+        : "No providers found. Try browsing our service categories.",
+      location: params.location,
+      total: results.length,
+      results,
+    };
+  }
 
   const response = await fetch(RECOMMEND_URL, {
     method: "POST",

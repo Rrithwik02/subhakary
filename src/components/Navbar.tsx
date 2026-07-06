@@ -53,7 +53,17 @@ export const Navbar = () => {
     refetchOnMount: "always",
   });
 
-  // Dynamically build nav links based on role
+  const customerLinks = [
+    { name: "Find Providers", href: "/providers" },
+    { name: "Plan Wedding", href: "/plan-wedding" },
+    { name: "My Bookings", href: "/my-bookings" },
+    { name: "Wishlist", href: "/favorites" },
+    { name: "Notifications", href: "/notifications" },
+    { name: "Profile", href: "/profile" }
+  ];
+
+  // Dynamically build nav links based on role.
+  // Providers keep the customer nav, with dashboard added as a peer action.
   const getNavLinks = () => {
     if (!user) {
       return [
@@ -67,22 +77,10 @@ export const Navbar = () => {
     }
 
     if (isApprovedProvider) {
-      return [
-        { name: "Dashboard", href: "/dashboard" },
-        { name: "Notifications", href: "/notifications" },
-        { name: "Profile", href: "/profile" }
-      ];
+      return customerLinks;
     }
 
-    // Customer
-    return [
-      { name: "Find Providers", href: "/providers" },
-      { name: "Plan Wedding", href: "/plan-wedding" },
-      { name: "My Bookings", href: "/my-bookings" },
-      { name: "Wishlist", href: "/favorites" },
-      { name: "Notifications", href: "/notifications" },
-      { name: "Profile", href: "/profile" }
-    ];
+    return customerLinks;
   };
 
   const activeLinks = getNavLinks();
@@ -234,7 +232,7 @@ export const Navbar = () => {
               {/* Action buttons inside the gold pill */}
               <div className="flex items-center gap-2 border-l border-brown/20 pl-3 xl:pl-4">
                 {isApprovedProvider ? (
-                  <Link to="/dashboard">
+                    <Link to="/dashboard">
                     <Button variant="ghost" size="sm" className="font-medium text-foreground hover:text-primary gap-1.5 h-9 text-xs xl:text-sm">
                       <LayoutDashboard className="w-4 h-4" />
                       My Dashboard
