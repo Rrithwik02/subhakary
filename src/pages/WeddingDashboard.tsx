@@ -73,7 +73,7 @@ const WeddingDashboard = () => {
 
   // State for Collaborator Invite link
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [inviteRole, setInviteRole] = useState("parent");
+  const [inviteRole, setInviteRole] = useState("host");
   const [invitePerm, setInvitePerm] = useState("edit");
   const [generatedLink, setGeneratedLink] = useState("");
   const [copied, setCopied] = useState(false);
@@ -84,7 +84,7 @@ const WeddingDashboard = () => {
     }
   }, [authLoading, navigate, user]);
 
-  // Query User's Weddings to support redirection from /wedding-dashboard
+  // Query user's planning workspaces to support redirection from /wedding-dashboard
   const { data: userWeddings } = useQuery({
     queryKey: ["user-weddings", user?.id],
     queryFn: async () => {
@@ -99,13 +99,13 @@ const WeddingDashboard = () => {
     enabled: !weddingId && !!user,
   });
 
-  // Redirect to active wedding or onboarding
+  // Redirect to active workspace or onboarding
   useEffect(() => {
     if (!weddingId && userWeddings) {
       if (userWeddings.length > 0) {
-        navigate(`/wedding/${userWeddings[0].id}`, { replace: true });
+        navigate(`/event/${userWeddings[0].id}`, { replace: true });
       } else {
-        navigate("/wedding/new", { replace: true });
+        navigate("/plan-event", { replace: true });
       }
     }
   }, [weddingId, userWeddings, navigate]);
@@ -273,7 +273,7 @@ const WeddingDashboard = () => {
     enabled: !!weddingId && !!user,
   });
 
-  // Fetch Wedding Collaborators
+  // Fetch planning collaborators
   const { data: members = [] } = useQuery({
     queryKey: ["wedding-members", weddingId],
     queryFn: async () => {
@@ -375,7 +375,7 @@ const WeddingDashboard = () => {
       return data;
     },
     onSuccess: (data: any) => {
-      const link = `${window.location.origin}/wedding/join/${data.invite_code}`;
+      const link = `${window.location.origin}/event/join/${data.invite_code}`;
       setGeneratedLink(link);
       toast({
         title: "Link Generated",
@@ -476,12 +476,12 @@ const WeddingDashboard = () => {
         <Navbar />
         <section className="pt-32 pb-16 px-4">
           <div className="container max-w-3xl mx-auto text-center">
-            <h1 className="font-display text-3xl font-semibold">Wedding Dashboard</h1>
+            <h1 className="font-display text-3xl font-semibold">Event Dashboard</h1>
             <p className="text-muted-foreground mt-3">
-              {weddingId ? "Wedding dashboard not found." : "Loading your wedding planning dashboard..."}
+              {weddingId ? "Event dashboard not found." : "Loading your event planning dashboard..."}
             </p>
-            <Button variant="gold" className="mt-6" onClick={() => navigate("/wedding/new")}>
-              Create Wedding Plan
+            <Button variant="gold" className="mt-6" onClick={() => navigate("/plan-event")}>
+              Start Planning
             </Button>
           </div>
         </section>
@@ -516,7 +516,7 @@ const WeddingDashboard = () => {
                   {wedding.title}
                 </h1>
                 <p className="text-muted-foreground mt-3 max-w-3xl">
-                  {wedding.bride_name} and {wedding.groom_name} are planning a {wedding.wedding_type} wedding in {wedding.city}.
+                  {wedding.title} is being planned in {wedding.city}.
                 </p>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mt-4">
                   <span className="flex items-center gap-1.5">
@@ -535,11 +535,11 @@ const WeddingDashboard = () => {
               </div>
 
               <div className="flex gap-3">
-                <Link to="/wedding/new">
-                  <Button variant="outline">New Wedding</Button>
+                <Link to="/plan-event">
+                  <Button variant="outline">New Event</Button>
                 </Link>
                 {events[0] && (
-                  <Link to={`/wedding/${wedding.id}/events/${events[0].id}`}>
+                  <Link to={`/event/${wedding.id}/events/${events[0].id}`}>
                     <Button variant="gold">Open Event Workspace</Button>
                   </Link>
                 )}
@@ -621,7 +621,7 @@ const WeddingDashboard = () => {
                         <DialogHeader>
                           <DialogTitle>Log Manual Expense</DialogTitle>
                           <DialogDescription>
-                            Keep track of offline wedding purchases. This will be added to your actual spent total.
+                            Keep track of offline event purchases. This will be added to your actual spent total.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
@@ -731,19 +731,19 @@ const WeddingDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Wedding Events Card */}
+                {/* Event milestones card */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="font-display text-2xl">Wedding Events</CardTitle>
+                    <CardTitle className="font-display text-2xl">Event Milestones</CardTitle>
                     {events[0] && (
-                      <Link to={`/wedding/${wedding.id}/events/${events[0].id}`}>
+                      <Link to={`/event/${wedding.id}/events/${events[0].id}`}>
                         <Button variant="outline" size="sm">Open Workspace</Button>
                       </Link>
                     )}
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {dashboard.timeline.map((event) => (
-                      <Link key={event.id} to={`/wedding/${wedding.id}/events/${event.id}`}>
+                      <Link key={event.id} to={`/event/${wedding.id}/events/${event.id}`}>
                         <div className="flex items-center justify-between rounded-2xl border p-4 hover:border-primary/40 transition-colors">
                           <div>
                             <p className="font-medium">{event.title}</p>
@@ -764,8 +764,8 @@ const WeddingDashboard = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
                     <div>
-                      <CardTitle className="font-display text-2xl">Wedding Collaborators</CardTitle>
-                      <CardDescription>Invite family members to plan together</CardDescription>
+                      <CardTitle className="font-display text-2xl">Planning Collaborators</CardTitle>
+                      <CardDescription>Invite family members or teammates to plan together</CardDescription>
                     </div>
                     <Dialog open={isInviteOpen} onOpenChange={(open) => {
                       setIsInviteOpen(open);
@@ -795,11 +795,12 @@ const WeddingDashboard = () => {
                                 <SelectValue placeholder="Select role" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="bride">Bride</SelectItem>
-                                <SelectItem value="groom">Groom</SelectItem>
+                                <SelectItem value="host">Host</SelectItem>
+                                <SelectItem value="co_host">Co-host</SelectItem>
+                                <SelectItem value="family">Family Member</SelectItem>
+                                <SelectItem value="planner">Planner</SelectItem>
                                 <SelectItem value="parent">Parent</SelectItem>
                                 <SelectItem value="sibling">Sibling</SelectItem>
-                                <SelectItem value="planner">Planner</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -971,7 +972,7 @@ const WeddingDashboard = () => {
                   <CardContent className="space-y-3">
                     {linkedBookings.length === 0 ? (
                       <p className="text-muted-foreground">
-                        As you book vendors from this Wedding OS, actual spend will start syncing here automatically.
+                        As you book vendors from this Event OS, actual spend will start syncing here automatically.
                       </p>
                     ) : (
                       linkedBookings.map((booking) => (

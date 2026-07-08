@@ -95,10 +95,15 @@ const App = () => (
               <Route path="/inquiry/:providerId" element={<ProtectedRoute allowedRole="customer"><InquiryChat /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute allowedRole="customer"><Notifications /></ProtectedRoute>} />
 
-              {/* Wedding OS (Customer Wedding Planner) */}
+              {/* Event OS (Customer Planning Workspace) */}
+              <Route path="/plan-event" element={<ProtectedRoute allowedRole="customer"><WeddingOnboarding /></ProtectedRoute>} />
+              <Route path="/event/new" element={<ProtectedRoute allowedRole="customer"><WeddingOnboarding /></ProtectedRoute>} />
               <Route path="/wedding/new" element={<ProtectedRoute allowedRole="customer"><WeddingOnboarding /></ProtectedRoute>} />
+              <Route path="/event/:weddingId" element={<ProtectedRoute allowedRole="customer"><WeddingDashboard /></ProtectedRoute>} />
               <Route path="/wedding/:weddingId" element={<ProtectedRoute allowedRole="customer"><WeddingDashboard /></ProtectedRoute>} />
+              <Route path="/event/join/:inviteCode" element={<ProtectedRoute allowedRole="customer"><WeddingJoin /></ProtectedRoute>} />
               <Route path="/wedding/join/:inviteCode" element={<ProtectedRoute allowedRole="customer"><WeddingJoin /></ProtectedRoute>} />
+              <Route path="/event/:weddingId/events/:eventId" element={<ProtectedRoute allowedRole="customer"><WeddingEventWorkspace /></ProtectedRoute>} />
               <Route path="/wedding/:weddingId/events/:eventId" element={<ProtectedRoute allowedRole="customer"><WeddingEventWorkspace /></ProtectedRoute>} />
               <Route path="/wedding-dashboard" element={<ProtectedRoute allowedRole="customer"><WeddingDashboard /></ProtectedRoute>} />
               <Route path="/plan-wedding" element={<ProtectedRoute allowedRole="customer"><PlanWedding /></ProtectedRoute>} />

@@ -11,7 +11,7 @@ type Task = { title: string; status: string; due_date: string | null };
 export const NextStepCard = ({ className = "" }: { className?: string }) => {
   const { user } = useAuth();
 
-  // Query User's Active Wedding from unified schema
+  // Query user's active planning workspace from the unified schema
   const { data: wedding } = useQuery({
     queryKey: ["next-step-active-wedding", user?.id],
     queryFn: async () => {
@@ -28,7 +28,7 @@ export const NextStepCard = ({ className = "" }: { className?: string }) => {
     enabled: !!user,
   });
 
-  // Query tasks for this wedding
+  // Query tasks for this workspace
   const { data: tasks = [] } = useQuery({
     queryKey: ["next-step-tasks", wedding?.id],
     queryFn: async () => {
@@ -44,7 +44,7 @@ export const NextStepCard = ({ className = "" }: { className?: string }) => {
     enabled: !!wedding,
   });
 
-  // Query bookings count for this wedding
+  // Query bookings count for this workspace
   const { data: bookingCount = 0 } = useQuery({
     queryKey: ["next-step-booking-count", wedding?.id],
     queryFn: async () => {
@@ -62,12 +62,12 @@ export const NextStepCard = ({ className = "" }: { className?: string }) => {
   if (!user) return null;
 
   const next = (() => {
-    if (!wedding) return { label: "Create your wedding plan", href: "/wedding/new" };
+    if (!wedding) return { label: "Start your event plan", href: "/plan-event" };
     if (bookingCount === 0) return { label: "Book your first vendor", href: "/providers" };
     const overdue = tasks.find((task) => task.status !== "done" && task.status !== "completed" && task.due_date && new Date(task.due_date) < new Date());
-    if (overdue) return { label: `Finish overdue task: ${overdue.title}`, href: `/wedding/${wedding.id}` };
+    if (overdue) return { label: `Finish overdue task: ${overdue.title}`, href: `/event/${wedding.id}` };
     const task = tasks.find((item) => item.status !== "done" && item.status !== "completed");
-    if (task) return { label: task.title, href: `/wedding/${wedding.id}` };
+    if (task) return { label: task.title, href: `/event/${wedding.id}` };
     return { label: "Review your guided journey", href: "/journey" };
   })();
 
