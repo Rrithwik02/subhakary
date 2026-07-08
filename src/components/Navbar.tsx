@@ -55,7 +55,7 @@ export const Navbar = () => {
 
   const customerLinks = [
     { name: "Find Providers", href: "/providers" },
-    { name: "Plan Wedding", href: "/plan-wedding" },
+    { name: "Plan an Event", href: "/plan-event" },
     { name: "My Bookings", href: "/my-bookings" },
   ];
 

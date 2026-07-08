@@ -38,7 +38,7 @@ const WeddingJoin = () => {
       localStorage.setItem("pending_invite_code", inviteCode);
       toast({
         title: "Login Required",
-        description: "Please log in or sign up first to accept this wedding invitation.",
+        description: "Please log in or sign up first to accept this planning invitation.",
       });
       navigate("/auth");
     }
@@ -102,7 +102,7 @@ const WeddingJoin = () => {
       if (memberError) {
         // If unique constraint fails, they might already be a member
         if (memberError.code === "23505") {
-          throw new Error("You are already a member of this wedding workspace.");
+          throw new Error("You are already a member of this planning workspace.");
         }
         throw memberError;
       }
@@ -120,7 +120,7 @@ const WeddingJoin = () => {
         title: "Successfully joined!",
         description: `Welcome to ${invitation?.wedding?.title}!`,
       });
-      navigate(`/wedding/${invitation?.wedding_id}`);
+      navigate(`/event/${invitation?.wedding_id}`);
     },
     onError: (error: any) => {
       toast({
@@ -178,7 +178,7 @@ const WeddingJoin = () => {
                     <Heart className="h-8 w-8 fill-primary/10" />
                   </div>
                   <CardTitle className="font-display text-2xl md:text-3xl font-semibold">
-                    Wedding Invitation
+                  Planning Invitation
                   </CardTitle>
                   <CardDescription className="mt-2 text-base">
                     You have been invited to join and collaborate!

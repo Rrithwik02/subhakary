@@ -5,7 +5,7 @@ const PlanWedding = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate("/wedding/new", { replace: true });
+    navigate("/plan-event", { replace: true });
   }, [navigate]);
 
   return (
