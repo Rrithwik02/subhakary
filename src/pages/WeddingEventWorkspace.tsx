@@ -276,8 +276,8 @@ const WeddingEventWorkspace = () => {
         <section className="pt-32 pb-16 px-4">
           <div className="container max-w-3xl mx-auto text-center">
             <h1 className="font-display text-3xl font-semibold">Event workspace not found</h1>
-            <Button className="mt-6" variant="gold" onClick={() => navigate(`/event/${weddingId}`)}>
-              Back to Event Dashboard
+            <Button className="mt-6" variant="gold" onClick={() => navigate(`/wedding/${weddingId}`)}>
+              Back to Dashboard
             </Button>
           </div>
         </section>
@@ -293,9 +293,9 @@ const WeddingEventWorkspace = () => {
       <section className="pt-28 pb-16 px-4">
         <div className="container max-w-6xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-            <Button variant="ghost" className="mb-5" onClick={() => navigate(`/event/${weddingId}`)}>
+            <Button variant="ghost" className="mb-5" onClick={() => navigate(`/wedding/${weddingId}`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Event Dashboard
+              Back to Wedding Dashboard
             </Button>
 
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-8">

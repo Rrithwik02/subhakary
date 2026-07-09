@@ -20,7 +20,7 @@ const Journey = () => {
     if (!authLoading && !user) navigate("/auth?redirect=/journey");
   }, [authLoading, user, navigate]);
 
-  // Query User's active planning workspace from the unified schema
+  // Query User's Active Wedding from unified schema
   const { data: wedding, isLoading: weddingLoading } = useQuery({
     queryKey: ["journey-active-wedding", user?.id],
     queryFn: async () => {
@@ -37,7 +37,7 @@ const Journey = () => {
     enabled: !!user,
   });
 
-  // Query tasks for this workspace
+  // Query tasks for this wedding
   const { data: tasks = [] } = useQuery({
     queryKey: ["journey-tasks", wedding?.id],
     queryFn: async () => {
@@ -52,7 +52,7 @@ const Journey = () => {
     enabled: !!wedding,
   });
 
-  // Query bookings for this workspace
+  // Query bookings for this wedding
   const { data: bookings = [] } = useQuery({
     queryKey: ["journey-bookings", wedding?.id],
     queryFn: async () => {
@@ -74,10 +74,10 @@ const Journey = () => {
     const hasTasks = tasks.some((task) => task.status === "done" || task.status === "completed");
     
     return [
-      { title: "Event basics", description: "Date, location, budget, guests, and type", done: hasBasics, href: "/plan-event", icon: Sparkles },
+      { title: "Wedding basics", description: "Date, city, budget, guests, and style", done: hasBasics, href: "/wedding/new", icon: Sparkles },
       { title: "Venue and location", description: "Shortlist or book your venue", done: hasVenue, href: "/providers?category=function-halls", icon: MapPin },
       { title: "Vendor team", description: "Book priority vendors and compare options", done: hasVendors, href: "/providers", icon: Users },
-      { title: "Tasks and reminders", description: "Work through your planning checklist", done: hasTasks, href: wedding ? `/event/${wedding.id}` : "/plan-event", icon: CheckCircle2 },
+      { title: "Tasks and reminders", description: "Work through your planning checklist", done: hasTasks, href: wedding ? `/wedding/${wedding.id}` : "/wedding/new", icon: CheckCircle2 },
     ];
   }, [bookings, wedding, tasks]);
 
@@ -99,10 +99,10 @@ const Journey = () => {
         <Navbar />
         <main className="container max-w-2xl mx-auto px-4 py-16 text-center">
           <h1 className="text-3xl font-bold mb-3">Start your guided journey</h1>
-          <p className="text-muted-foreground mb-6">Create an event workspace first so we can unlock your planning stages.</p>
+          <p className="text-muted-foreground mb-6">Create a wedding plan first so we can unlock your planning stages.</p>
           <Button asChild>
-            <Link to="/plan-event">
-              Start Planning <ArrowRight className="ml-2 h-4 w-4" />
+            <Link to="/wedding/new">
+              Plan Wedding <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </main>
@@ -113,11 +113,11 @@ const Journey = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead title="Guided Event Journey | Subhakary" description="Move through each event planning stage with Subhakary." />
+      <SEOHead title="Guided Wedding Journey | Subhakary" description="Move through each wedding planning stage with Subhakary." />
       <Navbar />
       <main className="container max-w-5xl mx-auto px-4 py-10">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Guided Event Journey</h1>
+          <h1 className="text-3xl font-bold mb-2">Guided Wedding Journey</h1>
           <p className="text-muted-foreground">Move from basics to vendors to checklist actions, one clear step at a time.</p>
         </div>
 
