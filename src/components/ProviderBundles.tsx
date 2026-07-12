@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { Package, IndianRupee, Calendar, Users, Check, XCircle, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,10 +19,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { trackBundleBooking } from "@/lib/analytics";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { DateRangePicker } from "@/components/DateRangePicker";
+import { DateRange } from "react-day-picker";
+import { useWeddingEvents } from "@/hooks/useWeddingEvents";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProviderBundlesProps {
   providerId: string;
@@ -34,13 +36,28 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: userEvents = [] } = useWeddingEvents(user?.id);
   
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [dateRange, setDateRange] = useState<DateRange>();
+  const [isMultiDay, setIsMultiDay] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState("");
   const [guestCount, setGuestCount] = useState("");
   const [specialRequirements, setSpecialRequirements] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!bookingDialogOpen) return;
+
+    if (!selectedEventId && userEvents.length > 0) {
+      const defaultEvent = userEvents.find((event) => event.is_primary) || userEvents[0];
+      if (defaultEvent) {
+        setSelectedEventId(defaultEvent.id);
+      }
+    }
+  }, [bookingDialogOpen, selectedEventId, userEvents]);
 
   // Fetch bundles with items
   const { data: bundles = [], isLoading } = useQuery({
@@ -71,11 +88,15 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
       return;
     }
     setSelectedBundle(bundle);
+    setIsMultiDay(Number(bundle.duration_days || 1) > 1);
     setBookingDialogOpen(true);
   };
 
   const handleSubmitBooking = async () => {
-    if (!selectedDate) {
+    const bookingDate = isMultiDay ? dateRange?.from : selectedDate;
+    const endDate = isMultiDay ? dateRange?.to : selectedDate;
+
+    if (!bookingDate) {
       toast({
         title: "Select a date",
         description: "Please select an event date",
@@ -84,15 +105,28 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
       return;
     }
 
+    if (isMultiDay && !endDate) {
+      toast({
+        title: "Select end date",
+        description: "Please select both start and end dates for this package",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const totalDays = isMultiDay && endDate ? differenceInDays(endDate, bookingDate) + 1 : 1;
+
     setIsSubmitting(true);
     try {
-      const eventId = await getPrimaryWeddingEventId(user!.id);
-      // Create a booking for the bundle
+      const eventId = selectedEventId || await getPrimaryWeddingEventId(user!.id);
       const { error } = await supabase.from("bookings").insert({
         user_id: user!.id,
         provider_id: providerId,
-        event_id: eventId,
-        service_date: format(selectedDate, "yyyy-MM-dd"),
+        event_id: eventId || null,
+        service_date: format(bookingDate, "yyyy-MM-dd"),
+        start_date: format(bookingDate, "yyyy-MM-dd"),
+        end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
+        total_days: totalDays,
         message: `Package: ${selectedBundle.bundle_name}\nGuests: ${guestCount || 'Not specified'}`,
         special_requirements: specialRequirements || null,
         total_amount: selectedBundle.discounted_price,
@@ -118,6 +152,9 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
       setBookingDialogOpen(false);
       setSelectedBundle(null);
       setSelectedDate(undefined);
+      setDateRange(undefined);
+      setIsMultiDay(false);
+      setSelectedEventId("");
       setGuestCount("");
       setSpecialRequirements("");
     } catch (error: any) {
@@ -294,16 +331,38 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
 
           <div className="space-y-4 py-2">
             <div>
-              <Label>Select Event Date *</Label>
-              <div className="flex justify-center mt-2">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date()}
-                  className={cn("rounded-md border")}
-                />
-              </div>
+              <Label className="mb-2 block">Event</Label>
+              {userEvents.length > 0 ? (
+                <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Choose an event" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userEvents.map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.name}
+                        {event.event_date ? ` • ${format(new Date(event.event_date), "PPP")}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Create a planning event first to attach this package booking automatically.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Select Date{isMultiDay ? "s" : ""} *</Label>
+              <DateRangePicker
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                singleDate={selectedDate}
+                onSingleDateChange={setSelectedDate}
+                isMultiDay={isMultiDay}
+                onMultiDayToggle={setIsMultiDay}
+              />
             </div>
 
             {selectedBundle?.max_guests && (

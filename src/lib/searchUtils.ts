@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getLocationSearchTerms } from "@/lib/location";
 
 // ─── AI Recommendation (primary for logged-in users) ───────────
 
@@ -285,7 +286,12 @@ export async function fetchProviders(params: SearchParams): Promise<SearchProvid
   }
 
   if (location) {
-    qb = qb.or(`city.ilike.%${location}%,service_cities.cs.{${location}}`);
+    const locationTerms = getLocationSearchTerms(location);
+    qb = qb.or(
+      locationTerms
+        .map((term) => `city.ilike.%${term}%,secondary_city.ilike.%${term}%,service_cities.cs.{${term}}`)
+        .join(",")
+    );
   }
 
   if (keywords.length > 0) {

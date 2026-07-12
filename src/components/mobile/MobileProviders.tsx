@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { indianStates, getCitiesByState } from "@/data/indianLocations";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
+import { displayLocationName, locationMatches } from "@/lib/location";
 
 export const MobileProviders = () => {
   const [searchParams] = useSearchParams();
@@ -107,8 +108,9 @@ export const MobileProviders = () => {
     // City filter
     if (selectedCity !== "all") {
       result = result.filter((p) =>
-        p.city?.toLowerCase().includes(selectedCity.toLowerCase()) ||
-        p.service_cities?.some((c: string) => c.toLowerCase().includes(selectedCity.toLowerCase()))
+        locationMatches(p.city, selectedCity) ||
+        locationMatches(p.secondary_city, selectedCity) ||
+        p.service_cities?.some((c: string) => locationMatches(c, selectedCity))
       );
     }
 
@@ -217,11 +219,11 @@ export const MobileProviders = () => {
                       </SelectTrigger>
                       <SelectContent className="max-h-60">
                         <SelectItem value="all">All States</SelectItem>
-                        {indianStates.map((state) => (
-                          <SelectItem key={state.name} value={state.name}>{state.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          {indianStates.map((state) => (
+                            <SelectItem key={state.name} value={state.name}>{state.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                   </div>
 
                   {/* City */}
@@ -235,7 +237,7 @@ export const MobileProviders = () => {
                         <SelectContent className="max-h-60">
                           <SelectItem value="all">All Cities</SelectItem>
                           {stateCities.map((city) => (
-                            <SelectItem key={city} value={city}>{city}</SelectItem>
+                            <SelectItem key={city} value={displayLocationName(city)}>{displayLocationName(city)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

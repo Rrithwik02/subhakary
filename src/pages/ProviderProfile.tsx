@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -49,6 +48,9 @@ import { trackProviderView, trackProviderContact, trackBookingRequest } from "@/
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileProviderProfile from "@/components/mobile/MobileProviderProfile";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { useSmartBack } from "@/hooks/useSmartBack";
+import { useWeddingEvents } from "@/hooks/useWeddingEvents";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -68,11 +70,14 @@ const DesktopProviderProfile = () => {
   const { toast } = useToast();
   const weddingId = searchParams.get("wedding");
   const weddingEventId = searchParams.get("event");
+  const goBack = useSmartBack("/providers");
+  const { data: userEvents = [] } = useWeddingEvents(user?.id);
   
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [dateRange, setDateRange] = useState<DateRange>();
   const [isMultiDay, setIsMultiDay] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -130,6 +135,20 @@ const DesktopProviderProfile = () => {
       }
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (weddingEventId) {
+      setSelectedEventId(weddingEventId);
+      return;
+    }
+
+    if (!selectedEventId && userEvents.length > 0) {
+      const defaultEvent = userEvents.find((event) => event.is_primary) || userEvents[0];
+      if (defaultEvent) {
+        setSelectedEventId(defaultEvent.id);
+      }
+    }
+  }, [selectedEventId, userEvents, weddingEventId]);
 
   // Fetch provider details using public_service_providers view for anonymous access
   const { data: provider, isLoading } = useQuery({
@@ -285,13 +304,12 @@ const DesktopProviderProfile = () => {
 
     setIsSubmitting(true);
     try {
-      const eventId = await getPrimaryWeddingEventId(user.id);
+      const eventId = selectedEventId || weddingEventId || await getPrimaryWeddingEventId(user.id);
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         provider_id: providerId,
         wedding_id: weddingId,
-        wedding_event_id: weddingEventId,
-        event_id: eventId,
+        event_id: eventId || null,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -359,7 +377,7 @@ const DesktopProviderProfile = () => {
             <p className="text-muted-foreground mb-6">
               This provider may no longer be available.
             </p>
-            <Button onClick={() => navigate("/providers")}>
+            <Button onClick={() => goBack("/providers")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Providers
             </Button>
@@ -380,7 +398,7 @@ const DesktopProviderProfile = () => {
             variant="ghost"
             size="sm"
             className="mb-3 md:mb-6 h-8 md:h-10 touch-manipulation -ml-2"
-            onClick={() => navigate("/providers")}
+            onClick={() => goBack("/providers")}
           >
             <ArrowLeft className="mr-1.5 h-4 w-4" />
             <span className="text-sm">Back</span>
@@ -742,6 +760,29 @@ const DesktopProviderProfile = () => {
           </DialogHeader>
 
           <div className="space-y-4 py-2 md:py-4">
+            <div>
+              <Label htmlFor="event" className="text-sm">Event</Label>
+              {userEvents.length > 0 ? (
+                <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                  <SelectTrigger id="event" className="mt-1 h-11 md:h-10">
+                    <SelectValue placeholder="Choose an event" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userEvents.map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.name}
+                        {event.event_date ? ` • ${format(new Date(event.event_date), "PPP")}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Create a planning event first to attach this booking automatically.
+                </p>
+              )}
+            </div>
+
             <div>
               <Label className="text-sm mb-2 block">Select Date *</Label>
               <DateRangePicker

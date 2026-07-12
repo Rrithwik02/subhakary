@@ -50,7 +50,7 @@ const Auth = () => {
       const pendingInviteCode = localStorage.getItem("pending_invite_code");
       if (pendingInviteCode) {
         localStorage.removeItem("pending_invite_code");
-        navigate(`/wedding/join/${pendingInviteCode}`);
+        navigate(`/event/join/${pendingInviteCode}`);
         return;
       }
 

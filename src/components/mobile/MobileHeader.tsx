@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ReactNode, useEffect, useState } from "react";
 import logo from "@/assets/logo.png";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 interface MobileHeaderProps {
   title?: string;
@@ -25,6 +26,7 @@ export const MobileHeader = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const goBack = useSmartBack("/");
 
   // Fetch user profile
   const { data: userProfile } = useQuery({
@@ -97,7 +99,7 @@ export const MobileHeader = ({
               variant="ghost"
               size="icon"
               className="h-9 w-9 -ml-2"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack("/")}
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>

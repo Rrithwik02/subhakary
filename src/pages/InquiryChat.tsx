@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { trackChatStarted } from "@/lib/analytics";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const InquiryChat = () => {
   const { providerId } = useParams();
@@ -17,6 +18,7 @@ const InquiryChat = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const goBack = useSmartBack("/providers");
   const [conversationId, setConversationId] = useState<string | null>(
     searchParams.get("conversation")
   );
@@ -147,7 +149,7 @@ const InquiryChat = () => {
             variant="ghost"
             size="icon"
             className="h-9 w-9 touch-manipulation"
-            onClick={() => navigate(`/providers/${providerId}`)}
+            onClick={() => goBack(`/providers/${providerId}`)}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -163,7 +165,7 @@ const InquiryChat = () => {
           <Button
             variant="ghost"
             className="mb-4 hidden md:flex"
-            onClick={() => navigate(`/providers/${providerId}`)}
+            onClick={() => goBack(`/providers/${providerId}`)}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Profile

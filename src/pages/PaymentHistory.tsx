@@ -10,11 +10,13 @@ import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { useAuth } from "@/hooks/useAuth";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobilePaymentHistory from "@/components/mobile/MobilePaymentHistory";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const PaymentHistory = () => {
   const isMobile = useMobileLayout();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const goBack = useSmartBack("/profile");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -49,7 +51,7 @@ const PaymentHistory = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate(-1)}
+                onClick={() => goBack("/profile")}
                 className="h-9 w-9"
               >
                 <ArrowLeft className="h-5 w-5" />

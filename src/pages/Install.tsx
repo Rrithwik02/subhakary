@@ -5,9 +5,11 @@ import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { useSmartBack } from '@/hooks/useSmartBack';
 
 const Install = () => {
   const navigate = useNavigate();
+  const goBack = useSmartBack("/");
   const { isIOS, isAndroid, isInstalled, isStandalone, promptInstall, isInstallable } = usePWAInstall();
 
   if (isInstalled || isStandalone) {
@@ -42,7 +44,7 @@ const Install = () => {
         <Button
           variant="ghost"
           className="mb-6"
-          onClick={() => navigate(-1)}
+          onClick={() => goBack("/")}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back

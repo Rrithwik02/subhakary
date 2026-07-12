@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, differenceInDays } from "date-fns";
@@ -35,22 +35,30 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/integrations/supabase/client";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { useSmartBack } from "@/hooks/useSmartBack";
+import { useWeddingEvents } from "@/hooks/useWeddingEvents";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const MobileProviderProfile = () => {
   const { id: paramValue } = useParams();
+  const [searchParams] = useSearchParams();
   const isUUID = paramValue ? UUID_REGEX.test(paramValue) : false;
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const { isFavorite, toggleFavorite } = useFavorites();
   const queryClient = useQueryClient();
+  const goBack = useSmartBack("/providers");
+  const { data: userEvents = [] } = useWeddingEvents(user?.id);
+  const weddingEventId = searchParams.get("event");
   
   const [showBookingSheet, setShowBookingSheet] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [dateRange, setDateRange] = useState<DateRange>();
   const [isMultiDay, setIsMultiDay] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,6 +97,22 @@ const MobileProviderProfile = () => {
   });
 
   const providerId = provider?.id;
+
+  useEffect(() => {
+    if (!showBookingSheet) return;
+
+    if (weddingEventId && !selectedEventId) {
+      setSelectedEventId(weddingEventId);
+      return;
+    }
+
+    if (!selectedEventId && userEvents.length > 0) {
+      const defaultEvent = userEvents.find((event) => event.is_primary) || userEvents[0];
+      if (defaultEvent) {
+        setSelectedEventId(defaultEvent.id);
+      }
+    }
+  }, [showBookingSheet, selectedEventId, userEvents, weddingEventId]);
 
   // Fetch reviews
   const { data: reviews = [] } = useQuery({
@@ -150,11 +174,11 @@ const MobileProviderProfile = () => {
 
     setIsSubmitting(true);
     try {
-      const eventId = await getPrimaryWeddingEventId(user.id);
+      const eventId = selectedEventId || weddingEventId || await getPrimaryWeddingEventId(user.id);
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         provider_id: providerId,
-        event_id: eventId,
+        event_id: eventId || null,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -201,7 +225,7 @@ const MobileProviderProfile = () => {
           <div className="relative">
             <Skeleton className="w-full h-64" />
             <div className="absolute top-4 left-4">
-              <Button variant="ghost" size="icon" className="bg-black/20 backdrop-blur-sm" onClick={() => navigate(-1)}>
+              <Button variant="ghost" size="icon" className="bg-black/20 backdrop-blur-sm" onClick={() => goBack("/providers")}>
                 <ArrowLeft className="h-5 w-5 text-white" />
               </Button>
             </div>
@@ -284,7 +308,7 @@ const MobileProviderProfile = () => {
               variant="ghost"
               size="icon"
               className="bg-black/30 backdrop-blur-sm hover:bg-black/40"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack("/providers")}
             >
               <ArrowLeft className="h-5 w-5 text-white" />
             </Button>
@@ -479,11 +503,11 @@ const MobileProviderProfile = () => {
 
                   <div className="space-y-4">
                     {/* Multi-day toggle */}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant={!isMultiDay ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setIsMultiDay(false)}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={!isMultiDay ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsMultiDay(false)}
                       >
                         Single Day
                       </Button>
@@ -494,6 +518,29 @@ const MobileProviderProfile = () => {
                       >
                         Multi-Day
                       </Button>
+                    </div>
+
+                    <div>
+                      <Label className="mb-2 block">Event</Label>
+                      {userEvents.length > 0 ? (
+                        <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Choose an event" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {userEvents.map((event) => (
+                              <SelectItem key={event.id} value={event.id}>
+                                {event.name}
+                                {event.event_date ? ` • ${format(new Date(event.event_date), "PPP")}` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Create an event first to attach this booking automatically.
+                        </p>
+                      )}
                     </div>
 
                     {/* Date Selection */}

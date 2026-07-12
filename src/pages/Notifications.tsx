@@ -14,6 +14,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileNotifications from "@/components/mobile/MobileNotifications";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const notificationIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   booking: Calendar,
@@ -34,6 +35,7 @@ const DesktopNotifications = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const goBack = useSmartBack("/profile");
 
   // Get user's profile
   const { data: profile } = useQuery({
@@ -148,7 +150,7 @@ const DesktopNotifications = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <Button variant="ghost" size="icon" onClick={() => goBack("/profile")}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>

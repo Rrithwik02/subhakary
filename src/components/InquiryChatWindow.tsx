@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useChatPresence } from "@/hooks/useChatPresence";
 import { cn } from "@/lib/utils";
 import { trackMessageSent, trackBookingInquiry } from "@/lib/analytics";
+import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
 
 interface InquiryChatWindowProps {
   conversationId: string;
@@ -236,13 +237,14 @@ export const InquiryChatWindow = ({
     setIsSubmitting(true);
     try {
       // Create the booking
+      const eventId = weddingEventId || (await getPrimaryWeddingEventId(user.id));
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
         .insert({
           user_id: user.id,
           provider_id: providerId,
           wedding_id: weddingId || null,
-          wedding_event_id: weddingEventId || null,
+          event_id: eventId || null,
           service_date: format(selectedDate, "yyyy-MM-dd"),
           service_time: selectedTime || null,
           message: bookingMessage || null,

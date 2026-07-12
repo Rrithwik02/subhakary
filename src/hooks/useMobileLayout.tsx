@@ -13,8 +13,6 @@ export const useMobileLayout = () => {
     return false;
   });
   const [isNativeApp, setIsNativeApp] = useState(false);
-  const [isPWA, setIsPWA] = useState(false);
-
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
@@ -26,34 +24,20 @@ export const useMobileLayout = () => {
       setIsNativeApp(isNativePlatform);
     };
 
-    // Check if running as installed PWA (standalone mode)
-    const checkPWA = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isIOSStandalone = (window.navigator as any).standalone === true;
-      setIsPWA(isStandalone || isIOSStandalone);
-    };
-
     checkMobile();
     checkNative();
-    checkPWA();
     
     window.addEventListener("resize", checkMobile);
     
-    // Listen for PWA display mode changes
-    const displayModeQuery = window.matchMedia('(display-mode: standalone)');
-    displayModeQuery.addEventListener('change', checkPWA);
-    
     return () => {
       window.removeEventListener("resize", checkMobile);
-      displayModeQuery.removeEventListener('change', checkPWA);
     };
   }, []);
 
   // Show mobile layout ONLY for:
   // 1. Native Capacitor apps (iOS/Android)
-  // 2. Installed PWAs running in standalone mode
-  // Website in mobile browsers will use the responsive desktop layout
-  return isNativeApp || isPWA;
+  // Website and installed PWA surfaces should use the responsive web layout.
+  return isNativeApp;
 };
 
 // Export additional utilities for more granular control

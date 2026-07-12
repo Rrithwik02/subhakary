@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileChat from "@/components/mobile/MobileChat";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const Chat = () => {
   const isMobile = useMobileLayout();
@@ -31,6 +32,7 @@ const DesktopChat = () => {
   const [selectedBooking, setSelectedBooking] = useState<string | null>(
     bookingIdFromUrl
   );
+  const goBack = useSmartBack("/providers");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -179,7 +181,7 @@ const DesktopChat = () => {
 
       <section className="pt-32 pb-12 px-4">
         <div className="container max-w-6xl mx-auto">
-          <Button variant="ghost" className="mb-6" onClick={() => navigate(-1)}>
+          <Button variant="ghost" className="mb-6" onClick={() => goBack("/providers")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
