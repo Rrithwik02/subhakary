@@ -37,6 +37,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { indianStates, getCitiesByState } from "@/data/indianLocations";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import { MobileProviders } from "@/components/mobile/MobileProviders";
+import { displayLocationName, locationMatches } from "@/lib/location";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 // Areas for cities (used when a city is selected)
 const CITY_AREAS: Record<string, string[]> = {
@@ -67,6 +69,7 @@ const DesktopProviders = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
+  const goBack = useSmartBack("/services");
 
   // Initialize filters from URL params and update SEO
   useEffect(() => {
@@ -86,7 +89,7 @@ const DesktopProviders = () => {
       if (foundState) {
         setSelectedState(foundState.name);
       }
-      setSelectedCity(cityParam);
+      setSelectedCity(displayLocationName(cityParam));
     }
     if (dateParam) {
       setSelectedDate(dateParam);
@@ -187,7 +190,9 @@ const DesktopProviders = () => {
 
   // Get unique cities from providers only (cities with at least one provider)
   const providerCities = useMemo(() => {
-    const cities = providers.map((p) => p.city).filter(Boolean);
+    const cities = providers
+      .map((p) => displayLocationName(p.city))
+      .filter(Boolean);
     return Array.from(new Set(cities)).sort();
   }, [providers]);
 
@@ -242,17 +247,19 @@ const DesktopProviders = () => {
 
     // City filter
     if (selectedCity !== "all") {
-      result = result.filter((p) => 
-        p.city?.toLowerCase().includes(selectedCity.toLowerCase()) ||
-        p.service_cities?.some((c: string) => c.toLowerCase().includes(selectedCity.toLowerCase()))
+      result = result.filter((p) =>
+        locationMatches(p.city, selectedCity) ||
+        locationMatches(p.secondary_city, selectedCity) ||
+        p.service_cities?.some((c: string) => locationMatches(c, selectedCity))
       );
     }
 
     // Area filter (search in city or service_cities - address is private)
     if (selectedArea !== "all") {
       result = result.filter((p) =>
-        p.city?.toLowerCase().includes(selectedArea.toLowerCase()) ||
-        p.service_cities?.some((c: string) => c.toLowerCase().includes(selectedArea.toLowerCase()))
+        locationMatches(p.city, selectedArea) ||
+        locationMatches(p.secondary_city, selectedArea) ||
+        p.service_cities?.some((c: string) => locationMatches(c, selectedArea))
       );
     }
 
@@ -492,7 +499,7 @@ const DesktopProviders = () => {
             variant="ghost"
             size="sm"
             className="mb-4 -ml-2"
-            onClick={() => navigate(-1)}
+            onClick={() => goBack("/services")}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Back

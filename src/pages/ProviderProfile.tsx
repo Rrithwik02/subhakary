@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -49,6 +48,7 @@ import { trackProviderView, trackProviderContact, trackBookingRequest } from "@/
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileProviderProfile from "@/components/mobile/MobileProviderProfile";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -68,6 +68,7 @@ const DesktopProviderProfile = () => {
   const { toast } = useToast();
   const weddingId = searchParams.get("wedding");
   const weddingEventId = searchParams.get("event");
+  const goBack = useSmartBack("/providers");
   
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -290,8 +291,7 @@ const DesktopProviderProfile = () => {
         user_id: user.id,
         provider_id: providerId,
         wedding_id: weddingId,
-        wedding_event_id: weddingEventId,
-        event_id: eventId,
+        wedding_event_id: weddingEventId || eventId,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -359,7 +359,7 @@ const DesktopProviderProfile = () => {
             <p className="text-muted-foreground mb-6">
               This provider may no longer be available.
             </p>
-            <Button onClick={() => navigate("/providers")}>
+            <Button onClick={() => goBack("/providers")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Providers
             </Button>
@@ -380,7 +380,7 @@ const DesktopProviderProfile = () => {
             variant="ghost"
             size="sm"
             className="mb-3 md:mb-6 h-8 md:h-10 touch-manipulation -ml-2"
-            onClick={() => navigate("/providers")}
+            onClick={() => goBack("/providers")}
           >
             <ArrowLeft className="mr-1.5 h-4 w-4" />
             <span className="text-sm">Back</span>

@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { MobileAISearch } from "@/components/mobile/MobileAISearch";
+import { locationMatches } from "@/lib/location";
 import {
   fetchAIRecommendations,
   extractSearchParams,
@@ -107,11 +108,11 @@ function useSearchLogic(query: string) {
           const params = extractSearchParams(query);
           const fetched = await fetchProviders(params);
           setProviders(fetched);
-          if (fetched.length > 0 && params.location) {
-            // Check if results are from the searched location or a fallback
-            const hasLocalResults = fetched.some(
-              (p) => p.city && p.city.toLowerCase().includes(params.location!.toLowerCase())
-            );
+            if (fetched.length > 0 && params.location) {
+              // Check if results are from the searched location or a fallback
+              const hasLocalResults = fetched.some(
+                (p) => locationMatches(p.city, params.location) || locationMatches((p as any).secondary_city, params.location)
+              );
             if (!hasLocalResults) {
               setSuggestion(
                 `No providers found in ${params.location}. Showing top providers from other cities.`

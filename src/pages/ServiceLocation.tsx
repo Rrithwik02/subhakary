@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, MapPin, CheckCircle2, ArrowRight, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { locationMatches } from "@/lib/location";
 
 const ServiceLocation = () => {
   const { service, city } = useParams();
@@ -40,9 +41,10 @@ const ServiceLocation = () => {
       
       if (!data) return [];
       
-      return data.filter(provider => 
-        provider.city?.toLowerCase() === cityName.toLowerCase() ||
-        provider.service_cities?.some((c: string) => c.toLowerCase() === cityName.toLowerCase())
+      return data.filter(provider =>
+        locationMatches(provider.city, cityName) ||
+        locationMatches(provider.secondary_city, cityName) ||
+        provider.service_cities?.some((c: string) => locationMatches(c, cityName))
       ).slice(0, 12);
     },
     enabled: !!serviceData
@@ -325,7 +327,7 @@ const ServiceLocation = () => {
             ].filter(s => s.slug !== service).map(otherService => (
               <Link
                 key={otherService.slug}
-                to={`/services/${otherService.slug}/${city}`}
+                to={`/services/${otherService.slug}/${createCitySlug(cityName)}`}
                 className="p-4 bg-background rounded-lg hover:shadow-md transition-shadow"
               >
                 <p className="font-medium">{otherService.name}</p>

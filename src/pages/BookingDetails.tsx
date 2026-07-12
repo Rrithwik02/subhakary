@@ -26,6 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileBookingDetails from "@/components/mobile/MobileBookingDetails";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const statusConfig = {
   pending: {
@@ -71,6 +72,7 @@ const DesktopBookingDetails = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const goBack = useSmartBack("/my-bookings");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -148,7 +150,7 @@ const DesktopBookingDetails = () => {
             <p className="text-muted-foreground mb-6">
               This booking may not exist or you don't have access to it.
             </p>
-            <Button onClick={() => navigate("/my-bookings")}>
+          <Button onClick={() => goBack("/my-bookings")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to My Bookings
             </Button>
@@ -171,7 +173,7 @@ const DesktopBookingDetails = () => {
           <Button
             variant="ghost"
             className="mb-6"
-            onClick={() => navigate("/my-bookings")}
+            onClick={() => goBack("/my-bookings")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to My Bookings

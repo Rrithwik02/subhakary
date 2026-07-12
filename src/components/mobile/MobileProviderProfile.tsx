@@ -35,6 +35,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/integrations/supabase/client";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { useSmartBack } from "@/hooks/useSmartBack";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -46,6 +47,7 @@ const MobileProviderProfile = () => {
   const { toast } = useToast();
   const { isFavorite, toggleFavorite } = useFavorites();
   const queryClient = useQueryClient();
+  const goBack = useSmartBack("/providers");
   
   const [showBookingSheet, setShowBookingSheet] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -154,7 +156,7 @@ const MobileProviderProfile = () => {
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         provider_id: providerId,
-        event_id: eventId,
+        wedding_event_id: eventId,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -201,7 +203,7 @@ const MobileProviderProfile = () => {
           <div className="relative">
             <Skeleton className="w-full h-64" />
             <div className="absolute top-4 left-4">
-              <Button variant="ghost" size="icon" className="bg-black/20 backdrop-blur-sm" onClick={() => navigate(-1)}>
+              <Button variant="ghost" size="icon" className="bg-black/20 backdrop-blur-sm" onClick={() => goBack("/providers")}>
                 <ArrowLeft className="h-5 w-5 text-white" />
               </Button>
             </div>
@@ -284,7 +286,7 @@ const MobileProviderProfile = () => {
               variant="ghost"
               size="icon"
               className="bg-black/30 backdrop-blur-sm hover:bg-black/40"
-              onClick={() => navigate(-1)}
+              onClick={() => goBack("/providers")}
             >
               <ArrowLeft className="h-5 w-5 text-white" />
             </Button>

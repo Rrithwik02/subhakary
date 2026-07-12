@@ -91,7 +91,7 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
       const { error } = await supabase.from("bookings").insert({
         user_id: user!.id,
         provider_id: providerId,
-        event_id: eventId,
+        wedding_event_id: eventId,
         service_date: format(selectedDate, "yyyy-MM-dd"),
         message: `Package: ${selectedBundle.bundle_name}\nGuests: ${guestCount || 'Not specified'}`,
         special_requirements: specialRequirements || null,
