@@ -49,7 +49,7 @@ export const FavoriteButton = ({
         onClick={handleClick}
         disabled={toggleFavorite.isPending}
         className={cn(
-          favorited && "bg-destructive hover:bg-destructive/90",
+          favorited && "bg-gold text-primary-foreground border-gold hover:bg-gold/90",
           className
         )}
       >

@@ -122,7 +122,7 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
       const { error } = await supabase.from("bookings").insert({
         user_id: user!.id,
         provider_id: providerId,
-        event_id: eventId || null,
+        wedding_event_id: eventId || null,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),

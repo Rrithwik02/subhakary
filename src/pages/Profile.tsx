@@ -21,7 +21,6 @@ import { z } from "zod";
 
 const profileSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
-  email: z.string().email("Invalid email address"),
   phone: z.string().max(20).optional(),
   city: z.string().max(100).optional(),
 });
@@ -89,7 +88,7 @@ const DesktopProfile = () => {
     if (profile) {
       setFormData({
         fullName: profile.full_name || "",
-        email: profile.email || user?.email || "",
+        email: user?.email || profile.email || "",
         phone: profile.phone || "",
         city: profile.city || "",
       });
@@ -160,7 +159,6 @@ const DesktopProfile = () => {
     try {
       profileSchema.parse({
         fullName: formData.fullName,
-        email: formData.email,
         phone: formData.phone || undefined,
         city: formData.city || undefined,
       });
@@ -189,7 +187,6 @@ const DesktopProfile = () => {
         .from("profiles")
         .update({
           full_name: formData.fullName.trim(),
-          email: formData.email.trim(),
           phone: formData.phone.trim() || null,
           city: formData.city.trim() || null,
         })
@@ -399,16 +396,13 @@ const DesktopProfile = () => {
                       <Input
                         id="email"
                         type="email"
-                        placeholder="Enter your email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        value={formData.email || user?.email || ""}
                         className="pl-10"
-                        disabled={!isEditing}
+                        disabled
+                        readOnly
                       />
                     </div>
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
-                    )}
+                    <p className="text-xs text-muted-foreground">This email is linked to your sign-in account and cannot be changed here.</p>
                   </div>
 
                   <div className="space-y-2">
