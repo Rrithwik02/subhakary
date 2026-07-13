@@ -35,6 +35,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
 import { supabase } from "@/integrations/supabase/client";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { createBooking } from "@/lib/bookings";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useWeddingEvents } from "@/hooks/useWeddingEvents";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -188,10 +189,9 @@ const MobileProviderProfile = () => {
     setIsSubmitting(true);
     try {
       const eventId = selectedEventId || weddingEventId || await getPrimaryWeddingEventId(user.id);
-      const { error } = await supabase.from("bookings").insert({
+      await createBooking({
         user_id: user.id,
         provider_id: providerId,
-        wedding_event_id: eventId || null,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -199,9 +199,7 @@ const MobileProviderProfile = () => {
         service_time: selectedTime || null,
         message: message || null,
         status: "pending",
-      });
-
-      if (error) throw error;
+      }, eventId);
 
       toast({
         title: "Booking request sent!",
