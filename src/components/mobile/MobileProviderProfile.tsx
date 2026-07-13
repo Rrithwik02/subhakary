@@ -38,6 +38,7 @@ import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useWeddingEvents } from "@/hooks/useWeddingEvents";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SEOHead } from "@/components/SEOHead";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -64,6 +65,7 @@ const MobileProviderProfile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showFullGallery, setShowFullGallery] = useState(false);
+  const isMobileShare = window.matchMedia("(max-width: 768px)").matches || navigator.userAgent.includes("Mobile");
 
   // Fetch provider details using public_service_providers view for anonymous access
   const { data: provider, isLoading } = useQuery({
@@ -97,6 +99,7 @@ const MobileProviderProfile = () => {
   });
 
   const providerId = provider?.id;
+  const shareImage = provider?.logo_url || `${window.location.origin}/favicon.png`;
 
   useEffect(() => {
     if (!showBookingSheet) return;
@@ -134,13 +137,14 @@ const MobileProviderProfile = () => {
   const handleShare = async () => {
     const slug = provider?.url_slug || paramValue;
     const shareUrl = `${window.location.origin}/provider/${slug}`;
-    if (navigator.share) {
+    if (navigator.share && isMobileShare) {
       try {
         await navigator.share({
           title: provider?.business_name || "Service Provider",
           text: `Check out ${provider?.business_name}!`,
           url: shareUrl,
         });
+        return;
       } catch (err) {
         // User cancelled
       }
@@ -163,6 +167,15 @@ const MobileProviderProfile = () => {
       toast({
         title: "Select a date",
         description: "Please select a date for your booking",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isMultiDay && !endDate) {
+      toast({
+        title: "Select end date",
+        description: "Please select both start and end dates for multi-day booking",
         variant: "destructive",
       });
       return;
@@ -263,6 +276,13 @@ const MobileProviderProfile = () => {
 
   return (
     <MobileLayout hideNav>
+      <SEOHead
+        title={provider ? `${provider.business_name} | Subhakary` : "Provider Profile | Subhakary"}
+        description={provider ? `View ${provider.business_name} on Subhakary and send a booking request.` : "View verified providers and send a booking request on Subhakary."}
+        canonicalUrl={`${window.location.origin}/provider/${provider?.url_slug || paramValue}`}
+        ogImage={shareImage}
+        ogType="profile"
+      />
       <div className="min-h-screen bg-background pb-24">
         {/* Hero Image Section */}
         <div className="relative">
@@ -581,7 +601,7 @@ const MobileProviderProfile = () => {
                     <Button
                       className="w-full h-12 gradient-gold text-primary-foreground"
                       onClick={handleBookingSubmit}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !(isMultiDay ? dateRange?.from : selectedDate) || (isMultiDay && !dateRange?.to)}
                     >
                       {isSubmitting ? (
                         <>

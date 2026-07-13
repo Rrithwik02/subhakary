@@ -411,7 +411,7 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
             <Button
               className="gradient-gold text-primary-foreground w-full sm:w-auto"
               onClick={handleSubmitBooking}
-              disabled={isSubmitting || !selectedDate}
+              disabled={isSubmitting || !(isMultiDay ? dateRange?.from : selectedDate) || (isMultiDay && !dateRange?.to)}
             >
               {isSubmitting ? "Sending..." : "Send Request"}
             </Button>

@@ -26,7 +26,31 @@ export const useFavorites = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (!profile) return [];
+      let profileId = profile?.id;
+      if (!profileId) {
+        const { data: createdProfile, error: profileError } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              user_id: user.id,
+              email: user.email || null,
+              full_name:
+                user.user_metadata?.full_name ||
+                user.user_metadata?.name ||
+                user.email?.split("@")[0] ||
+                "User",
+              avatar_url: user.user_metadata?.avatar_url || null,
+            },
+            { onConflict: "user_id" }
+          )
+          .select("id")
+          .single();
+
+        if (profileError) throw profileError;
+        profileId = createdProfile?.id;
+      }
+
+      if (!profileId) return [];
 
       const { data, error } = await supabase
         .from("favorites")
@@ -45,9 +69,8 @@ export const useFavorites = () => {
             category:service_categories(name, icon)
           )
         `)
-        .eq("user_id", profile.id);
+        .eq("user_id", profileId);
 
-      if (error) throw error;
       if (error) throw error;
       return (data as unknown as Favorite[]) || [];
     },
@@ -64,13 +87,37 @@ export const useFavorites = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (!profile) throw new Error("Profile not found");
+      let profileId = profile?.id;
+      if (!profileId) {
+        const { data: createdProfile, error: profileError } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              user_id: user.id,
+              email: user.email || null,
+              full_name:
+                user.user_metadata?.full_name ||
+                user.user_metadata?.name ||
+                user.email?.split("@")[0] ||
+                "User",
+              avatar_url: user.user_metadata?.avatar_url || null,
+            },
+            { onConflict: "user_id" }
+          )
+          .select("id")
+          .single();
+
+        if (profileError) throw profileError;
+        profileId = createdProfile?.id;
+      }
+
+      if (!profileId) throw new Error("Profile not found");
 
       // Check if already favorited
       const { data: existing } = await supabase
         .from("favorites")
         .select("id")
-        .eq("user_id", profile.id)
+        .eq("user_id", profileId)
         .eq("provider_id", providerId)
         .maybeSingle();
 
@@ -86,7 +133,7 @@ export const useFavorites = () => {
         // Add to favorites
         const { error } = await supabase
           .from("favorites")
-          .insert({ user_id: profile.id, provider_id: providerId });
+          .insert({ user_id: profileId, provider_id: providerId });
         if (error) throw error;
         return { action: "added" };
       }
