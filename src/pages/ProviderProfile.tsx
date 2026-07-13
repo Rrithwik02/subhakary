@@ -51,6 +51,7 @@ import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useWeddingEvents } from "@/hooks/useWeddingEvents";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SEOHead } from "@/components/SEOHead";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -82,6 +83,7 @@ const DesktopProviderProfile = () => {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const isMobileShare = window.matchMedia("(max-width: 768px)").matches || navigator.userAgent.includes("Mobile");
 
   const isUUID = paramValue ? UUID_REGEX.test(paramValue) : false;
 
@@ -89,8 +91,8 @@ const DesktopProviderProfile = () => {
     const slug = provider?.url_slug || paramValue;
     const shareUrl = `${window.location.origin}/provider/${slug}`;
     
-    // Try native share first (mobile)
-    if (navigator.share) {
+    // Try native share only on mobile; desktop stays on a stable copy-link flow.
+    if (navigator.share && isMobileShare) {
       try {
         await navigator.share({
           title: provider?.business_name || "Service Provider",
@@ -223,6 +225,11 @@ const DesktopProviderProfile = () => {
   });
 
   const providerId = provider?.id;
+  const shareImage = provider?.logo_url || `${window.location.origin}/favicon.png`;
+  const seoTitle = provider?.business_name ? `${provider.business_name} | Subhakary` : "Provider Profile | Subhakary";
+  const seoDescription = provider?.business_name
+    ? `View ${provider.business_name} on Subhakary and send a booking request.`
+    : "View verified providers and send a booking request on Subhakary.";
 
   // Fetch verified additional services for this provider
   const { data: verifiedServices = [] } = useQuery({
@@ -353,6 +360,13 @@ const DesktopProviderProfile = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
+        <SEOHead
+          title={seoTitle}
+          description={seoDescription}
+          canonicalUrl={`${window.location.origin}/provider/${provider?.url_slug || paramValue}`}
+          ogImage={shareImage}
+          ogType="profile"
+        />
         <Navbar />
         <div className="pt-32 pb-12 px-4">
           <div className="container max-w-4xl mx-auto">
@@ -370,6 +384,13 @@ const DesktopProviderProfile = () => {
   if (!provider) {
     return (
       <div className="min-h-screen bg-background">
+        <SEOHead
+          title={seoTitle}
+          description={seoDescription}
+          canonicalUrl={`${window.location.origin}/provider/${provider?.url_slug || paramValue}`}
+          ogImage={shareImage}
+          ogType="profile"
+        />
         <Navbar />
         <div className="pt-32 pb-12 px-4">
           <div className="container max-w-4xl mx-auto text-center">
@@ -389,6 +410,13 @@ const DesktopProviderProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={`${window.location.origin}/provider/${provider?.url_slug || paramValue}`}
+        ogImage={shareImage}
+        ogType="profile"
+      />
       <Navbar />
 
       <section className="pt-20 md:pt-32 pb-12 px-3 md:px-4">
@@ -831,7 +859,7 @@ const DesktopProviderProfile = () => {
             <Button
               className="gradient-gold text-primary-foreground w-full sm:w-auto h-11 md:h-10 touch-manipulation active:scale-[0.98] transition-transform"
               onClick={handleBookingSubmit}
-              disabled={isSubmitting || !selectedDate}
+              disabled={isSubmitting || !(isMultiDay ? dateRange?.from : selectedDate) || (isMultiDay && !dateRange?.to)}
             >
               {isSubmitting ? "Sending..." : "Send Request"}
             </Button>
