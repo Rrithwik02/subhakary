@@ -44,7 +44,6 @@ import { z } from "zod";
 
 const profileSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
-  email: z.string().email("Invalid email address"),
   phone: z.string().max(20).optional(),
   city: z.string().max(100).optional(),
 });
@@ -201,7 +200,7 @@ const MobileProfile = () => {
     if (profile) {
       setFormData({
         fullName: profile.full_name || "",
-        email: profile.email || user?.email || "",
+        email: user?.email || profile.email || "",
         phone: profile.phone || "",
         city: profile.city || "",
       });
@@ -272,7 +271,6 @@ const MobileProfile = () => {
     try {
       profileSchema.parse({
         fullName: formData.fullName,
-        email: formData.email,
         phone: formData.phone || undefined,
         city: formData.city || undefined,
       });
@@ -301,7 +299,6 @@ const MobileProfile = () => {
         .from("profiles")
         .update({
           full_name: formData.fullName.trim(),
-          email: formData.email.trim(),
           phone: formData.phone.trim() || null,
           city: formData.city.trim() || null,
         })
@@ -587,13 +584,13 @@ const MobileProfile = () => {
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        value={formData.email || user?.email || ""}
                         className="pl-10 h-10"
-                        disabled={!isEditing}
+                        disabled
+                        readOnly
                       />
                     </div>
-                    {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
+                    <p className="text-xs text-muted-foreground mt-1">This email is linked to your sign-in account and cannot be changed here.</p>
                   </div>
 
                   <div>
