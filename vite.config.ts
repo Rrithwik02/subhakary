@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.png", "robots.txt", "sitemap.xml"],
       manifest: false, // Use existing manifest.json
       workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}"],
         runtimeCaching: [
           {
