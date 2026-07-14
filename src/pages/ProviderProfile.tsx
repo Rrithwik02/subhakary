@@ -238,16 +238,37 @@ const DesktopProviderProfile = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("additional_services")
-        .select(`
-          id,
-          service_type,
-          category:service_categories(name, icon)
-        `)
+        .select("id, service_type, category_id")
         .eq("provider_id", providerId!)
         .eq("verification_status", "verified");
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.warn("Unable to load provider additional services", error);
+        return [];
+      }
+
+      const services = data || [];
+      const categoryIds = services
+        .map((service) => service.category_id)
+        .filter((id): id is string => Boolean(id));
+
+      if (categoryIds.length === 0) return services;
+
+      const { data: categories, error: categoriesError } = await supabase
+        .from("service_categories")
+        .select("id, name, icon")
+        .in("id", categoryIds);
+
+      if (categoriesError) {
+        console.warn("Unable to load additional service categories", categoriesError);
+        return services;
+      }
+
+      const categoryById = new Map((categories || []).map((category) => [category.id, category]));
+      return services.map((service) => ({
+        ...service,
+        category: service.category_id ? categoryById.get(service.category_id) : null,
+      }));
     },
     enabled: !!providerId,
   });

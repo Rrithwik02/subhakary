@@ -1,4 +1,4 @@
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, isSameDay, startOfDay } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ interface DateRangePickerProps {
   onSingleDateChange: (date: Date | undefined) => void;
   isMultiDay: boolean;
   onMultiDayToggle: (isMulti: boolean) => void;
-  disabledDates?: Date[];
+  disabledDates?: Array<Date | string | null | undefined>;
   className?: string;
 }
 
@@ -28,10 +28,23 @@ export const DateRangePicker = ({
   disabledDates = [],
   className,
 }: DateRangePickerProps) => {
+  const normalizedDisabledDates = disabledDates
+    .map((value) => {
+      if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : value;
+      }
+      if (typeof value === "string") {
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      }
+      return null;
+    })
+    .filter((value): value is Date => Boolean(value));
+
   const isDateDisabled = (date: Date) => {
-    if (date < new Date()) return true;
-    return disabledDates.some(
-      (d) => d.toDateString() === date.toDateString()
+    if (startOfDay(date) < startOfDay(new Date())) return true;
+    return normalizedDisabledDates.some((blockedDate) =>
+      isSameDay(blockedDate, date)
     );
   };
 
@@ -105,7 +118,7 @@ export const DateRangePicker = ({
             numberOfMonths={1}
             className="pointer-events-auto rounded-md border"
             modifiers={{
-              blocked: disabledDates,
+              blocked: normalizedDisabledDates,
             }}
             modifiersStyles={{
               blocked: { textDecoration: "line-through", color: "hsl(var(--destructive))" },
@@ -121,7 +134,7 @@ export const DateRangePicker = ({
             disabled={isDateDisabled}
             className="pointer-events-auto rounded-md border"
             modifiers={{
-              blocked: disabledDates,
+              blocked: normalizedDisabledDates,
             }}
             modifiersStyles={{
               blocked: { textDecoration: "line-through", color: "hsl(var(--destructive))" },
