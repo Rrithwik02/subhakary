@@ -10,13 +10,14 @@ const isMissingColumnError = (error: unknown) => {
 };
 
 export async function createBooking(payload: BookingPayload, weddingEventId?: string | null) {
+  const { wedding_id: _legacyWeddingId, ...bookingPayload } = payload as Record<string, unknown>;
   const attempts = weddingEventId
     ? [
-        { ...payload, wedding_event_id: weddingEventId },
-        { ...payload, event_id: weddingEventId },
-        payload,
+        { ...bookingPayload, wedding_event_id: weddingEventId },
+        { ...bookingPayload, event_id: weddingEventId },
+        bookingPayload,
       ]
-    : [payload];
+    : [bookingPayload];
 
   let lastError: unknown = null;
   for (const attempt of attempts) {

@@ -208,7 +208,7 @@ const WeddingDashboard = () => {
           )
         `)
         .eq("user_id", user!.id)
-        .eq("wedding_id", weddingId)
+        .in("wedding_event_id", events.map((event) => event.id))
         .order("service_date", { ascending: true });
 
       if (error) throw error;
