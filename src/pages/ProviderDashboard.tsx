@@ -151,7 +151,7 @@ const DesktopProviderDashboard = () => {
         .from("bookings")
         .select(`
           *,
-          event:wedding_events(
+          event:wedding_events!bookings_event_id_fkey(
             id,
             title,
             event_type

@@ -54,7 +54,7 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
         .from("bookings")
         .select(`
           *,
-          event:wedding_events(
+          event:wedding_events!bookings_event_id_fkey(
             title,
             event_type
           )
