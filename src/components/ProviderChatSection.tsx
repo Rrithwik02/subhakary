@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ interface Conversation {
   booking_id: string;
   customer_name: string;
   customer_id: string;
+  customer_avatar?: string;
   last_message: string;
   last_message_time: string;
   unread_count: number;
@@ -70,7 +72,8 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
       const profiles = customerInfo?.map((c: any) => ({
         id: c.customer_profile_id,
         user_id: c.customer_user_id,
-        full_name: c.customer_name
+        full_name: c.customer_name,
+        profile_image: c.customer_profile_image,
       })) || [];
 
       // Get last message and unread count for each booking
@@ -97,8 +100,9 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
 
           return {
             booking_id: booking.id,
-            customer_name: profile?.full_name || "Customer",
+            customer_name: profile?.full_name || "Unknown customer",
             customer_id: profile?.id || "",
+            customer_avatar: profile?.profile_image,
             last_message: lastMsg?.message || "No messages yet",
             last_message_time: lastMsg?.created_at || booking.service_date,
             unread_count: count || 0,
@@ -283,9 +287,12 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-8 w-8 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-secondary" />
-                    </div>
+                    <Avatar className="h-8 w-8 flex-shrink-0 border border-border/50">
+                      <AvatarImage src={conv.customer_avatar} alt={conv.customer_name} />
+                      <AvatarFallback className="bg-secondary/10 text-secondary">
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="min-w-0">
                       <p className="font-medium text-sm truncate">{conv.customer_name}</p>
                       <p className="text-xs text-muted-foreground truncate">
@@ -324,9 +331,12 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <User className="h-5 w-5 text-secondary" />
-                </div>
+                <Avatar className="h-10 w-10 border border-border/50">
+                  <AvatarImage src={selectedConversation.customer_avatar} alt={selectedConversation.customer_name} />
+                  <AvatarFallback className="bg-secondary/10 text-secondary">
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <CardTitle className="text-lg">{selectedConversation.customer_name}</CardTitle>
                   <p className="text-xs text-muted-foreground">

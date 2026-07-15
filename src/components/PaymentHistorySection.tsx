@@ -112,7 +112,7 @@ export const PaymentHistorySection = ({
 
         return data.map(payment => ({
           ...payment,
-          customerName: profileMap.get(payment.booking_id) || "Customer",
+          customerName: profileMap.get(payment.booking_id) || "Unknown customer",
         }));
       }
 

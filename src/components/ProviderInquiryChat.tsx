@@ -89,7 +89,7 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
             status: convo.status,
             created_at: convo.created_at,
             booking_id: convo.booking_id,
-            customerName: customerInfo?.customer_name || "Customer",
+            customerName: customerInfo?.customer_name || "Unknown customer",
             customerEmail: customerInfo?.customer_email || "",
             customerAvatar: customerInfo?.customer_profile_image,
             lastMessage: lastMsg?.message,
@@ -227,9 +227,9 @@ export const ProviderInquiryChat = ({ providerId }: ProviderInquiryChatProps) =>
         <CardContent className="p-12 text-center">
           <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="font-display text-xl font-semibold mb-2">No inquiries yet</h3>
-          <p className="text-muted-foreground">
-            Customer inquiries will appear here when they message you
-          </p>
+            <p className="text-muted-foreground">
+              Booking inquiries will appear here when customers message you
+            </p>
         </CardContent>
       </Card>
     );
