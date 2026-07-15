@@ -2436,6 +2436,7 @@ export type Database = {
           customer_email: string
           customer_name: string
           customer_phone: string
+          customer_profile_image: string
         }[]
       }
       get_booking_participant_profile_ids: {

@@ -34,6 +34,7 @@ import { MobileLayout } from "./MobileLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -138,7 +139,14 @@ const MobileProviderDashboard = () => {
     queryFn: async () => {
       const { data: bookingsData, error } = await supabase
         .from("bookings")
-        .select(`*`)
+        .select(`
+          *,
+          event:wedding_events(
+            id,
+            title,
+            event_type
+          )
+        `)
         .eq("provider_id", provider!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -160,6 +168,7 @@ const MobileProviderDashboard = () => {
           full_name: c.customer_name,
           email: c.customer_email,
           phone: c.customer_phone,
+          profile_image: c.customer_profile_image,
         }]) || []
       );
 
@@ -547,6 +556,8 @@ const MobileProviderDashboard = () => {
   const renderBookingCard = (booking: any, index: number) => {
     const status = statusConfig[booking.status as keyof typeof statusConfig];
     const StatusIcon = status.icon;
+    const customerName = booking.customer?.full_name || "Unknown customer";
+    const customerPhone = booking.status === "accepted" ? booking.customer?.phone : null;
 
     return (
       <motion.div
@@ -558,18 +569,21 @@ const MobileProviderDashboard = () => {
       >
         <div className="p-4">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
-              <User className="h-5 w-5 text-secondary" />
-            </div>
+            <Avatar className="h-10 w-10 border border-border/50">
+              <AvatarImage src={booking.customer?.profile_image} alt={customerName} />
+              <AvatarFallback className="bg-secondary/10 text-secondary">
+                <User className="h-5 w-5" />
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-semibold">
-                    {booking.customer?.full_name || "Customer"}
+                    {customerName}
                   </h3>
-                  {booking.customer?.phone && (
+                  {customerPhone && (
                     <p className="text-xs text-muted-foreground">
-                      {booking.customer.phone}
+                      {customerPhone}
                     </p>
                   )}
                 </div>
@@ -589,6 +603,16 @@ const MobileProviderDashboard = () => {
                   </>
                 )}
               </div>
+
+              {booking.event && (
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>
+                    {booking.event.title || booking.event.event_type}
+                    {booking.event.title && booking.event.event_type ? ` • ${booking.event.event_type}` : ""}
+                  </span>
+                </p>
+              )}
 
               {booking.message && (
                 <p className="text-xs text-muted-foreground mt-2 line-clamp-2 flex items-start gap-1">
@@ -901,7 +925,7 @@ const MobileProviderDashboard = () => {
                   <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="font-semibold mb-1">No Inquiries</h3>
                   <p className="text-sm text-muted-foreground">
-                    Customer inquiries will appear here
+                    Booking inquiries will appear here
                   </p>
                 </div>
               ) : (

@@ -39,6 +39,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -148,7 +149,14 @@ const DesktopProviderDashboard = () => {
     queryFn: async () => {
       const { data: bookingsData, error } = await supabase
         .from("bookings")
-        .select(`*`)
+        .select(`
+          *,
+          event:wedding_events(
+            id,
+            title,
+            event_type
+          )
+        `)
         .eq("provider_id", provider!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -171,6 +179,8 @@ const DesktopProviderDashboard = () => {
           user_id: bookingsData.find(b => b.id === c.booking_id)?.user_id,
           full_name: c.customer_name,
           email: c.customer_email,
+          phone: c.customer_phone,
+          profile_image: c.customer_profile_image,
         }]) || []
       );
 
@@ -484,6 +494,8 @@ const DesktopProviderDashboard = () => {
     showActions?: boolean;
   }) => {
     const status = statusConfig[(booking.ui_status || booking.status) as keyof typeof statusConfig];
+    const customerName = booking.customer?.full_name || "Unknown customer";
+    const customerPhone = booking.status === "accepted" ? booking.customer?.phone : null;
 
     return (
       <Card className="hover-lift">
@@ -491,16 +503,24 @@ const DesktopProviderDashboard = () => {
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <User className="h-5 w-5 text-secondary" />
-                </div>
+                <Avatar className="h-10 w-10 border border-border/50">
+                  <AvatarImage src={booking.customer?.profile_image} alt={customerName} />
+                  <AvatarFallback className="bg-secondary/10 text-secondary">
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <h3 className="font-semibold">
-                    {booking.customer?.full_name || "Customer"}
+                    {customerName}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {booking.customer?.email}
                   </p>
+                  {customerPhone && (
+                    <p className="text-sm text-muted-foreground">
+                      {customerPhone}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -516,6 +536,16 @@ const DesktopProviderDashboard = () => {
                   </span>
                 )}
               </div>
+
+              {booking.event && (
+                <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>
+                    {booking.event.title || booking.event.event_type}
+                    {booking.event.title && booking.event.event_type ? ` • ${booking.event.event_type}` : ""}
+                  </span>
+                </p>
+              )}
 
               {booking.message && (
                 <p className="text-sm text-muted-foreground mt-3 flex items-start gap-1">
@@ -594,7 +624,7 @@ const DesktopProviderDashboard = () => {
                       variant="outline"
                       onClick={() => setPaymentRequestDialog({
                         bookingId: booking.id,
-                        customerName: booking.customer?.full_name || "Customer",
+                        customerName,
                       })}
                       disabled={isProcessing}
                     >
@@ -624,13 +654,13 @@ const DesktopProviderDashboard = () => {
                   <Button
                     size="sm"
                     onClick={() => handleOpenCompletionForm(
-                      booking.id, 
-                      booking.customer?.full_name || "Customer"
+                      booking.id,
+                      customerName
                     )}
                     disabled={isProcessing || booking.completion_confirmed_by_provider}
                   >
-                    {booking.completion_confirmed_by_provider 
-                      ? "Awaiting Customer Confirmation" 
+                    {booking.completion_confirmed_by_provider
+                      ? "Awaiting confirmation"
                       : "Mark Completed"}
                   </Button>
                 </div>

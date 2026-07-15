@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format, isSameDay } from "date-fns";
 import { Clock, User, MapPin, Ban, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ interface BookingProfile {
   full_name: string | null;
   phone: string | null;
   city: string | null;
+  profile_image?: string | null;
 }
 
 interface BookingWithProfile {
@@ -27,6 +29,10 @@ interface BookingWithProfile {
   service_time: string | null;
   message: string | null;
   profiles: BookingProfile | null;
+  event?: {
+    title: string | null;
+    event_type: string | null;
+  } | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -44,22 +50,39 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
   const { data: bookings = [] } = useQuery({
     queryKey: ["provider-calendar-bookings", providerId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: bookingsData, error } = await supabase
         .from("bookings")
         .select(`
           *,
-          profiles:user_id (
-            full_name,
-            phone,
-            city
+          event:wedding_events(
+            title,
+            event_type
           )
         `)
         .eq("provider_id", providerId)
         .in("status", ["pending", "accepted", "completed"]);
 
       if (error) throw error;
-      if (error) throw error;
-      return (data as unknown as BookingWithProfile[]) || [];
+
+      const bookingIds = (bookingsData || []).map((booking) => booking.id);
+      const { data: customerInfo, error: customerError } = await supabase
+        .rpc("get_booking_customer_info", { booking_ids: bookingIds });
+
+      if (customerError) throw customerError;
+
+      const customerMap = new Map(
+        customerInfo?.map((item: any) => [item.booking_id, {
+          full_name: item.customer_name,
+          phone: item.customer_phone,
+          city: null,
+          profile_image: item.customer_profile_image,
+        }]) || []
+      );
+
+      return (bookingsData || []).map((booking) => ({
+        ...booking,
+        profiles: customerMap.get(booking.id) || null,
+      })) as BookingWithProfile[];
     },
     enabled: !!providerId,
   });
@@ -220,27 +243,39 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
             </div>
           )}
 
-          {selectedDateBookings.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              No bookings for this date
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {selectedDateBookings.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">
-                        {booking.profiles?.full_name || "Customer"}
-                      </span>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={cn(
+              {selectedDateBookings.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No bookings for this date
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {selectedDateBookings.map((booking) => (
+                    <div
+                      key={booking.id}
+                      className="p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={booking.profiles?.profile_image || undefined} alt={booking.profiles?.full_name || "Unknown customer"} />
+                            <AvatarFallback>
+                              <User className="h-4 w-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <span className="font-medium block">
+                              {booking.profiles?.full_name || "Unknown customer"}
+                            </span>
+                            {booking.status === "accepted" && booking.profiles?.phone && (
+                              <span className="text-xs text-muted-foreground">
+                                {booking.profiles.phone}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn(
                         "capitalize",
                         statusColors[booking.status] || ""
                       )}
@@ -249,17 +284,26 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
                     </Badge>
                   </div>
 
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    {booking.service_time && (
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>{booking.service_time}</span>
-                      </div>
-                    )}
-                    {booking.profiles?.city && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>{booking.profiles.city}</span>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        {booking.service_time && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            <span>{booking.service_time}</span>
+                          </div>
+                        )}
+                        {booking.event && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>
+                              {booking.event.title || booking.event.event_type}
+                              {booking.event.title && booking.event.event_type ? ` • ${booking.event.event_type}` : ""}
+                            </span>
+                          </div>
+                        )}
+                        {booking.profiles?.city && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>{booking.profiles.city}</span>
                       </div>
                     )}
                     {booking.message && (

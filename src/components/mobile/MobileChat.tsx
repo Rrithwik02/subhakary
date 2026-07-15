@@ -112,7 +112,7 @@ const MobileChat = () => {
             ...b,
             isProvider: true,
             otherUser: {
-              full_name: profileMap.get(b.user_id)?.full_name || "Customer",
+              full_name: profileMap.get(b.user_id)?.full_name || "Unknown customer",
               profile_image: profileMap.get(b.user_id)?.profile_image,
             },
           }));
@@ -312,7 +312,7 @@ const MobileChat = () => {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <Badge variant="secondary" className="text-xs">
-                          {booking.isProvider ? "Customer" : "Provider"}
+                          {booking.isProvider ? booking.otherUser?.full_name || "Unknown customer" : "Provider"}
                         </Badge>
                       </div>
                     </div>
