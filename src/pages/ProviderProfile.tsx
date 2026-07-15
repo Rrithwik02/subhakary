@@ -48,6 +48,7 @@ import { trackProviderView, trackProviderContact, trackBookingRequest } from "@/
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileProviderProfile from "@/components/mobile/MobileProviderProfile";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { createBooking } from "@/lib/bookings";
 import { useSmartBack } from "@/hooks/useSmartBack";
 import { useWeddingEvents } from "@/hooks/useWeddingEvents";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -245,7 +246,11 @@ const DesktopProviderProfile = () => {
         .eq("provider_id", providerId!)
         .eq("verification_status", "verified");
 
-      if (error) throw error;
+      if (error) {
+        console.warn("Unable to load provider additional services", error);
+        return [];
+      }
+
       return data || [];
     },
     enabled: !!providerId,
@@ -312,11 +317,10 @@ const DesktopProviderProfile = () => {
     setIsSubmitting(true);
     try {
       const eventId = selectedEventId || weddingEventId || await getPrimaryWeddingEventId(user.id);
-      const { error } = await supabase.from("bookings").insert({
+      await createBooking({
         user_id: user.id,
         provider_id: providerId,
         wedding_id: weddingId,
-        wedding_event_id: eventId || null,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -324,9 +328,7 @@ const DesktopProviderProfile = () => {
         service_time: selectedTime || null,
         message: message || null,
         status: "pending",
-      } as any);
-
-      if (error) throw error;
+      }, eventId);
 
       // Track successful booking request
       trackBookingRequest({

@@ -24,6 +24,7 @@ import { useChatPresence } from "@/hooks/useChatPresence";
 import { cn } from "@/lib/utils";
 import { trackMessageSent, trackBookingInquiry } from "@/lib/analytics";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { createBooking } from "@/lib/bookings";
 
 interface InquiryChatWindowProps {
   conversationId: string;
@@ -238,23 +239,16 @@ export const InquiryChatWindow = ({
     try {
       // Create the booking
       const eventId = weddingEventId || (await getPrimaryWeddingEventId(user.id));
-      const { data: booking, error: bookingError } = await supabase
-        .from("bookings")
-        .insert({
-          user_id: user.id,
-          provider_id: providerId,
-          wedding_id: weddingId || null,
-          wedding_event_id: eventId || null,
-          service_date: format(selectedDate, "yyyy-MM-dd"),
-          service_time: selectedTime || null,
-          message: bookingMessage || null,
-          special_requirements: specialRequirements || null,
-          status: "pending",
-        } as any)
-        .select()
-        .single();
-
-      if (bookingError) throw bookingError;
+      const booking = await createBooking({
+        user_id: user.id,
+        provider_id: providerId,
+        wedding_id: weddingId || null,
+        service_date: format(selectedDate, "yyyy-MM-dd"),
+        service_time: selectedTime || null,
+        message: bookingMessage || null,
+        special_requirements: specialRequirements || null,
+        status: "pending",
+      }, eventId);
 
       // Link the booking to the conversation
       await supabase

@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { trackBundleBooking } from "@/lib/analytics";
 import { getPrimaryWeddingEventId } from "@/lib/weddingEvent";
+import { createBooking } from "@/lib/bookings";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { useWeddingEvents } from "@/hooks/useWeddingEvents";
@@ -119,10 +120,9 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
     setIsSubmitting(true);
     try {
       const eventId = selectedEventId || await getPrimaryWeddingEventId(user!.id);
-      const { error } = await supabase.from("bookings").insert({
+      await createBooking({
         user_id: user!.id,
         provider_id: providerId,
-        wedding_event_id: eventId || null,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),
@@ -131,9 +131,7 @@ export function ProviderBundles({ providerId, providerName }: ProviderBundlesPro
         special_requirements: specialRequirements || null,
         total_amount: selectedBundle.discounted_price,
         status: "pending",
-      });
-
-      if (error) throw error;
+      }, eventId);
 
       // Track bundle booking
       trackBundleBooking({
