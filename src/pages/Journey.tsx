@@ -20,7 +20,7 @@ const Journey = () => {
     if (!authLoading && !user) navigate("/auth?redirect=/journey");
   }, [authLoading, user, navigate]);
 
-  // Query User's active planning workspace from the unified schema
+  // Query User's Active Wedding from unified schema
   const { data: wedding, isLoading: weddingLoading } = useQuery({
     queryKey: ["journey-active-wedding", user?.id],
     queryFn: async () => {
@@ -37,7 +37,7 @@ const Journey = () => {
     enabled: !!user,
   });
 
-  // Query tasks for this workspace
+  // Query tasks for this wedding
   const { data: tasks = [] } = useQuery({
     queryKey: ["journey-tasks", wedding?.id],
     queryFn: async () => {
