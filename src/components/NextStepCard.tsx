@@ -44,19 +44,36 @@ export const NextStepCard = ({ className = "" }: { className?: string }) => {
     enabled: !!wedding,
   });
 
+  // Query the wedding's event workspaces so booking counts follow the actual booking foreign key
+  const { data: weddingEvents = [] } = useQuery({
+    queryKey: ["next-step-wedding-events", wedding?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("wedding_events" as any)
+        .select("id")
+        .eq("wedding_id", wedding.id);
+
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!wedding,
+  });
+
   // Query bookings count for this workspace
   const { data: bookingCount = 0 } = useQuery({
-    queryKey: ["next-step-booking-count", wedding?.id],
+    queryKey: ["next-step-booking-count", wedding?.id, weddingEvents.map((event) => event.id).join(",")],
     queryFn: async () => {
+      if (weddingEvents.length === 0) return 0;
+
       const { count, error } = await supabase
         .from("bookings")
         .select("id", { count: "exact", head: true })
-        .eq("wedding_id", wedding.id);
+        .in("wedding_event_id", weddingEvents.map((event) => event.id));
 
       if (error) throw error;
       return count ?? 0;
     },
-    enabled: !!wedding,
+    enabled: !!wedding && weddingEvents.length > 0,
   });
 
   if (!user) return null;

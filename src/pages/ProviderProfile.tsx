@@ -320,7 +320,6 @@ const DesktopProviderProfile = () => {
       await createBooking({
         user_id: user.id,
         provider_id: providerId,
-        wedding_id: weddingId,
         service_date: format(bookingDate, "yyyy-MM-dd"),
         start_date: format(bookingDate, "yyyy-MM-dd"),
         end_date: endDate ? format(endDate, "yyyy-MM-dd") : format(bookingDate, "yyyy-MM-dd"),

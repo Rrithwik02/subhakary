@@ -242,7 +242,6 @@ export const InquiryChatWindow = ({
       const booking = await createBooking({
         user_id: user.id,
         provider_id: providerId,
-        wedding_id: weddingId || null,
         service_date: format(selectedDate, "yyyy-MM-dd"),
         service_time: selectedTime || null,
         message: bookingMessage || null,

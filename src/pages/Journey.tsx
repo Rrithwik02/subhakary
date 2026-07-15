@@ -52,19 +52,36 @@ const Journey = () => {
     enabled: !!wedding,
   });
 
-  // Query bookings for this workspace
-  const { data: bookings = [] } = useQuery({
-    queryKey: ["journey-bookings", wedding?.id],
+  // Query event workspaces for this wedding so booking counts can follow the actual FK chain
+  const { data: weddingEvents = [] } = useQuery({
+    queryKey: ["journey-wedding-events", wedding?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("bookings")
-        .select("id, status")
+        .from("wedding_events" as any)
+        .select("id")
         .eq("wedding_id", wedding.id);
 
       if (error) throw error;
       return (data || []) as any[];
     },
     enabled: !!wedding,
+  });
+
+  // Query bookings for this workspace
+  const { data: bookings = [] } = useQuery({
+    queryKey: ["journey-bookings", wedding?.id, weddingEvents.map((event) => event.id).join(",")],
+    queryFn: async () => {
+      if (weddingEvents.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, status, wedding_event_id")
+        .in("wedding_event_id", weddingEvents.map((event) => event.id));
+
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+    enabled: !!wedding && weddingEvents.length > 0,
   });
 
   const stages = useMemo(() => {
