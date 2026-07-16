@@ -153,8 +153,8 @@ const DesktopProviderDashboard = () => {
           *,
           event:wedding_events!bookings_event_id_fkey(
             id,
-            title,
-            event_type
+            name,
+            event_date
           )
         `)
         .eq("provider_id", provider!.id)
@@ -541,8 +541,8 @@ const DesktopProviderDashboard = () => {
                 <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   <span>
-                    {booking.event.title || booking.event.event_type}
-                    {booking.event.title && booking.event.event_type ? ` • ${booking.event.event_type}` : ""}
+                    {booking.event.name}
+                    {booking.event.event_date ? ` • ${format(new Date(booking.event.event_date), "MMM d, yyyy")}` : ""}
                   </span>
                 </p>
               )}
