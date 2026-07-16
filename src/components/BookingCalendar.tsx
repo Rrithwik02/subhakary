@@ -30,8 +30,8 @@ interface BookingWithProfile {
   message: string | null;
   profiles: BookingProfile | null;
   event?: {
-    title: string | null;
-    event_type: string | null;
+    name: string | null;
+    event_date: string | null;
   } | null;
 }
 
@@ -55,8 +55,8 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
         .select(`
           *,
           event:wedding_events!bookings_event_id_fkey(
-            title,
-            event_type
+            name,
+            event_date
           )
         `)
         .eq("provider_id", providerId)
@@ -295,8 +295,8 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
                             <span>
-                              {booking.event.title || booking.event.event_type}
-                              {booking.event.title && booking.event.event_type ? ` • ${booking.event.event_type}` : ""}
+                              {booking.event.name}
+                              {booking.event.event_date ? ` • ${format(new Date(booking.event.event_date), "MMM d, yyyy")}` : ""}
                             </span>
                           </div>
                         )}

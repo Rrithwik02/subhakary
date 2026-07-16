@@ -176,7 +176,7 @@ const WeddingDashboard = () => {
         .from("wedding_event_vendor_requirements" as any)
         .select(`
           *,
-          wedding_event:wedding_events!wedding_event_vendor_requirements_wedding_event_id_fkey(id, wedding_id, title)
+          wedding_event:wedding_events!wedding_event_vendor_requirements_wedding_event_id_fkey(id, name, event_date)
         `)
         .in("wedding_event_id", events.map((event) => event.id));
 
