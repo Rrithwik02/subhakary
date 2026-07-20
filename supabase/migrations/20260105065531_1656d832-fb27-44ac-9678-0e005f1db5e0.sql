@@ -3,9 +3,10 @@ DROP POLICY IF EXISTS "Authenticated users can upload review photos" ON storage.
 
 CREATE POLICY "Authenticated users can upload review photos"
 ON storage.objects FOR INSERT
+TO authenticated
 WITH CHECK (
   bucket_id = 'review-photos' 
-  AND auth.role() = 'authenticated'
+  AND auth.uid() IS NOT NULL
   AND (storage.foldername(name))[1] = auth.uid()::text
 );
 
@@ -14,8 +15,9 @@ DROP POLICY IF EXISTS "Users can delete their own review photos" ON storage.obje
 
 CREATE POLICY "Users can delete their own review photos"
 ON storage.objects FOR DELETE
+TO authenticated
 USING (
   bucket_id = 'review-photos'
-  AND auth.role() = 'authenticated'
+  AND auth.uid() IS NOT NULL
   AND (storage.foldername(name))[1] = auth.uid()::text
 );

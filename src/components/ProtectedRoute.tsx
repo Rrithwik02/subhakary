@@ -56,9 +56,5 @@ export const ProtectedRoute = ({ children, allowedRole }: ProtectedRouteProps) =
     return <Navigate to="/providers" replace />;
   }
 
-  if (allowedRole === "customer" && isProvider) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   return <>{children}</>;
 };

@@ -182,6 +182,7 @@ const DesktopAdminDashboard = () => {
       // Filter documents to only include those for this additional service's category
       return (data || []).map((service: any) => ({
         ...service,
+        verification_status: service.verification_status || service.status || "pending",
         documents: (service.documents || []).filter((doc: any) => 
           doc.service_category_id === service.category_id && 
           doc.document_type === 'additional_service_proof'
