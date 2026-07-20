@@ -62,6 +62,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
+import { CompletionDetailsForm } from "@/components/CompletionDetailsForm";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600", icon: AlertCircle },
@@ -80,6 +81,8 @@ const DAYS_OF_WEEK = [
   { value: 5, label: "Friday" },
   { value: 6, label: "Saturday" },
 ];
+
+const ENABLE_PAYMENT_REQUESTS = false;
 
 type TabType = "pending" | "active" | "calendar" | "inquiries" | "messages" | "payments" | "history" | "profile";
 
@@ -111,6 +114,10 @@ const MobileProviderDashboard = () => {
     amount: number;
     payment_description: string | null;
     booking_id: string;
+  } | null>(null);
+  const [completionFormBooking, setCompletionFormBooking] = useState<{
+    id: string;
+    customerName: string;
   } | null>(null);
 
   // Fetch provider profile
@@ -699,14 +706,14 @@ const MobileProviderDashboard = () => {
                   <Button
                     size="sm"
                     className="flex-1 h-9"
-                    onClick={() => navigate(`/provider-dashboard?complete=${booking.id}`)}
+                    onClick={() => setCompletionFormBooking({ id: booking.id, customerName })}
                   >
                     Mark Complete
                   </Button>
                 )}
               </div>
               {/* Payment request/edit buttons */}
-              {booking.pendingPayment ? (
+              {ENABLE_PAYMENT_REQUESTS && booking.pendingPayment ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -933,7 +940,7 @@ const MobileProviderDashboard = () => {
                   <Card 
                     key={inquiry.id} 
                     className="cursor-pointer"
-                    onClick={() => navigate(`/inquiry-chat/${inquiry.id}`)}
+                    onClick={() => navigate("/provider-dashboard?tab=inquiries")}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
@@ -1144,9 +1151,19 @@ const MobileProviderDashboard = () => {
               )}
             </>
           )}
-        </div>
+      </div>
 
-        {/* Block Dates Dialog */}
+      {completionFormBooking && (
+        <CompletionDetailsForm
+          bookingId={completionFormBooking.id}
+          customerName={completionFormBooking.customerName}
+          open={!!completionFormBooking}
+          onOpenChange={(open) => !open && setCompletionFormBooking(null)}
+          onSubmitted={() => refetch()}
+        />
+      )}
+
+      {/* Block Dates Dialog */}
         <Dialog open={blockDateDialogOpen} onOpenChange={setBlockDateDialogOpen}>
           <DialogContent className="max-w-sm mx-4">
             <DialogHeader>

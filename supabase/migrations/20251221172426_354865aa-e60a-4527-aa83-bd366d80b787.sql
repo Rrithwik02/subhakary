@@ -23,7 +23,8 @@ USING (bucket_id = 'review-photos');
 
 CREATE POLICY "Authenticated users can upload review photos"
 ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'review-photos' AND auth.role() = 'authenticated');
+TO authenticated
+WITH CHECK (bucket_id = 'review-photos' AND auth.uid() IS NOT NULL);
 
 CREATE POLICY "Users can delete their own review photos"
 ON storage.objects FOR DELETE

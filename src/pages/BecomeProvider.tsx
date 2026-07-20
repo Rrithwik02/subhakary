@@ -433,6 +433,7 @@ const BecomeProvider = () => {
           service_type: category.name,
           description: `Additional service: ${category.name}`,
           category_id: categoryId,
+          status: "pending",
           verification_status: "pending",
           min_price: 0,
           max_price: 0,
@@ -558,7 +559,7 @@ const BecomeProvider = () => {
             Your provider application has been approved! You can now access your provider dashboard 
             to manage your services and bookings.
           </p>
-          <Button variant="gold" className="rounded-full" onClick={() => navigate("/provider/dashboard")}>
+          <Button variant="gold" className="rounded-full" onClick={() => navigate("/dashboard")}>
             Go to Dashboard
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>

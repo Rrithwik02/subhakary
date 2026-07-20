@@ -200,6 +200,7 @@ export const AdditionalServicesManager = ({
             service_type: category.name,
             description: `Additional service: ${category.name}`,
             category_id: categoryId,
+            status: "pending",
             verification_status: "pending",
             min_price: pricing.min_price,
             max_price: pricing.max_price,

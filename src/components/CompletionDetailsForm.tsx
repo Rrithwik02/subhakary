@@ -53,16 +53,20 @@ export const CompletionDetailsForm = ({
 
     setIsSubmitting(true);
     try {
-      // Insert completion details
+      // Booking completion details are one row per booking, so upsert by booking_id.
       const { error: detailsError } = await supabase
         .from("booking_completion_details")
-        .insert({
-          booking_id: bookingId,
-          service_description: formData.serviceDescription,
-          amount_charged: parseFloat(formData.amountCharged),
-          completion_days: parseInt(formData.completionDays),
-          additional_notes: formData.additionalNotes || null,
-        });
+        .upsert(
+          {
+            booking_id: bookingId,
+            service_description: formData.serviceDescription,
+            amount_charged: parseFloat(formData.amountCharged),
+            completion_days: parseInt(formData.completionDays),
+            additional_notes: formData.additionalNotes || null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "booking_id" }
+        );
 
       if (detailsError) throw detailsError;
 

@@ -120,6 +120,33 @@ const MobileAdminDashboard = () => {
     enabled: isAdmin === true,
   });
 
+  // Fetch additional services pending verification
+  const { data: additionalServices = [], refetch: refetchAdditionalServices } = useQuery({
+    queryKey: ["admin-additional-services-mobile"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("additional_services")
+        .select(`
+          *,
+          provider:service_providers(id, business_name, user_id, category:service_categories(name, icon)),
+          category:service_categories(name, icon),
+          documents:provider_documents(*)
+        `)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      return (data || []).map((service: any) => ({
+        ...service,
+        verification_status: service.verification_status || service.status || "pending",
+        documents: (service.documents || []).filter((doc: any) =>
+          doc.service_category_id === service.category_id &&
+          doc.document_type === "additional_service_proof"
+        ),
+      }));
+    },
+    enabled: isAdmin === true,
+  });
+
   const { isPulling, isRefreshing, pullDistance, pullProgress, handleTouchStart, handleTouchMove, handleTouchEnd } = usePullToRefresh({
     onRefresh: async () => {
       await refetch();
@@ -162,6 +189,7 @@ const MobileAdminDashboard = () => {
         description: "The provider has been approved.",
       });
       refetch();
+      refetchAdditionalServices();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -197,6 +225,7 @@ const MobileAdminDashboard = () => {
       setSelectedProvider(null);
       setRejectionReason("");
       refetch();
+      refetchAdditionalServices();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -249,6 +278,9 @@ const MobileAdminDashboard = () => {
   const pendingProviders = providers.filter((p) => p.status === "pending");
   const approvedProviders = providers.filter((p) => p.status === "approved");
   const rejectedProviders = providers.filter((p) => p.status === "rejected");
+  const pendingServices = additionalServices.filter((s: any) => s.verification_status === "pending");
+  const verifiedServices = additionalServices.filter((s: any) => s.verification_status === "verified");
+  const rejectedServices = additionalServices.filter((s: any) => s.verification_status === "rejected");
 
   const displayedProviders = activeTab === "pending" 
     ? pendingProviders 
@@ -336,6 +368,7 @@ const MobileAdminDashboard = () => {
               { id: "pending", label: `Pending (${pendingProviders.length})` },
               { id: "approved", label: `Approved (${approvedProviders.length})` },
               { id: "rejected", label: `Rejected (${rejectedProviders.length})` },
+              { id: "services", label: `Services (${pendingServices.length})` },
               { id: "users", label: `Users (${allUsers.length})` },
             ] as const).map((tab) => (
               <button
@@ -362,7 +395,126 @@ const MobileAdminDashboard = () => {
 
         {/* Content */}
         <div className="px-4 py-4 pb-24">
-          {activeTab !== "users" ? (
+          {activeTab === "services" ? (
+            <div className="space-y-4">
+              {pendingServices.length === 0 && verifiedServices.length === 0 && rejectedServices.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <Layers className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="font-semibold mb-1">No additional services</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Additional service requests from providers will appear here
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {pendingServices.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm text-yellow-600">Pending Verification</h3>
+                      {pendingServices.map((service: any) => (
+                        <div key={service.id} className="bg-card rounded-xl border p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm">{service.service_type}</p>
+                              <p className="text-xs text-muted-foreground">
+                                by {service.provider?.business_name || "Unknown Provider"}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {service.description}
+                              </p>
+                            </div>
+                            <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-200 text-[10px]">
+                              Pending
+                            </Badge>
+                          </div>
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 h-9"
+                              onClick={async () => {
+                                const { error } = await supabase
+                                  .from("additional_services")
+                                  .update({ verification_status: "rejected", status: "rejected" })
+                                  .eq("id", service.id);
+                                if (!error) {
+                                  toast({ title: "Service rejected", variant: "destructive" });
+                                  refetchAdditionalServices();
+                                }
+                              }}
+                              disabled={isProcessing}
+                            >
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex-1 h-9 gradient-gold text-primary-foreground"
+                              onClick={async () => {
+                                const { error } = await supabase
+                                  .from("additional_services")
+                                  .update({ verification_status: "verified", status: "approved" })
+                                  .eq("id", service.id);
+                                if (!error) {
+                                  toast({ title: "Service approved" });
+                                  refetchAdditionalServices();
+                                }
+                              }}
+                              disabled={isProcessing}
+                            >
+                              Approve
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {verifiedServices.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm text-green-600">Verified</h3>
+                      {verifiedServices.map((service: any) => (
+                        <div key={service.id} className="bg-card rounded-xl border p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-sm">{service.service_type}</p>
+                              <p className="text-xs text-muted-foreground">
+                                by {service.provider?.business_name || "Unknown Provider"}
+                              </p>
+                            </div>
+                            <Badge className="bg-green-500/10 text-green-600 border-green-200 text-[10px]">
+                              Verified
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {rejectedServices.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm text-red-600">Rejected</h3>
+                      {rejectedServices.map((service: any) => (
+                        <div key={service.id} className="bg-card rounded-xl border p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-sm">{service.service_type}</p>
+                              <p className="text-xs text-muted-foreground">
+                                by {service.provider?.business_name || "Unknown Provider"}
+                              </p>
+                            </div>
+                            <Badge variant="destructive" className="text-[10px]">
+                              Rejected
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ) : activeTab !== "users" ? (
             <div className="space-y-3">
               {isLoading ? (
                 [...Array(4)].map((_, i) => (

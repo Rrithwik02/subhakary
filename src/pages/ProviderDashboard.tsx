@@ -74,6 +74,8 @@ const statusConfig = {
   cancelled: { label: "Cancelled", color: "bg-muted text-muted-foreground" },
 };
 
+const ENABLE_PAYMENT_REQUESTS = false;
+
 const ProviderDashboard = () => {
   const isMobile = useMobileLayout();
   if (isMobile) return <MobileProviderDashboard />;
@@ -617,8 +619,8 @@ const DesktopProviderDashboard = () => {
 
               {showActions && booking.status === "accepted" && booking.ui_status !== "completed" && (
                 <div className="flex flex-col gap-2">
-                  {/* Request Payment Button - only show if no pending payment */}
-                  {!booking.pendingPayment && (
+                  {/* Request Payment is temporarily disabled, but the booking completion flow stays active. */}
+                  {ENABLE_PAYMENT_REQUESTS && !booking.pendingPayment && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -633,7 +635,7 @@ const DesktopProviderDashboard = () => {
                     </Button>
                   )}
                   {/* Edit/Cancel Payment buttons if payment is pending */}
-                  {booking.pendingPayment && (
+                  {ENABLE_PAYMENT_REQUESTS && booking.pendingPayment && (
                     <div className="flex gap-2">
                       <Button
                         size="sm"
@@ -1043,7 +1045,8 @@ const DesktopProviderDashboard = () => {
       />
 
       {/* Payment Request Dialog */}
-      <Dialog open={!!paymentRequestDialog} onOpenChange={(open) => !open && setPaymentRequestDialog(null)}>
+      {ENABLE_PAYMENT_REQUESTS && (
+        <Dialog open={!!paymentRequestDialog} onOpenChange={(open) => !open && setPaymentRequestDialog(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1090,7 +1093,8 @@ const DesktopProviderDashboard = () => {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      )}
 
       {/* Edit Payment Dialog */}
       <EditPaymentDialog
