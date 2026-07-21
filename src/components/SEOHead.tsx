@@ -15,10 +15,12 @@ export const SEOHead = ({
   description,
   keywords,
   canonicalUrl,
-  ogImage = "https://lovable.dev/opengraph-image-p98pqg.png",
+  ogImage,
   ogType = "website",
   jsonLd
 }: SEOHeadProps) => {
+  const resolvedOgImage = ogImage || `${window.location.origin}/subhakary-og-image.png`;
+
   useEffect(() => {
     // Update document title
     document.title = title;
@@ -42,14 +44,21 @@ export const SEOHead = ({
     // Open Graph
     updateMeta("og:title", title, true);
     updateMeta("og:description", description, true);
-    updateMeta("og:image", ogImage, true);
+    updateMeta("og:image", resolvedOgImage, true);
+    updateMeta("og:image:width", "1200", true);
+    updateMeta("og:image:height", "630", true);
+    updateMeta("og:image:type", "image/png", true);
+    updateMeta("og:image:alt", "Subhakary preview image", true);
     updateMeta("og:type", ogType, true);
     if (canonicalUrl) updateMeta("og:url", canonicalUrl, true);
 
     // Twitter
+    updateMeta("twitter:card", "summary_large_image");
     updateMeta("twitter:title", title);
     updateMeta("twitter:description", description);
-    updateMeta("twitter:image", ogImage);
+    updateMeta("twitter:image", resolvedOgImage);
+    updateMeta("twitter:image:alt", "Subhakary preview image");
+    updateMeta("twitter:site", "@Subhakary");
 
     // Update canonical link
     if (canonicalUrl) {
@@ -83,7 +92,7 @@ export const SEOHead = ({
       const dynamicScripts = document.querySelectorAll('script[data-seo-jsonld]');
       dynamicScripts.forEach(script => script.remove());
     };
-  }, [title, description, keywords, canonicalUrl, ogImage, ogType, jsonLd]);
+  }, [title, description, keywords, canonicalUrl, resolvedOgImage, ogType, jsonLd]);
 
   return null;
 };
