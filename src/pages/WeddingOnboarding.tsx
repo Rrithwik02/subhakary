@@ -162,6 +162,7 @@ const WeddingOnboarding = () => {
     setSubmitting(true);
     try {
       const weddingPayload = {
+        owner_user_id: user.id,
         bride_name: formData.brideName.trim(),
         groom_name: formData.groomName.trim(),
         title: createWeddingTitle(formData.brideName, formData.groomName),

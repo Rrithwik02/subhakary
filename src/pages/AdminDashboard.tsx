@@ -584,6 +584,7 @@ const DesktopAdminDashboard = () => {
         .from("additional_services")
         .update({
           verification_status: "verified",
+          status: "approved",
           verified_at: new Date().toISOString(),
           verified_by: user?.id,
         })
@@ -617,6 +618,7 @@ const DesktopAdminDashboard = () => {
         .from("additional_services")
         .update({
           verification_status: "rejected",
+          status: "rejected",
         })
         .eq("id", serviceId);
 

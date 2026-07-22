@@ -1,7 +1,7 @@
 import { useParams, Link, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Clock, ArrowLeft, Share2, Bookmark, User } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, Bookmark, User } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { blogPosts } from "@/data/blogData";
 import ReactMarkdown from "react-markdown";
+import { ShareButton } from "@/components/ShareButton";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -85,14 +86,12 @@ const BlogPost = () => {
             </div>
 
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                size="sm"
+              <ShareButton
+                title={post.title}
+                text={`Read ${post.title} on Subhakary`}
+                url={`/blog/${post.slug}`}
                 className="border-brown/20 hover:bg-brown hover:text-cream"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
+              />
               <Button
                 variant="outline"
                 size="sm"

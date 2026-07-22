@@ -29,6 +29,7 @@ import {
 export default function SaaSLanding() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"budget" | "rsvp" | "checklist">("budget");
+  const showPricingPlans = false;
 
   // Trust logos/badges
   const trustBadges = [
@@ -130,9 +131,9 @@ export default function SaaSLanding() {
                   variant="gold"
                   size="lg"
                   className="rounded-full px-8 py-6 font-semibold text-brown-dark hover:scale-105 transition-transform shadow-lg cursor-pointer"
-                  onClick={() => navigate("/auth?redirect=/planning-os")}
+                  onClick={() => navigate("/auth?redirect=/wedding/new")}
                 >
-                  Get Started Free
+                  Plan Wedding
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button
@@ -565,6 +566,7 @@ export default function SaaSLanding() {
       </section>
 
       {/* Pricing Table Section */}
+      {showPricingPlans && (
       <section id="pricing" className="py-20 bg-gradient-to-b from-cream/30 to-background relative">
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Header */}
@@ -636,6 +638,7 @@ export default function SaaSLanding() {
           </div>
         </div>
       </section>
+      )}
 
       {/* CTA Final Hook Section */}
       <section className="py-20 relative overflow-hidden bg-cream/40 border-t border-gold/10">
@@ -652,9 +655,9 @@ export default function SaaSLanding() {
               variant="gold"
               size="lg"
               className="rounded-full px-8 py-6 font-semibold text-brown-dark hover:scale-105 transition-transform shadow-lg cursor-pointer"
-              onClick={() => navigate("/auth?redirect=/planning-os")}
+              onClick={() => navigate("/auth?redirect=/wedding/new")}
             >
-              Get Started Free
+              Plan Wedding
             </Button>
             <Button
               variant="outline"
