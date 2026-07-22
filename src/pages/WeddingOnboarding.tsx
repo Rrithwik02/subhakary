@@ -162,7 +162,6 @@ const WeddingOnboarding = () => {
     setSubmitting(true);
     try {
       const weddingPayload = {
-        owner_user_id: user.id,
         bride_name: formData.brideName.trim(),
         groom_name: formData.groomName.trim(),
         title: createWeddingTitle(formData.brideName, formData.groomName),
@@ -178,13 +177,31 @@ const WeddingOnboarding = () => {
         notes: formData.notes.trim() || null,
       };
 
-      const { data: wedding, error: weddingError } = await supabase
+      const { error: weddingError } = await supabase
         .from("weddings" as any)
-        .insert(weddingPayload as any)
-        .select()
-        .single();
+        .insert(weddingPayload as any);
 
       if (weddingError) throw weddingError;
+
+      const { data: wedding, error: weddingLookupError } = await supabase
+        .from("weddings" as any)
+        .select("id")
+        .eq("bride_name", weddingPayload.bride_name)
+        .eq("groom_name", weddingPayload.groom_name)
+        .eq("title", weddingPayload.title)
+        .eq("budget_range", weddingPayload.budget_range)
+        .eq("city", weddingPayload.city)
+        .eq("guest_count", weddingPayload.guest_count)
+        .eq("wedding_type", weddingPayload.wedding_type)
+        .eq("is_estimated_date", weddingPayload.is_estimated_date)
+        .eq("owner_user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (weddingLookupError || !wedding) {
+        throw weddingLookupError || new Error("Wedding created, but could not resolve its dashboard record.");
+      }
 
       await supabase.from("wedding_members" as any).insert({
         wedding_id: wedding.id,
