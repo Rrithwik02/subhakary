@@ -6,6 +6,7 @@ import { Search, MapPin, Star, Filter, X, BadgeCheck, Images, ChevronLeft, Slide
 import { Link } from "react-router-dom";
 import { CompareButton } from "@/components/CompareButton";
 import { ShareButton } from "@/components/ShareButton";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ const DesktopProviders = () => {
   const [selectedArea, setSelectedArea] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("rating");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [desktopFiltersOpen, setDesktopFiltersOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
@@ -597,19 +599,40 @@ const DesktopProviders = () => {
       {/* Desktop Filters */}
       <section className="hidden lg:block py-6 px-4 border-b border-border sticky top-20 bg-background/95 backdrop-blur-sm z-40">
         <div className="container max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search providers, services, or locations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-end gap-3">
+              <div className="relative flex-1 max-w-4xl">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search providers, services, or locations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-11 rounded-full"
+                />
+              </div>
 
-            <FilterControls />
+              <Sheet open={desktopFiltersOpen} onOpenChange={setDesktopFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="lg" className="rounded-full gap-2 h-11 px-5 flex-shrink-0">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    Filters
+                    {activeFilterCount > 0 && (
+                      <Badge variant="secondary" className="h-5 min-w-5 px-1 text-[10px] flex items-center justify-center">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-lg">
+                  <SheetHeader>
+                    <SheetTitle>Filters</SheetTitle>
+                  </SheetHeader>
+                  <ScrollArea className="h-[calc(100vh-8rem)] py-4 pr-4">
+                    <FilterControls isMobile />
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
 
           {/* Active Filter Badges */}
@@ -717,21 +740,19 @@ const DesktopProviders = () => {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Link to={`/provider/${provider.url_slug || provider.id}${selectedDate ? `?date=${selectedDate}` : ''}`}>
-                    <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden group">
+                      <Card className="hover-lift cursor-pointer h-full bg-card border-border/50 overflow-hidden group">
                       <CardContent className="p-4 md:p-6">
                         {/* Header with Avatar, Name and Verification Badge */}
                         <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
-                          <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0 border-2 border-primary/20">
-                            {provider.logo_url ? (
-                              <img 
-                                src={provider.logo_url} 
-                                alt={provider.business_name}
-                                className="h-full w-full rounded-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-2xl md:text-3xl">👤</span>
-                            )}
-                          </div>
+                          <ProviderAvatar
+                            name={provider.business_name}
+                            logoUrl={provider.logo_url}
+                            fallback={provider.category?.icon || "👤"}
+                            sizeClassName="h-14 w-14 md:h-16 md:w-16"
+                            className="border-2 border-primary/20"
+                            imageClassName="object-cover"
+                            fallbackClassName="bg-muted text-2xl md:text-3xl"
+                          />
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-col gap-1">
                               <div className="flex items-start justify-between gap-2">

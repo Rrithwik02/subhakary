@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,13 @@ import { trackSignup, trackLogin } from "@/lib/analytics";
 const signUpSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must include an uppercase letter")
+    .regex(/[a-z]/, "Password must include a lowercase letter")
+    .regex(/[0-9]/, "Password must include a number")
+    .regex(/[^A-Za-z0-9]/, "Password must include a special character"),
 });
 
 const signInSchema = z.object({
@@ -34,6 +40,7 @@ const Auth = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [signupSuccess, setSignupSuccess] = useState(false);
   
   // 2FA state
   const [show2FAStep, setShow2FAStep] = useState(false);
@@ -44,9 +51,21 @@ const Auth = () => {
   const { user, signUp, signIn, signInWithGoogle, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const suppressAuthRedirectRef = useRef(false);
+
+  const passwordChecks = useMemo(() => {
+    const password = formData.password;
+    return {
+      minLength: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[^A-Za-z0-9]/.test(password),
+    };
+  }, [formData.password]);
 
   useEffect(() => {
-    if (user && !show2FAStep) {
+    if (user && !show2FAStep && !signupSuccess && !suppressAuthRedirectRef.current) {
       const pendingInviteCode = localStorage.getItem("pending_invite_code");
       if (pendingInviteCode) {
         localStorage.removeItem("pending_invite_code");
@@ -83,7 +102,7 @@ const Auth = () => {
 
       handleRoleRedirect();
     }
-  }, [user, navigate, show2FAStep]);
+  }, [user, navigate, show2FAStep, signupSuccess]);
 
   const validateForm = () => {
     try {
@@ -195,8 +214,10 @@ const Auth = () => {
 
     try {
       if (isSignUp) {
+        suppressAuthRedirectRef.current = true;
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
+          suppressAuthRedirectRef.current = false;
           if (error.message.includes("already registered")) {
             toast({
               title: "Account exists",
@@ -212,9 +233,11 @@ const Auth = () => {
           }
         } else {
           trackSignup('email');
+          await signOut();
+          setSignupSuccess(true);
           toast({
-            title: "Welcome to Subhakary!",
-            description: "Your account has been created successfully.",
+            title: "Account created successfully",
+            description: "You can now return to the login page and sign in.",
           });
         }
       } else {
@@ -255,6 +278,19 @@ const Auth = () => {
     await signOut();
     setShow2FAStep(false);
     setOtpCode("");
+  };
+
+  const handleBackToLogin = () => {
+    suppressAuthRedirectRef.current = false;
+    setSignupSuccess(false);
+    setIsSignUp(false);
+    setErrors({});
+    setShow2FAStep(false);
+    setOtpCode("");
+    setFormData((current) => ({
+      ...current,
+      password: "",
+    }));
   };
 
   // 2FA Verification Step UI
@@ -330,6 +366,36 @@ const Auth = () => {
                 Cancel and go back
               </Button>
             </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (signupSuccess) {
+    return (
+      <div className="min-h-screen bg-background flex items-start justify-center overflow-y-auto px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <div className="glass-card rounded-2xl p-8 text-center space-y-6">
+            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="font-display text-2xl font-semibold text-foreground">
+                Account created successfully
+              </h1>
+              <p className="text-muted-foreground">
+                Your Subhakary account is ready. Return to login to continue.
+              </p>
+            </div>
+            <Button variant="gold" className="w-full rounded-full" onClick={handleBackToLogin}>
+              Back to Login
+            </Button>
           </div>
         </motion.div>
       </div>
@@ -428,6 +494,27 @@ const Auth = () => {
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password}</p>
             )}
+            {isSignUp && (
+              <div className="rounded-2xl border border-border/70 bg-muted/40 p-4 space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Password requirements
+                </p>
+                <div className="grid gap-2 text-sm">
+                  {[
+                    { label: "Minimum 8 characters", passed: passwordChecks.minLength },
+                    { label: "Uppercase letter", passed: passwordChecks.uppercase },
+                    { label: "Lowercase letter", passed: passwordChecks.lowercase },
+                    { label: "Number", passed: passwordChecks.number },
+                    { label: "Special character", passed: passwordChecks.special },
+                  ].map((rule) => (
+                    <div key={rule.label} className={`flex items-center gap-2 ${rule.passed ? "text-emerald-700" : "text-muted-foreground"}`}>
+                      {rule.passed ? <CheckCircle2 className="h-4 w-4 flex-shrink-0" /> : <Circle className="h-4 w-4 flex-shrink-0" />}
+                      <span>{rule.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {!isSignUp && (
               <div className="text-right">
                 <button
@@ -524,6 +611,8 @@ const Auth = () => {
             <button
               type="button"
               onClick={() => {
+                suppressAuthRedirectRef.current = false;
+                setSignupSuccess(false);
                 setIsSignUp(!isSignUp);
                 setErrors({});
               }}

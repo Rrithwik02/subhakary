@@ -63,7 +63,7 @@ const WeddingOnboarding = () => {
     city: "",
     location: "",
     weddingType: "traditional" as WeddingType,
-    guestCount: 300,
+    guestCount: "",
     notes: "",
   });
   const [selectedEvents, setSelectedEvents] = useState<WeddingEventType[]>([
@@ -172,7 +172,7 @@ const WeddingOnboarding = () => {
         total_budget: totalBudget,
         city: formData.city.trim(),
         location: formData.location.trim() || null,
-        guest_count: formData.guestCount,
+        guest_count: Number(formData.guestCount) || 0,
         wedding_type: formData.weddingType,
         cultural_preferences: selectedPreferences,
         notes: formData.notes.trim() || null,
@@ -210,7 +210,7 @@ const WeddingOnboarding = () => {
           title: template.label,
           event_date: eventDate ? eventDate.toISOString().slice(0, 10) : null,
           city: formData.city.trim(),
-          guest_count: eventType === "wedding" || eventType === "reception" ? formData.guestCount : Math.round(formData.guestCount * 0.55),
+          guest_count: eventType === "wedding" || eventType === "reception" ? Number(formData.guestCount) || 0 : Math.round((Number(formData.guestCount) || 0) * 0.55),
           budget_allocated: Math.round((totalBudget * template.budgetPercent) / 100),
           sort_order: index,
         };
@@ -343,7 +343,7 @@ const WeddingOnboarding = () => {
                         id="bride-name"
                         value={formData.brideName}
                         onChange={(e) => setFormData((current) => ({ ...current, brideName: e.target.value }))}
-                        placeholder="Enter bride name"
+                        placeholder="Enter full name"
                       />
                     </div>
                     <div className="space-y-2">
@@ -352,7 +352,7 @@ const WeddingOnboarding = () => {
                         id="groom-name"
                         value={formData.groomName}
                         onChange={(e) => setFormData((current) => ({ ...current, groomName: e.target.value }))}
-                        placeholder="Enter groom name"
+                        placeholder="Enter full name"
                       />
                     </div>
                   </div>
@@ -382,8 +382,13 @@ const WeddingOnboarding = () => {
                         id="guest-count"
                         type="number"
                         min={10}
+                        placeholder="e.g. 300"
                         value={formData.guestCount}
-                        onChange={(e) => setFormData((current) => ({ ...current, guestCount: Number(e.target.value) || 0 }))}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const normalized = raw.replace(/^0+(?=\d)/, "");
+                          setFormData((current) => ({ ...current, guestCount: normalized }));
+                        }}
                       />
                     </div>
                   </div>

@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Scale, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { useProviderComparison } from "@/hooks/useProviderComparison";
 
 export const CompareBar = () => {
@@ -35,19 +36,15 @@ export const CompareBar = () => {
                       key={provider.id}
                       className="relative group flex-shrink-0"
                     >
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-muted border-2 border-primary/20 overflow-hidden">
-                        {provider.logo_url ? (
-                          <img
-                            src={provider.logo_url}
-                            alt={provider.business_name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-lg">
-                            {provider.category?.icon || "👤"}
-                          </div>
-                        )}
-                      </div>
+                      <ProviderAvatar
+                        name={provider.business_name}
+                        logoUrl={provider.logo_url}
+                        fallback={provider.category?.icon || "👤"}
+                        sizeClassName="w-10 h-10 md:w-12 md:h-12"
+                        className="border-2 border-primary/20"
+                        imageClassName="object-cover"
+                        fallbackClassName="bg-muted text-lg"
+                      />
                       <button
                         onClick={() => removeFromCompare(provider.id)}
                         className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"

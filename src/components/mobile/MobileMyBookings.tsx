@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReviewForm } from "@/components/ReviewForm";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { CustomerVerificationDialog } from "@/components/CustomerVerificationDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -329,17 +330,15 @@ const MobileMyBookings = () => {
                     <div className="p-4">
                       <div className="flex items-start gap-3">
                         {/* Provider Logo */}
-                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
-                          {booking.provider?.logo_url ? (
-                            <img
-                              src={booking.provider.logo_url}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            booking.provider?.category?.icon || "🙏"
-                          )}
-                        </div>
+                          <ProviderAvatar
+                            name={booking.provider?.business_name}
+                            logoUrl={booking.provider?.logo_url}
+                            fallback={booking.provider?.category?.icon || "🙏"}
+                            sizeClassName="h-12 w-12"
+                            className="border border-primary/10 rounded-xl"
+                            imageClassName="object-cover"
+                            fallbackClassName="bg-primary/10 text-2xl rounded-xl"
+                          />
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">

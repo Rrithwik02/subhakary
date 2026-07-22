@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { useProviderComparison } from "@/hooks/useProviderComparison";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -206,19 +207,15 @@ const Compare = () => {
                       <X className="h-4 w-4 text-muted-foreground" />
                     </button>
                     <CardContent className="p-4 text-center">
-                      <div className="w-16 h-16 mx-auto rounded-full bg-muted overflow-hidden mb-3 border-2 border-primary/20">
-                        {provider.logo_url ? (
-                          <img
-                            src={provider.logo_url}
-                            alt={provider.business_name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl">
-                            {provider.category?.icon || "👤"}
-                          </div>
-                        )}
-                      </div>
+                      <ProviderAvatar
+                        name={provider.business_name}
+                        logoUrl={provider.logo_url}
+                        fallback={provider.category?.icon || "👤"}
+                        sizeClassName="w-16 h-16 mx-auto mb-3"
+                        className="border-2 border-primary/20"
+                        imageClassName="object-cover"
+                        fallbackClassName="bg-muted text-2xl"
+                      />
                       <h3 className="font-semibold text-sm line-clamp-2 mb-2">
                         {provider.business_name}
                       </h3>

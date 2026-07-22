@@ -28,6 +28,7 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
 import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
 import { Button } from "@/components/ui/button";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -443,19 +444,15 @@ const DesktopProviderProfile = () => {
                 {/* Desktop Layout */}
                 <div className="hidden md:flex flex-col gap-6">
                   <div className="flex items-start gap-6">
-                    <div className="flex-shrink-0">
-                      {provider.logo_url ? (
-                        <img
-                          src={provider.logo_url}
-                          alt={provider.business_name}
-                          className="h-24 w-24 rounded-2xl object-cover"
-                        />
-                      ) : (
-                        <div className="h-24 w-24 rounded-2xl bg-primary/10 flex items-center justify-center text-5xl">
-                          {provider.category?.icon || "🙏"}
-                        </div>
-                      )}
-                    </div>
+                    <ProviderAvatar
+                      name={provider.business_name}
+                      logoUrl={provider.logo_url}
+                      fallback={provider.category?.icon || "🙏"}
+                      sizeClassName="h-24 w-24"
+                      className="border border-border/50 rounded-2xl"
+                      imageClassName="object-cover"
+                      fallbackClassName="bg-primary/10 text-5xl rounded-2xl"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-3">
                         <div className="min-w-0 flex-1">
@@ -547,19 +544,15 @@ const DesktopProviderProfile = () => {
                 <div className="flex flex-col gap-3 md:hidden">
                   {/* Row 1: Avatar + Full Name */}
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      {provider.logo_url ? (
-                        <img
-                          src={provider.logo_url}
-                          alt={provider.business_name}
-                          className="h-16 w-16 rounded-xl object-cover"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center text-3xl">
-                          {provider.category?.icon || "🙏"}
-                        </div>
-                      )}
-                    </div>
+                    <ProviderAvatar
+                      name={provider.business_name}
+                      logoUrl={provider.logo_url}
+                      fallback={provider.category?.icon || "🙏"}
+                      sizeClassName="h-16 w-16"
+                      className="border border-border/50 rounded-xl"
+                      imageClassName="object-cover"
+                      fallbackClassName="bg-primary/10 text-3xl rounded-xl"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <h1 className="font-display text-lg font-bold text-foreground leading-tight">

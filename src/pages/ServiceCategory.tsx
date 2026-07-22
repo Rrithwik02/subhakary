@@ -36,6 +36,7 @@ const ServiceCategory = () => {
   const pageDescription = `Find and book trusted ${serviceData.pluralName.toLowerCase()} near you. ${serviceData.description}. Available in 50+ cities across India. Compare prices, read reviews, book online.`;
   const pageKeywords = serviceData.keywords.map(k => `${k} near me, ${k} in India`).join(", ") + ", " + topCitiesSEO.slice(0, 10).map(c => `${serviceData.name.toLowerCase()} in ${c.name}`).join(", ");
   const canonicalUrl = `https://subhakary.com/services/${service}`;
+  const showCustomQuote = false;
 
   const breadcrumbs = [
     { name: "Home", url: "https://subhakary.com/" },
@@ -114,9 +115,11 @@ const ServiceCategory = () => {
                 Browse All {serviceData.pluralName}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-              <Button variant="outline" size="lg" onClick={() => navigate("/contact")}>
-                Get Custom Quote
-              </Button>
+              {showCustomQuote && (
+                <Button variant="outline" size="lg" onClick={() => navigate("/contact")}>
+                  Get Custom Quote
+                </Button>
+              )}
             </div>
           </motion.div>
         </div>

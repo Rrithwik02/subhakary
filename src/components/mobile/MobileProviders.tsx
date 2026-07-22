@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { indianStates, getCitiesByState } from "@/data/indianLocations";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -329,6 +330,15 @@ export const MobileProviders = () => {
                   >
                     {/* Image */}
                     <div className="relative h-36">
+                      <ProviderAvatar
+                        name={provider.business_name}
+                        logoUrl={provider.logo_url}
+                        fallback={provider.category?.icon || "👤"}
+                        sizeClassName="h-12 w-12"
+                        className="absolute top-3 left-3 z-10 border-2 border-white/80 shadow-md"
+                        imageClassName="object-cover"
+                        fallbackClassName="bg-background text-lg"
+                      />
                       {provider.portfolio_images?.[0] ? (
                         <img
                           src={provider.portfolio_images[0]}

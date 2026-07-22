@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -986,13 +987,15 @@ const MobileProviderDashboard = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                      {provider.logo_url ? (
-                        <img src={provider.logo_url} alt="Logo" className="w-full h-full object-cover" />
-                      ) : (
-                        <UserCircle className="h-8 w-8 text-primary" />
-                      )}
-                    </div>
+                    <ProviderAvatar
+                      name={provider.business_name}
+                      logoUrl={provider.logo_url}
+                      fallback={provider.category?.icon || "👤"}
+                      sizeClassName="h-14 w-14"
+                      className="border border-border/50 rounded-full"
+                      imageClassName="object-cover"
+                      fallbackClassName="bg-primary/10 text-2xl rounded-full"
+                    />
                     <div className="flex-1">
                       <h3 className="font-semibold">{provider.business_name}</h3>
                       <p className="text-sm text-muted-foreground">{provider.city}</p>

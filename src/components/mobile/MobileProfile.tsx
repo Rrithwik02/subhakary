@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReviewForm } from "@/components/ReviewForm";
 import { CustomerVerificationDialog } from "@/components/CustomerVerificationDialog";
@@ -645,13 +646,15 @@ const MobileProfile = () => {
                           onClick={() => navigate(`/booking/${booking.id}`)}
                         >
                           <div className="flex items-start gap-3">
-                            <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
-                              {booking.provider?.logo_url ? (
-                                <img src={booking.provider.logo_url} alt="" className="h-full w-full object-cover rounded-xl" />
-                              ) : (
-                                booking.provider?.category?.icon || "🙏"
-                              )}
-                            </div>
+                            <ProviderAvatar
+                              name={booking.provider?.business_name}
+                              logoUrl={booking.provider?.logo_url}
+                              fallback={booking.provider?.category?.icon || "🙏"}
+                              sizeClassName="h-11 w-11"
+                              className="border border-border/50 rounded-xl"
+                              imageClassName="object-cover"
+                              fallbackClassName="bg-primary/10 text-xl rounded-xl"
+                            />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
                                 <h4 className="font-semibold text-sm truncate">{booking.provider?.business_name || "Provider"}</h4>
@@ -725,13 +728,15 @@ const MobileProfile = () => {
                           onClick={() => navigate(`/booking/${booking.id}`)}
                         >
                           <div className="flex items-start gap-3">
-                            <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
-                              {booking.provider?.logo_url ? (
-                                <img src={booking.provider.logo_url} alt="" className="h-full w-full object-cover rounded-xl" />
-                              ) : (
-                                booking.provider?.category?.icon || "🙏"
-                              )}
-                            </div>
+                            <ProviderAvatar
+                              name={booking.provider?.business_name}
+                              logoUrl={booking.provider?.logo_url}
+                              fallback={booking.provider?.category?.icon || "🙏"}
+                              sizeClassName="h-11 w-11"
+                              className="border border-border/50 rounded-xl"
+                              imageClassName="object-cover"
+                              fallbackClassName="bg-primary/10 text-xl rounded-xl"
+                            />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
                                 <h4 className="font-semibold text-sm truncate">{booking.provider?.business_name || "Provider"}</h4>
@@ -880,3 +885,5 @@ const MobileProfile = () => {
 };
 
 export default MobileProfile;
+
+

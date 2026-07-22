@@ -9,6 +9,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
+import { ProviderAvatar } from "@/components/ProviderAvatar";
 
 export const MobileFavorites = () => {
   const navigate = useNavigate();
@@ -97,17 +98,15 @@ export const MobileFavorites = () => {
                   >
                     <div className="flex items-center gap-3">
                       {/* Provider image */}
-                      <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
-                        {favorite.provider?.logo_url ? (
-                          <img
-                            src={favorite.provider.logo_url}
-                            alt={favorite.provider?.business_name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          favorite.provider?.category?.icon || "🙏"
-                        )}
-                      </div>
+                      <ProviderAvatar
+                        name={favorite.provider?.business_name}
+                        logoUrl={favorite.provider?.logo_url}
+                        fallback={favorite.provider?.category?.icon || "🙏"}
+                        sizeClassName="h-14 w-14"
+                        className="border border-primary/10 rounded-xl"
+                        imageClassName="object-cover"
+                        fallbackClassName="bg-primary/10 text-2xl rounded-xl"
+                      />
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
