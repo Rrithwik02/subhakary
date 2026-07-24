@@ -34,8 +34,6 @@ import { MobileLayout } from "./MobileLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ProviderAvatar } from "@/components/ProviderAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -63,13 +61,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
-import { CompletionDetailsForm } from "@/components/CompletionDetailsForm";
-import { UpcomingEventsWidget } from "@/components/provider-calendar/UpcomingEventsWidget";
-import { ProviderCalendarModule } from "@/components/provider-calendar/ProviderCalendarModule";
-import { TimeSlotCapacityManager } from "@/components/provider-calendar/TimeSlotCapacityManager";
-import { ScheduleNotificationSettings } from "@/components/provider-calendar/ScheduleNotificationSettings";
-import { GoogleCalendarConnectUI } from "@/components/provider-calendar/GoogleCalendarConnectUI";
-
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600", icon: AlertCircle },
@@ -88,8 +79,6 @@ const DAYS_OF_WEEK = [
   { value: 5, label: "Friday" },
   { value: 6, label: "Saturday" },
 ];
-
-const ENABLE_PAYMENT_REQUESTS = false;
 
 type TabType = "pending" | "active" | "calendar" | "inquiries" | "messages" | "payments" | "history" | "profile";
 
@@ -122,10 +111,6 @@ const MobileProviderDashboard = () => {
     payment_description: string | null;
     booking_id: string;
   } | null>(null);
-  const [completionFormBooking, setCompletionFormBooking] = useState<{
-    id: string;
-    customerName: string;
-  } | null>(null);
 
   // Fetch provider profile
   const { data: provider, refetch: refetchProvider } = useQuery({
@@ -153,14 +138,7 @@ const MobileProviderDashboard = () => {
     queryFn: async () => {
       const { data: bookingsData, error } = await supabase
         .from("bookings")
-        .select(`
-          *,
-          event:wedding_events!bookings_event_id_fkey(
-            id,
-            name,
-            event_date
-          )
-        `)
+        .select(`*`)
         .eq("provider_id", provider!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -182,7 +160,6 @@ const MobileProviderDashboard = () => {
           full_name: c.customer_name,
           email: c.customer_email,
           phone: c.customer_phone,
-          profile_image: c.customer_profile_image,
         }]) || []
       );
 
@@ -570,8 +547,6 @@ const MobileProviderDashboard = () => {
   const renderBookingCard = (booking: any, index: number) => {
     const status = statusConfig[booking.status as keyof typeof statusConfig];
     const StatusIcon = status.icon;
-    const customerName = booking.customer?.full_name || "Unknown customer";
-    const customerPhone = booking.status === "accepted" ? booking.customer?.phone : null;
 
     return (
       <motion.div
@@ -583,21 +558,18 @@ const MobileProviderDashboard = () => {
       >
         <div className="p-4">
           <div className="flex items-start gap-3">
-            <Avatar className="h-10 w-10 border border-border/50">
-              <AvatarImage src={booking.customer?.profile_image} alt={customerName} />
-              <AvatarFallback className="bg-secondary/10 text-secondary">
-                <User className="h-5 w-5" />
-              </AvatarFallback>
-            </Avatar>
+            <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
+              <User className="h-5 w-5 text-secondary" />
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-semibold">
-                    {customerName}
+                    {booking.customer?.full_name || "Customer"}
                   </h3>
-                  {customerPhone && (
+                  {booking.customer?.phone && (
                     <p className="text-xs text-muted-foreground">
-                      {customerPhone}
+                      {booking.customer.phone}
                     </p>
                   )}
                 </div>
@@ -617,16 +589,6 @@ const MobileProviderDashboard = () => {
                   </>
                 )}
               </div>
-
-              {booking.event && (
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>
-                    {booking.event.name}
-                    {booking.event.event_date ? ` • ${format(new Date(booking.event.event_date), "MMM d, yyyy")}` : ""}
-                  </span>
-                </p>
-              )}
 
               {booking.message && (
                 <p className="text-xs text-muted-foreground mt-2 line-clamp-2 flex items-start gap-1">
@@ -713,14 +675,14 @@ const MobileProviderDashboard = () => {
                   <Button
                     size="sm"
                     className="flex-1 h-9"
-                    onClick={() => setCompletionFormBooking({ id: booking.id, customerName })}
+                    onClick={() => navigate(`/provider-dashboard?complete=${booking.id}`)}
                   >
                     Mark Complete
                   </Button>
                 )}
               </div>
               {/* Payment request/edit buttons */}
-              {ENABLE_PAYMENT_REQUESTS && booking.pendingPayment ? (
+              {booking.pendingPayment ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -829,113 +791,6 @@ const MobileProviderDashboard = () => {
           {/* Tabs - Scrollable */}
           <div className="flex gap-2 mb-4 overflow-x-auto -mx-4 px-4 pb-2 no-scrollbar">
             {tabs.map((tab) => (
-                  onClick={() => setEditPaymentDialog({
-                    id: booking.pendingPayment.id,
-                    amount: booking.pendingPayment.amount,
-                    payment_description: booking.pendingPayment.payment_description,
-                    booking_id: booking.id,
-                  })}
-                >
-                  <Pencil className="h-3.5 w-3.5 mr-1" />
-                  Edit ₹{booking.pendingPayment.amount?.toLocaleString()} Request
-                </Button>
-              ) : null}
-            </div>
-          )}
-        </div>
-      </motion.div>
-    );
-  };
-
-  return (
-    <MobileLayout>
-      <div
-        ref={scrollRef}
-        className="min-h-screen bg-background pb-24"
-        onTouchStart={(e) => handleTouchStart(e, scrollRef.current?.scrollTop || 0)}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Pull to Refresh Indicator */}
-        <AnimatePresence>
-          {(isPulling || isRefreshing) && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: pullDistance, opacity: pullProgress }}
-              exit={{ height: 0, opacity: 0 }}
-              className="flex items-center justify-center overflow-hidden"
-            >
-              <Loader2 className={`h-6 w-6 text-primary ${isRefreshing ? "animate-spin" : ""}`} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="px-4 pt-4">
-          {/* Header with Status */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-bold">Dashboard</h1>
-              <p className="text-sm text-muted-foreground">{provider.business_name}</p>
-            </div>
-            <Select
-              value={provider.availability_status || "offline"}
-              onValueChange={handleStatusChange}
-            >
-              <SelectTrigger className="w-28 h-9">
-                <Circle className={`h-2 w-2 mr-2 fill-current ${getStatusColor(provider.availability_status || "offline")}`} />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="online">Online</SelectItem>
-                <SelectItem value="busy">Busy</SelectItem>
-                <SelectItem value="offline">Offline</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <Card className="p-3">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-primary">{pendingBookings.length}</p>
-                <p className="text-xs text-muted-foreground">Pending</p>
-              </div>
-            </Card>
-            <Card className="p-3">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">{activeBookings.length}</p>
-                <p className="text-xs text-muted-foreground">Active</p>
-              </div>
-            </Card>
-            <Card className="p-3">
-              <div className="text-center">
-                <p className="text-2xl font-bold">{provider.total_reviews || 0}</p>
-                <p className="text-xs text-muted-foreground">Reviews</p>
-              </div>
-            </Card>
-          </div>
-
-          {/* Rating Card */}
-          {provider.rating && provider.rating > 0 && (
-            <Card className="mb-4 bg-gradient-to-r from-primary/10 to-primary/5">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Star className="h-6 w-6 text-primary fill-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{provider.rating.toFixed(1)}</p>
-                  <p className="text-xs text-muted-foreground">Average Rating</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Upcoming Events & Live Countdown Widget */}
-          <UpcomingEventsWidget onOpenCalendar={() => setActiveTab("calendar")} />
-
-          {/* Tabs - Scrollable */}
-          <div className="flex gap-2 mb-4 overflow-x-auto -mx-4 px-4 pb-2 no-scrollbar">
-            {tabs.map((tab) => (
               <Button
                 key={tab.key}
                 variant={activeTab === tab.key ? "default" : "outline"}
@@ -951,18 +806,93 @@ const MobileProviderDashboard = () => {
 
           {/* Tab Content */}
           {activeTab === "calendar" ? (
-            <div className="space-y-6">
-              <ProviderCalendarModule providerId={provider?.id} />
+            <div className="space-y-4">
+              {/* Weekly Off Days */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="font-semibold text-sm">Weekly Off Days</h3>
+                      <p className="text-xs text-muted-foreground">Days you're unavailable every week</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedRecurringDays(recurringBlockedDays);
+                        setRecurringDialogOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {recurringBlockedDays.length === 0 ? (
+                      <span className="text-sm text-muted-foreground">
+                        Available all days
+                      </span>
+                    ) : (
+                      DAYS_OF_WEEK.filter((d) => recurringBlockedDays.includes(d.value)).map(
+                        (day) => (
+                          <Badge key={day.value} variant="secondary">
+                            {day.label}
+                          </Badge>
+                        )
+                      )
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="pt-4 border-t border-border/40 space-y-6">
-                <h3 className="font-display text-lg font-bold text-foreground">
-                  Schedule Settings & Integrations
-                </h3>
-
-                <TimeSlotCapacityManager />
-                <ScheduleNotificationSettings />
-                <GoogleCalendarConnectUI />
-              </div>
+              {/* Blocked Dates */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="font-semibold text-sm">Blocked Dates</h3>
+                      <p className="text-xs text-muted-foreground">Specific dates when you're unavailable</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setBlockDateDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Block
+                    </Button>
+                  </div>
+                  
+                  {blockedDates.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No specific dates blocked
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {blockedDates
+                        .filter((d) => d >= new Date())
+                        .sort((a, b) => a.getTime() - b.getTime())
+                        .slice(0, 8)
+                        .map((date) => (
+                          <Badge
+                            key={date.toISOString()}
+                            variant="outline"
+                            className="flex items-center gap-1 pr-1"
+                          >
+                            <CalendarX className="h-3 w-3" />
+                            {format(date, "MMM d")}
+                            <button
+                              onClick={() => removeBlockedDateMutation.mutate(date)}
+                              className="ml-1 p-0.5 hover:bg-destructive/20 rounded"
+                              disabled={removeBlockedDateMutation.isPending}
+                            >
+                              <Trash2 className="h-3 w-3 text-destructive" />
+                            </button>
+                          </Badge>
+                        ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           ) : activeTab === "inquiries" ? (
             <div className="space-y-3">
@@ -971,7 +901,7 @@ const MobileProviderDashboard = () => {
                   <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="font-semibold mb-1">No Inquiries</h3>
                   <p className="text-sm text-muted-foreground">
-                    Booking inquiries will appear here
+                    Customer inquiries will appear here
                   </p>
                 </div>
               ) : (
@@ -979,7 +909,7 @@ const MobileProviderDashboard = () => {
                   <Card 
                     key={inquiry.id} 
                     className="cursor-pointer"
-                    onClick={() => navigate("/provider-dashboard?tab=inquiries")}
+                    onClick={() => navigate(`/inquiry-chat/${inquiry.id}`)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
@@ -1025,15 +955,13 @@ const MobileProviderDashboard = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-4">
-                    <ProviderAvatar
-                      name={provider.business_name}
-                      logoUrl={provider.logo_url}
-                      fallback={provider.category?.icon || "👤"}
-                      sizeClassName="h-14 w-14"
-                      className="border border-border/50 rounded-full"
-                      imageClassName="object-cover"
-                      fallbackClassName="bg-primary/10 text-2xl rounded-full"
-                    />
+                    <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                      {provider.logo_url ? (
+                        <img src={provider.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <UserCircle className="h-8 w-8 text-primary" />
+                      )}
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-semibold">{provider.business_name}</h3>
                       <p className="text-sm text-muted-foreground">{provider.city}</p>
@@ -1192,19 +1120,9 @@ const MobileProviderDashboard = () => {
               )}
             </>
           )}
-      </div>
+        </div>
 
-      {completionFormBooking && (
-        <CompletionDetailsForm
-          bookingId={completionFormBooking.id}
-          customerName={completionFormBooking.customerName}
-          open={!!completionFormBooking}
-          onOpenChange={(open) => !open && setCompletionFormBooking(null)}
-          onSubmitted={() => refetch()}
-        />
-      )}
-
-      {/* Block Dates Dialog */}
+        {/* Block Dates Dialog */}
         <Dialog open={blockDateDialogOpen} onOpenChange={setBlockDateDialogOpen}>
           <DialogContent className="max-w-sm mx-4">
             <DialogHeader>

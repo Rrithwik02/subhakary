@@ -39,24 +39,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { ProviderChatSection } from "@/components/ProviderChatSection";
-import { ProviderInquiryChat } from "@/components/ProviderInquiryChat";
-import { ProviderLogoUpload } from "@/components/ProviderLogoUpload";
-import { ProviderPortfolioUpload } from "@/components/ProviderPortfolioUpload";
-import { useMobileLayout } from "@/hooks/useMobileLayout";
-import MobileProviderDashboard from "@/components/mobile/MobileProviderDashboard";
-import { ProviderProfileEdit } from "@/components/ProviderProfileEdit";
 import {
   Select,
   SelectContent,
@@ -82,12 +64,6 @@ import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { AdditionalServicesManager } from "@/components/AdditionalServicesManager";
 import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
-import { UpcomingEventsWidget } from "@/components/provider-calendar/UpcomingEventsWidget";
-import { ProviderCalendarModule } from "@/components/provider-calendar/ProviderCalendarModule";
-import { TimeSlotCapacityManager } from "@/components/provider-calendar/TimeSlotCapacityManager";
-import { ScheduleNotificationSettings } from "@/components/provider-calendar/ScheduleNotificationSettings";
-import { GoogleCalendarConnectUI } from "@/components/provider-calendar/GoogleCalendarConnectUI";
-
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600" },
@@ -96,8 +72,6 @@ const statusConfig = {
   completed: { label: "Completed", color: "bg-blue-500/10 text-blue-600" },
   cancelled: { label: "Cancelled", color: "bg-muted text-muted-foreground" },
 };
-
-const ENABLE_PAYMENT_REQUESTS = false;
 
 const ProviderDashboard = () => {
   const isMobile = useMobileLayout();
@@ -174,14 +148,7 @@ const DesktopProviderDashboard = () => {
     queryFn: async () => {
       const { data: bookingsData, error } = await supabase
         .from("bookings")
-        .select(`
-          *,
-          event:wedding_events!bookings_event_id_fkey(
-            id,
-            name,
-            event_date
-          )
-        `)
+        .select(`*`)
         .eq("provider_id", provider!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -204,8 +171,6 @@ const DesktopProviderDashboard = () => {
           user_id: bookingsData.find(b => b.id === c.booking_id)?.user_id,
           full_name: c.customer_name,
           email: c.customer_email,
-          phone: c.customer_phone,
-          profile_image: c.customer_profile_image,
         }]) || []
       );
 
@@ -519,8 +484,6 @@ const DesktopProviderDashboard = () => {
     showActions?: boolean;
   }) => {
     const status = statusConfig[(booking.ui_status || booking.status) as keyof typeof statusConfig];
-    const customerName = booking.customer?.full_name || "Unknown customer";
-    const customerPhone = booking.status === "accepted" ? booking.customer?.phone : null;
 
     return (
       <Card className="hover-lift">
@@ -528,24 +491,16 @@ const DesktopProviderDashboard = () => {
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <Avatar className="h-10 w-10 border border-border/50">
-                  <AvatarImage src={booking.customer?.profile_image} alt={customerName} />
-                  <AvatarFallback className="bg-secondary/10 text-secondary">
-                    <User className="h-5 w-5" />
-                  </AvatarFallback>
-                </Avatar>
+                <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                  <User className="h-5 w-5 text-secondary" />
+                </div>
                 <div>
                   <h3 className="font-semibold">
-                    {customerName}
+                    {booking.customer?.full_name || "Customer"}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {booking.customer?.email}
                   </p>
-                  {customerPhone && (
-                    <p className="text-sm text-muted-foreground">
-                      {customerPhone}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -561,16 +516,6 @@ const DesktopProviderDashboard = () => {
                   </span>
                 )}
               </div>
-
-              {booking.event && (
-                <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>
-                    {booking.event.name}
-                    {booking.event.event_date ? ` • ${format(new Date(booking.event.event_date), "MMM d, yyyy")}` : ""}
-                  </span>
-                </p>
-              )}
 
               {booking.message && (
                 <p className="text-sm text-muted-foreground mt-3 flex items-start gap-1">
@@ -642,14 +587,14 @@ const DesktopProviderDashboard = () => {
 
               {showActions && booking.status === "accepted" && booking.ui_status !== "completed" && (
                 <div className="flex flex-col gap-2">
-                  {/* Request Payment is temporarily disabled, but the booking completion flow stays active. */}
-                  {ENABLE_PAYMENT_REQUESTS && !booking.pendingPayment && (
+                  {/* Request Payment Button - only show if no pending payment */}
+                  {!booking.pendingPayment && (
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setPaymentRequestDialog({
                         bookingId: booking.id,
-                        customerName,
+                        customerName: booking.customer?.full_name || "Customer",
                       })}
                       disabled={isProcessing}
                     >
@@ -658,7 +603,7 @@ const DesktopProviderDashboard = () => {
                     </Button>
                   )}
                   {/* Edit/Cancel Payment buttons if payment is pending */}
-                  {ENABLE_PAYMENT_REQUESTS && booking.pendingPayment && (
+                  {booking.pendingPayment && (
                     <div className="flex gap-2">
                       <Button
                         size="sm"
@@ -679,19 +624,319 @@ const DesktopProviderDashboard = () => {
                   <Button
                     size="sm"
                     onClick={() => handleOpenCompletionForm(
-                      booking.id,
-                      customerName
+                      booking.id, 
+                      booking.customer?.full_name || "Customer"
                     )}
                     disabled={isProcessing || booking.completion_confirmed_by_provider}
                   >
-                    {booking.completion_confirmed_by_provider
-                      ? "Awaiting confirmation"
+                    {booking.completion_confirmed_by_provider 
+                      ? "Awaiting Customer Confirmation" 
                       : "Mark Completed"}
                   </Button>
                 </div>
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+
+      <section className="pt-32 pb-12 px-4">
+        <div className="container max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+                  Provider Dashboard
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Manage your bookings for {provider.business_name}
+                </p>
+              </div>
+              
+              {/* Availability Status Toggle */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Select
+                  value={provider.availability_status || "offline"}
+                  onValueChange={handleStatusChange}
+                  disabled={isUpdatingStatus}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue>
+                      <div className="flex items-center gap-2">
+                        <Circle className={`h-2 w-2 fill-current ${getStatusColor(provider.availability_status || "offline")}`} />
+                        <span className="capitalize">{provider.availability_status || "offline"}</span>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="online">
+                      <div className="flex items-center gap-2">
+                        <Circle className="h-2 w-2 fill-current text-green-500" />
+                        <span>Online</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="busy">
+                      <div className="flex items-center gap-2">
+                        <Circle className="h-2 w-2 fill-current text-yellow-500" />
+                        <span>Busy</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="offline">
+                      <div className="flex items-center gap-2">
+                        <Circle className="h-2 w-2 fill-current text-muted-foreground" />
+                        <span>Offline</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-3xl font-bold text-yellow-600">
+                    {pendingBookings.length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Pending</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-3xl font-bold text-green-600">
+                    {activeBookings.length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Active</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-3xl font-bold text-blue-600">
+                    {bookings.filter((b) => b.status === "completed").length}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Completed</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Tabs defaultValue="pending" className="w-full">
+              <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
+                <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm">
+                  Pending ({pendingBookings.length})
+                </TabsTrigger>
+                <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
+                  Active ({activeBookings.length})
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <CalendarDays className="h-3 w-3 hidden sm:block" />
+                  Calendar
+                </TabsTrigger>
+                <TabsTrigger value="inquiries" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <MessageSquare className="h-3 w-3 hidden sm:block" />
+                  Inquiries
+                </TabsTrigger>
+                <TabsTrigger value="messages" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <MessageCircle className="h-3 w-3 hidden sm:block" />
+                  Messages
+                </TabsTrigger>
+                <TabsTrigger value="payments" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <CreditCard className="h-3 w-3 hidden sm:block" />
+                  Payments
+                </TabsTrigger>
+                <TabsTrigger value="history" className="flex-1 min-w-[80px] text-xs sm:text-sm">
+                  History ({pastBookings.length})
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <Settings className="h-3 w-3 hidden sm:block" />
+                  Profile
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="pending" className="mt-6">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(2)].map((_, i) => (
+                      <Card key={i} className="animate-pulse">
+                        <CardContent className="p-6">
+                          <div className="h-6 bg-muted rounded w-1/3 mb-2" />
+                          <div className="h-4 bg-muted rounded w-1/2" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : pendingBookings.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-display text-xl font-semibold mb-2">
+                        No pending bookings
+                      </h3>
+                      <p className="text-muted-foreground">
+                        New booking requests will appear here
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingBookings.map((booking, i) => (
+                      <motion.div
+                        key={booking.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <BookingCard booking={booking} showActions />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="active" className="mt-6">
+                {activeBookings.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-display text-xl font-semibold mb-2">
+                        No active bookings
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Accepted bookings will appear here
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {activeBookings.map((booking, i) => (
+                      <motion.div
+                        key={booking.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <BookingCard booking={booking} showActions />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="calendar" className="mt-6">
+                <BookingCalendar providerId={provider.id} />
+              </TabsContent>
+
+              <TabsContent value="inquiries" className="mt-6">
+                <ProviderInquiryChat providerId={provider.id} />
+              </TabsContent>
+
+              <TabsContent value="messages" className="mt-6">
+                <ProviderChatSection 
+                  providerId={provider.id} 
+                  providerProfileId={providerProfile?.id || ""} 
+                />
+              </TabsContent>
+
+              <TabsContent value="payments" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-display flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Payment History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PaymentHistorySection providerId={provider.id} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="history" className="mt-6">
+                {pastBookings.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-display text-xl font-semibold mb-2">
+                        No booking history
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Completed and past bookings will appear here
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {pastBookings.map((booking, i) => (
+                      <motion.div
+                        key={booking.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <BookingCard booking={booking} />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="profile" className="mt-6 space-y-6">
+                <ProviderLogoUpload
+                  providerId={provider.id}
+                  currentLogoUrl={provider.logo_url}
+                  businessName={provider.business_name}
+                  onLogoUpdated={() => refetch()}
+                />
+                
+                <ProviderPortfolioUpload
+                  providerId={provider.id}
+                  currentImages={provider.portfolio_images || []}
+                  onImagesUpdated={() => refetch()}
+                />
+                
+                <ProviderProfileEdit
+                  providerId={provider.id}
+                  initialData={{
+                    business_name: provider.business_name,
+                    description: provider.description,
+                    city: provider.city,
+                    address: provider.address,
+                    whatsapp_number: provider.whatsapp_number,
+                    website_url: provider.website_url,
+                    instagram_url: provider.instagram_url,
+                    facebook_url: provider.facebook_url,
+                    youtube_url: provider.youtube_url,
+                    base_price: provider.base_price,
+                    subcategory: provider.subcategory,
+                    specializations: provider.specializations,
+                  }}
+                  onProfileUpdated={() => refetch()}
+                />
+
+                <ProviderAvailabilityManager providerId={provider.id} />
+
+                <ProviderBundleManager providerId={provider.id} />
+
+                <AdditionalServicesManager 
+                  providerId={provider.id} 
+                  primaryCategoryId={provider.category_id || undefined}
+                />
+
+                {/* Danger Zone */}
+                <Card className="border-destructive/50">
+                  <CardHeader>
+                    <CardTitle className="font-display flex items-center gap-2 text-destructive">
+                      <AlertTriangle className="h-5 w-5" />
                       Danger Zone
                     </CardTitle>
                   </CardHeader>
@@ -768,8 +1013,7 @@ const DesktopProviderDashboard = () => {
       />
 
       {/* Payment Request Dialog */}
-      {ENABLE_PAYMENT_REQUESTS && (
-        <Dialog open={!!paymentRequestDialog} onOpenChange={(open) => !open && setPaymentRequestDialog(null)}>
+      <Dialog open={!!paymentRequestDialog} onOpenChange={(open) => !open && setPaymentRequestDialog(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -816,8 +1060,7 @@ const DesktopProviderDashboard = () => {
             </Button>
           </DialogFooter>
         </DialogContent>
-        </Dialog>
-      )}
+      </Dialog>
 
       {/* Edit Payment Dialog */}
       <EditPaymentDialog
