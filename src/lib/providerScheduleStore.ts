@@ -124,6 +124,37 @@ const STORAGE_KEYS = {
   GOOGLE_CAL: "subhakary_provider_google_cal",
 };
 
+const DEFAULT_PROVIDER_SCOPE = "default";
+
+const getScopedKey = (baseKey: string, providerId?: string) =>
+  providerId && providerId !== DEFAULT_PROVIDER_SCOPE ? `${baseKey}:${providerId}` : baseKey;
+
+const readScopedStorage = <T,>(baseKey: string, providerId: string | undefined, fallback: T): T => {
+  try {
+    const scopedKey = getScopedKey(baseKey, providerId);
+    const scopedValue = localStorage.getItem(scopedKey);
+    if (scopedValue) {
+      return JSON.parse(scopedValue) as T;
+    }
+
+    if (scopedKey !== baseKey) {
+      const legacyValue = localStorage.getItem(baseKey);
+      if (legacyValue) {
+        return JSON.parse(legacyValue) as T;
+      }
+    }
+  } catch (error) {
+    console.warn(`Failed to read schedule storage for ${baseKey}`, error);
+  }
+
+  return fallback;
+};
+
+const writeScopedStorage = <T,>(baseKey: string, providerId: string | undefined, value: T) => {
+  const scopedKey = getScopedKey(baseKey, providerId);
+  localStorage.setItem(scopedKey, JSON.stringify(value));
+};
+
 // Initial Mock Seed Data if local storage is empty
 const INITIAL_MOCK_EVENTS: ScheduleEvent[] = [
   {
@@ -232,21 +263,19 @@ const DEFAULT_GOOGLE_CAL: GoogleCalendarState = {
 };
 
 // Store Helper API
-export const getProviderEvents = (): ScheduleEvent[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.EVENTS);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(INITIAL_MOCK_EVENTS));
-      return INITIAL_MOCK_EVENTS;
-    }
-    return JSON.parse(raw);
-  } catch (e) {
-    return INITIAL_MOCK_EVENTS;
-  }
+export const getProviderEvents = (providerId?: string): ScheduleEvent[] => {
+  const fallbackEvents = providerId && providerId !== DEFAULT_PROVIDER_SCOPE
+    ? INITIAL_MOCK_EVENTS.map((event) => ({ ...event, providerId }))
+    : INITIAL_MOCK_EVENTS;
+
+  return readScopedStorage(STORAGE_KEYS.EVENTS, providerId, fallbackEvents);
 };
 
-export const saveProviderEvent = (event: Omit<ScheduleEvent, "id" | "createdAt"> & { id?: string }): ScheduleEvent => {
-  const events = getProviderEvents();
+export const saveProviderEvent = (
+  event: Omit<ScheduleEvent, "id" | "createdAt"> & { id?: string },
+  providerId?: string
+): ScheduleEvent => {
+  const events = getProviderEvents(providerId);
   const newEvent: ScheduleEvent = {
     ...event,
     id: event.id || `evt-${Date.now()}`,
@@ -260,65 +289,41 @@ export const saveProviderEvent = (event: Omit<ScheduleEvent, "id" | "createdAt">
     events.push(newEvent);
   }
 
-  localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+  writeScopedStorage(STORAGE_KEYS.EVENTS, providerId, events);
   return newEvent;
 };
 
-export const deleteProviderEvent = (id: string) => {
-  const events = getProviderEvents().filter((e) => e.id !== id);
-  localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
+export const deleteProviderEvent = (id: string, providerId?: string) => {
+  const events = getProviderEvents(providerId).filter((e) => e.id !== id);
+  writeScopedStorage(STORAGE_KEYS.EVENTS, providerId, events);
 };
 
-export const getTimeSlots = (): TimeSlotConfig[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SLOTS);
-    return raw ? JSON.parse(raw) : DEFAULT_TIME_SLOTS;
-  } catch {
-    return DEFAULT_TIME_SLOTS;
-  }
+export const getTimeSlots = (providerId?: string): TimeSlotConfig[] =>
+  readScopedStorage(STORAGE_KEYS.SLOTS, providerId, DEFAULT_TIME_SLOTS);
+
+export const saveTimeSlots = (slots: TimeSlotConfig[], providerId?: string) => {
+  writeScopedStorage(STORAGE_KEYS.SLOTS, providerId, slots);
 };
 
-export const saveTimeSlots = (slots: TimeSlotConfig[]) => {
-  localStorage.setItem(STORAGE_KEYS.SLOTS, JSON.stringify(slots));
+export const getCapacityConfig = (providerId?: string): ServiceCapacityConfig =>
+  readScopedStorage(STORAGE_KEYS.CAPACITY, providerId, DEFAULT_CAPACITY);
+
+export const saveCapacityConfig = (config: ServiceCapacityConfig, providerId?: string) => {
+  writeScopedStorage(STORAGE_KEYS.CAPACITY, providerId, config);
 };
 
-export const getCapacityConfig = (): ServiceCapacityConfig => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.CAPACITY);
-    return raw ? JSON.parse(raw) : DEFAULT_CAPACITY;
-  } catch {
-    return DEFAULT_CAPACITY;
-  }
+export const getNotificationSettings = (providerId?: string): NotificationSettings =>
+  readScopedStorage(STORAGE_KEYS.NOTIFICATIONS, providerId, DEFAULT_NOTIFICATIONS);
+
+export const saveNotificationSettings = (settings: NotificationSettings, providerId?: string) => {
+  writeScopedStorage(STORAGE_KEYS.NOTIFICATIONS, providerId, settings);
 };
 
-export const saveCapacityConfig = (config: ServiceCapacityConfig) => {
-  localStorage.setItem(STORAGE_KEYS.CAPACITY, JSON.stringify(config));
-};
+export const getGoogleCalendarState = (providerId?: string): GoogleCalendarState =>
+  readScopedStorage(STORAGE_KEYS.GOOGLE_CAL, providerId, DEFAULT_GOOGLE_CAL);
 
-export const getNotificationSettings = (): NotificationSettings => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    return raw ? JSON.parse(raw) : DEFAULT_NOTIFICATIONS;
-  } catch {
-    return DEFAULT_NOTIFICATIONS;
-  }
-};
-
-export const saveNotificationSettings = (settings: NotificationSettings) => {
-  localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(settings));
-};
-
-export const getGoogleCalendarState = (): GoogleCalendarState => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.GOOGLE_CAL);
-    return raw ? JSON.parse(raw) : DEFAULT_GOOGLE_CAL;
-  } catch {
-    return DEFAULT_GOOGLE_CAL;
-  }
-};
-
-export const saveGoogleCalendarState = (state: GoogleCalendarState) => {
-  localStorage.setItem(STORAGE_KEYS.GOOGLE_CAL, JSON.stringify(state));
+export const saveGoogleCalendarState = (state: GoogleCalendarState, providerId?: string) => {
+  writeScopedStorage(STORAGE_KEYS.GOOGLE_CAL, providerId, state);
 };
 
 // Conflict Detection Engine

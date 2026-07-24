@@ -27,6 +27,7 @@ import {
 
 interface UpcomingEventsWidgetProps {
   events?: ScheduleEvent[];
+  providerId?: string;
   onOpenCalendar?: () => void;
   onNewEvent?: () => void;
 }
@@ -52,6 +53,7 @@ const getEventIcon = (type: ScheduleEvent["type"]) => {
 
 export const UpcomingEventsWidget = ({ 
   events: propEvents, 
+  providerId = "default",
   onOpenCalendar,
   onNewEvent 
 }: UpcomingEventsWidgetProps) => {
@@ -62,9 +64,9 @@ export const UpcomingEventsWidget = ({
     if (propEvents) {
       setEvents(propEvents);
     } else {
-      setEvents(getProviderEvents());
+      setEvents(getProviderEvents(providerId));
     }
-  }, [propEvents]);
+  }, [propEvents, providerId]);
 
   const today = new Date();
   const tomorrow = addDays(today, 1);

@@ -64,6 +64,8 @@ import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { AdditionalServicesManager } from "@/components/AdditionalServicesManager";
 import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
+import { UpcomingEventsWidget } from "@/components/provider-calendar/UpcomingEventsWidget";
+import { ProviderScheduleModule } from "@/components/provider-calendar/ProviderScheduleModule";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600" },
@@ -72,6 +74,17 @@ const statusConfig = {
   completed: { label: "Completed", color: "bg-blue-500/10 text-blue-600" },
   cancelled: { label: "Cancelled", color: "bg-muted text-muted-foreground" },
 };
+
+type DashboardTab =
+  | "pending"
+  | "active"
+  | "calendar"
+  | "schedule"
+  | "inquiries"
+  | "messages"
+  | "payments"
+  | "history"
+  | "profile";
 
 const ProviderDashboard = () => {
   const isMobile = useMobileLayout();
@@ -83,6 +96,7 @@ const DesktopProviderDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<DashboardTab>("pending");
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -730,7 +744,16 @@ const DesktopProviderDashboard = () => {
               </Card>
             </div>
 
-            <Tabs defaultValue="pending" className="w-full">
+            <UpcomingEventsWidget
+              providerId={provider.id}
+              onOpenCalendar={() => setActiveTab("schedule")}
+            />
+
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as DashboardTab)}
+              className="w-full"
+            >
               <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
                 <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm">
                   Pending ({pendingBookings.length})
@@ -741,6 +764,10 @@ const DesktopProviderDashboard = () => {
                 <TabsTrigger value="calendar" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
                   <CalendarDays className="h-3 w-3 hidden sm:block" />
                   Calendar
+                </TabsTrigger>
+                <TabsTrigger value="schedule" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
+                  <CalendarDays className="h-3 w-3 hidden sm:block" />
+                  Schedule
                 </TabsTrigger>
                 <TabsTrigger value="inquiries" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
                   <MessageSquare className="h-3 w-3 hidden sm:block" />
@@ -834,6 +861,10 @@ const DesktopProviderDashboard = () => {
 
               <TabsContent value="calendar" className="mt-6">
                 <BookingCalendar providerId={provider.id} />
+              </TabsContent>
+
+              <TabsContent value="schedule" className="mt-6">
+                <ProviderScheduleModule providerId={provider.id} />
               </TabsContent>
 
               <TabsContent value="inquiries" className="mt-6">

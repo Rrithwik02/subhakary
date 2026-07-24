@@ -26,7 +26,11 @@ import {
   saveNotificationSettings 
 } from "@/lib/providerScheduleStore";
 
-export const ScheduleNotificationSettings = () => {
+interface ScheduleNotificationSettingsProps {
+  providerId?: string;
+}
+
+export const ScheduleNotificationSettings = ({ providerId = "default" }: ScheduleNotificationSettingsProps) => {
   const { toast } = useToast();
   const [settings, setSettings] = useState<NotificationSettings>({
     emailReminders: true,
@@ -38,15 +42,15 @@ export const ScheduleNotificationSettings = () => {
   });
 
   useEffect(() => {
-    setSettings(getNotificationSettings());
-  }, []);
+    setSettings(getNotificationSettings(providerId));
+  }, [providerId]);
 
   const handleChange = (field: keyof NotificationSettings, value: any) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
-    saveNotificationSettings(settings);
+    saveNotificationSettings(settings, providerId);
     toast({
       title: "Notification Preferences Saved",
       description: "Your calendar and schedule alert settings have been updated.",

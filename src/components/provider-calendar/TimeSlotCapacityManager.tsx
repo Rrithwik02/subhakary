@@ -25,7 +25,11 @@ import {
   saveCapacityConfig 
 } from "@/lib/providerScheduleStore";
 
-export const TimeSlotCapacityManager = () => {
+interface TimeSlotCapacityManagerProps {
+  providerId?: string;
+}
+
+export const TimeSlotCapacityManager = ({ providerId = "default" }: TimeSlotCapacityManagerProps) => {
   const { toast } = useToast();
 
   const [slots, setSlots] = useState<TimeSlotConfig[]>([]);
@@ -37,9 +41,9 @@ export const TimeSlotCapacityManager = () => {
   });
 
   useEffect(() => {
-    setSlots(getTimeSlots());
-    setCapacity(getCapacityConfig());
-  }, []);
+    setSlots(getTimeSlots(providerId));
+    setCapacity(getCapacityConfig(providerId));
+  }, [providerId]);
 
   const handleToggleSlot = (id: string) => {
     setSlots((prev) =>
@@ -52,8 +56,8 @@ export const TimeSlotCapacityManager = () => {
   };
 
   const handleSaveAll = () => {
-    saveTimeSlots(slots);
-    saveCapacityConfig(capacity);
+    saveTimeSlots(slots, providerId);
+    saveCapacityConfig(capacity, providerId);
     toast({
       title: "Schedule Settings Saved",
       description: "Your time slots and service capacity configuration have been updated.",

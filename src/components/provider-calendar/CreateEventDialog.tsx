@@ -53,6 +53,7 @@ interface CreateEventDialogProps {
   onOpenChange: (open: boolean) => void;
   initialDate?: Date;
   editingEvent?: ScheduleEvent | null;
+  providerId?: string;
   onEventSaved?: (event: ScheduleEvent) => void;
 }
 
@@ -61,6 +62,7 @@ export const CreateEventDialog = ({
   onOpenChange,
   initialDate,
   editingEvent,
+  providerId = "default",
   onEventSaved,
 }: CreateEventDialogProps) => {
   const { toast } = useToast();
@@ -112,7 +114,7 @@ export const CreateEventDialog = ({
   useEffect(() => {
     if (!open) return;
 
-    const allEvents = getProviderEvents();
+    const allEvents = getProviderEvents(providerId);
     const result = checkScheduleConflict(
       {
         startDate,
@@ -126,7 +128,7 @@ export const CreateEventDialog = ({
     );
 
     setConflictResult(result);
-  }, [startDate, endDate, startTime, endTime, isAllDay, eventType, editingEvent, open]);
+  }, [startDate, endDate, startTime, endTime, isAllDay, eventType, editingEvent, open, providerId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,7 +142,7 @@ export const CreateEventDialog = ({
       return;
     }
 
-    if (conflictResult.hasConflict && conflictResult.conflictType === "blocked_date") {
+    if (conflictResult.hasConflict) {
       toast({
         title: "Cannot schedule event",
         description: conflictResult.message,
@@ -151,7 +153,7 @@ export const CreateEventDialog = ({
 
     const newEvent = saveProviderEvent({
       id: editingEvent?.id,
-      providerId: "default",
+      providerId,
       type: eventType,
       title: title.trim(),
       startDate,
@@ -164,7 +166,7 @@ export const CreateEventDialog = ({
       customerName: customerName.trim() || undefined,
       customerPhone: customerPhone.trim() || undefined,
       status: ["vacation", "holiday", "leave", "blocked_date"].includes(eventType) ? "blocked" : "confirmed",
-    });
+    }, providerId);
 
     toast({
       title: editingEvent ? "Event Updated" : "Event Created",

@@ -61,6 +61,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
+import { UpcomingEventsWidget } from "@/components/provider-calendar/UpcomingEventsWidget";
+import { ProviderScheduleModule } from "@/components/provider-calendar/ProviderScheduleModule";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600", icon: AlertCircle },
@@ -80,7 +82,7 @@ const DAYS_OF_WEEK = [
   { value: 6, label: "Saturday" },
 ];
 
-type TabType = "pending" | "active" | "calendar" | "inquiries" | "messages" | "payments" | "history" | "profile";
+type TabType = "pending" | "active" | "schedule" | "calendar" | "inquiries" | "messages" | "payments" | "history" | "profile";
 
 const MobileProviderDashboard = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -525,6 +527,7 @@ const MobileProviderDashboard = () => {
   const tabs = [
     { key: "pending" as TabType, label: `Pending(${pendingBookings.length})` },
     { key: "active" as TabType, label: `Active(${activeBookings.length})` },
+    { key: "schedule" as TabType, label: "Schedule", icon: CalendarDays },
     { key: "calendar" as TabType, label: "Calendar", icon: CalendarDays },
     { key: "inquiries" as TabType, label: "Inquiries", icon: MessageSquare },
     { key: "messages" as TabType, label: "Messages", icon: MessageCircle },
@@ -788,6 +791,11 @@ const MobileProviderDashboard = () => {
             </Card>
           )}
 
+          <UpcomingEventsWidget
+            providerId={provider.id}
+            onOpenCalendar={() => setActiveTab("schedule")}
+          />
+
           {/* Tabs - Scrollable */}
           <div className="flex gap-2 mb-4 overflow-x-auto -mx-4 px-4 pb-2 no-scrollbar">
             {tabs.map((tab) => (
@@ -805,7 +813,9 @@ const MobileProviderDashboard = () => {
           </div>
 
           {/* Tab Content */}
-          {activeTab === "calendar" ? (
+          {activeTab === "schedule" ? (
+            <ProviderScheduleModule providerId={provider.id} />
+          ) : activeTab === "calendar" ? (
             <div className="space-y-4">
               {/* Weekly Off Days */}
               <Card>

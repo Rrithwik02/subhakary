@@ -30,7 +30,11 @@ import {
   saveGoogleCalendarState 
 } from "@/lib/providerScheduleStore";
 
-export const GoogleCalendarConnectUI = () => {
+interface GoogleCalendarConnectUIProps {
+  providerId?: string;
+}
+
+export const GoogleCalendarConnectUI = ({ providerId = "default" }: GoogleCalendarConnectUIProps) => {
   const { toast } = useToast();
   const [state, setState] = useState<GoogleCalendarState>({
     isConnected: false,
@@ -43,8 +47,8 @@ export const GoogleCalendarConnectUI = () => {
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    setState(getGoogleCalendarState());
-  }, []);
+    setState(getGoogleCalendarState(providerId));
+  }, [providerId]);
 
   const handleToggleConnect = () => {
     if (state.isConnected) {
@@ -56,7 +60,7 @@ export const GoogleCalendarConnectUI = () => {
         lastSyncedAt: undefined,
       };
       setState(newState);
-      saveGoogleCalendarState(newState);
+      saveGoogleCalendarState(newState, providerId);
       toast({
         title: "Google Calendar Disconnected",
         description: "Your Google Calendar account has been unlinked.",
@@ -72,7 +76,7 @@ export const GoogleCalendarConnectUI = () => {
           lastSyncedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " Today",
         };
         setState(newState);
-        saveGoogleCalendarState(newState);
+        saveGoogleCalendarState(newState, providerId);
         setIsConnecting(false);
         toast({
           title: "Google Calendar Connected!",
@@ -90,7 +94,7 @@ export const GoogleCalendarConnectUI = () => {
         lastSyncedAt: "Just now (" + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ")",
       };
       setState(newState);
-      saveGoogleCalendarState(newState);
+      saveGoogleCalendarState(newState, providerId);
       setIsSyncing(false);
       toast({
         title: "Schedule Synchronized",
@@ -102,7 +106,7 @@ export const GoogleCalendarConnectUI = () => {
   const handleChange = (field: keyof GoogleCalendarState, value: any) => {
     const newState = { ...state, [field]: value };
     setState(newState);
-    saveGoogleCalendarState(newState);
+    saveGoogleCalendarState(newState, providerId);
   };
 
   return (

@@ -69,7 +69,7 @@ interface ProviderCalendarModuleProps {
   onEventSelect?: (event: ScheduleEvent) => void;
 }
 
-export const ProviderCalendarModule = ({ providerId }: ProviderCalendarModuleProps) => {
+export const ProviderCalendarModule = ({ providerId = "default" }: ProviderCalendarModuleProps) => {
   const { toast } = useToast();
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -84,12 +84,12 @@ export const ProviderCalendarModule = ({ providerId }: ProviderCalendarModulePro
 
   // Load events
   const loadEvents = () => {
-    setEvents(getProviderEvents());
+    setEvents(getProviderEvents(providerId));
   };
 
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, [providerId]);
 
   const handlePrev = () => {
     if (viewMode === "month") setCurrentDate(subMonths(currentDate, 1));
@@ -109,7 +109,7 @@ export const ProviderCalendarModule = ({ providerId }: ProviderCalendarModulePro
   };
 
   const handleDeleteEvent = (id: string) => {
-    deleteProviderEvent(id);
+    deleteProviderEvent(id, providerId);
     toast({ title: "Event Deleted", description: "Event has been removed from your schedule." });
     setDetailEvent(null);
     loadEvents();
@@ -176,7 +176,7 @@ export const ProviderCalendarModule = ({ providerId }: ProviderCalendarModulePro
               }}
             >
               <Plus className="h-4 w-4" />
-              <span>Add Event</span>
+              <span>Create Event</span>
             </Button>
           </div>
         </CardContent>
@@ -338,7 +338,7 @@ export const ProviderCalendarModule = ({ providerId }: ProviderCalendarModulePro
                   setCreateDialogOpen(true);
                 }}
               >
-                + Add Event on {format(selectedDate, "MMM d")}
+                Create Event on {format(selectedDate, "MMM d")}
               </Button>
             </CardContent>
           </Card>
@@ -351,6 +351,7 @@ export const ProviderCalendarModule = ({ providerId }: ProviderCalendarModulePro
         onOpenChange={setCreateDialogOpen}
         initialDate={selectedDate}
         editingEvent={editingEvent}
+        providerId={providerId}
         onEventSaved={() => loadEvents()}
       />
 
