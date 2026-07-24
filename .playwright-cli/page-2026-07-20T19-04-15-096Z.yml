@@ -1,0 +1,314 @@
+- generic [ref=f3e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - main [ref=f3e3]:
+    - navigation [ref=f3e4]:
+      - generic [ref=f3e5]:
+        - link [ref=f3e6] [cursor=pointer]:
+          - /url: /
+          - img "Subhakary" [ref=f3e7]
+        - button [ref=f3e8] [cursor=pointer]
+    - generic [ref=f3e12]:
+      - generic [ref=f3e13]:
+        - generic [ref=f3e14]:
+          - generic [ref=f3e15]: Subhakary Event Intelligence
+          - heading "The Planning OS for Sacred Ceremonies" [level=1] [ref=f3e18]
+          - paragraph [ref=f3e19]: Plan, allocate budget, manage RSVPs, and coordinate vetted vendor networks with our data-driven SaaS platform. Experience stress-free traditional ceremonies.
+        - generic [ref=f3e20]:
+          - button "Get Started Free" [ref=f3e21] [cursor=pointer]
+          - button "View Pricing" [ref=f3e22] [cursor=pointer]
+      - generic [ref=f3e24]:
+        - generic [ref=f3e25]:
+          - generic [ref=f3e31]:
+            - heading "Budget Analytics" [level=3] [ref=f3e32]
+            - paragraph [ref=f3e33]: Real-Time Cost Distribution
+          - generic [ref=f3e34]: v3.2
+        - generic [ref=f3e35]: ₹11.7L (Catering)
+        - generic [ref=f3e43]:
+          - generic [ref=f3e44]:
+            - generic [ref=f3e45]: Spent Total
+            - text: ₹11,70,000
+          - generic [ref=f3e46]:
+            - generic [ref=f3e47]: Budget Goal
+            - text: ₹15,00,000
+          - generic [ref=f3e48]:
+            - generic [ref=f3e49]: Analytics Health
+            - text: Stable
+    - generic [ref=f3e52]:
+      - generic [ref=f3e53]: Razorpay Secure Payments
+      - generic [ref=f3e58]: 100% KYC Vetted Providers
+      - generic [ref=f3e65]: ISO 27001 Encrypted
+      - generic [ref=f3e70]: 24/7 Priority Assistance
+    - generic [ref=f3e76]:
+      - generic [ref=f3e77]:
+        - generic [ref=f3e78]: Complete Control
+        - heading "Intelligent Planning Features" [level=2] [ref=f3e79]
+        - paragraph [ref=f3e80]: A comprehensive toolbelt of automated features crafted specifically for large-scale ceremony coordination.
+      - generic [ref=f3e81]:
+        - generic [ref=f3e83]:
+          - heading "Budget Analytics" [level=3] [ref=f3e87]
+          - paragraph [ref=f3e88]: Track vendor costs, compare quotes, configure milestone payments, and visualize cost trends with automatic alert indicators.
+        - generic [ref=f3e90]:
+          - heading "Guest Intelligence" [level=3] [ref=f3e97]
+          - paragraph [ref=f3e98]: Import contacts, send digital invitations via SMS/WhatsApp, log regional dietary preferences, and track RSVPs dynamically.
+        - generic [ref=f3e100]:
+          - heading "Muhurtham Timeline" [level=3] [ref=f3e104]
+          - paragraph [ref=f3e105]: Plan every micro-event of your wedding, griha pravesh, or naming ceremonies, ensuring ritual timings are respected.
+        - generic [ref=f3e107]:
+          - heading "Centralized Documents" [level=3] [ref=f3e113]
+          - paragraph [ref=f3e114]: Securely store invoices, vendor contracts, design moodboards, and photo directories in a central cloud locker.
+        - generic [ref=f3e116]:
+          - heading "Collaborative Planning" [level=3] [ref=f3e122]
+          - paragraph [ref=f3e123]: Invite family members, planners, and main vendors to join the workspace with granular role-based edit permissions.
+        - generic [ref=f3e125]:
+          - heading "Pre-Vetted Directory" [level=3] [ref=f3e132]
+          - paragraph [ref=f3e133]: Direct API integrations with verified pandits, elite wedding photographers, caterers, and decorations experts in your city.
+    - generic [ref=f3e136]:
+      - generic [ref=f3e137]:
+        - generic [ref=f3e138]: Interactive Showcase
+        - heading "Intuitive workspaces to monitor ceremony progress" [level=2] [ref=f3e139]
+        - paragraph [ref=f3e140]: Click the preview tabs to see mock dashboard workspaces representing various components of the SaaS OS. Monitor RSVP feedback, checklist statuses, and payments.
+        - generic [ref=f3e141]:
+          - button [ref=f3e142] [cursor=pointer]:
+            - generic [ref=f3e145]:
+              - paragraph [ref=f3e146]: Budget Ledger Dashboard
+              - paragraph [ref=f3e147]: Track costs by vendor category
+          - button [ref=f3e150] [cursor=pointer]:
+            - generic [ref=f3e156]:
+              - paragraph [ref=f3e157]: Guest List Management
+              - paragraph [ref=f3e158]: Analyze meal requirements and feedback
+          - button [ref=f3e161] [cursor=pointer]:
+            - generic [ref=f3e165]:
+              - paragraph [ref=f3e166]: Muhurtham Checklist Tracker
+              - paragraph [ref=f3e167]: Monitor critical rituals and task completion
+      - generic [ref=f3e171]:
+        - generic [ref=f3e172]:
+          - heading "Cost Breakdown by Category" [level=4] [ref=f3e173]
+          - generic [ref=f3e174]: "Total Budget: ₹15,00,000"
+        - generic [ref=f3e175]:
+          - generic [ref=f3e177]:
+            - generic [ref=f3e178]: Catering (Sai Catering)
+            - generic [ref=f3e179]: ₹4,20,000 (28%)
+          - generic [ref=f3e183]:
+            - generic [ref=f3e184]: Decorations (Vivah Decors)
+            - generic [ref=f3e185]: ₹3,50,000 (23%)
+          - generic [ref=f3e189]:
+            - generic [ref=f3e190]: Venue Rental (Sri Palace)
+            - generic [ref=f3e191]: ₹3,00,000 (20%)
+          - generic [ref=f3e195]:
+            - generic [ref=f3e196]: Pandits & Rituals (Pandit Ram)
+            - generic [ref=f3e197]: ₹1,00,000 (7%)
+    - generic [ref=f3e201]:
+      - generic [ref=f3e202]:
+        - generic [ref=f3e203]: Pricing Options
+        - heading "Transparent, Value-Driven Plans" [level=2] [ref=f3e204]
+        - paragraph [ref=f3e205]: Choose the tier that fits the scale of your upcoming auspicious ceremony. Upgrade or downgrade anytime.
+      - generic [ref=f3e206]:
+        - generic [ref=f3e207]:
+          - generic [ref=f3e208]:
+            - generic [ref=f3e209]:
+              - heading "Muhurtham Basic" [level=3] [ref=f3e210]
+              - paragraph [ref=f3e211]: Essential planning tools for intimate home ceremonies and family pujas.
+            - generic [ref=f3e212]:
+              - generic [ref=f3e213]: ₹0
+              - generic [ref=f3e214]: / forever
+            - list [ref=f3e216]:
+              - listitem [ref=f3e217]:
+                - generic [ref=f3e221]: Up to 50 Guest Invitations
+              - listitem [ref=f3e222]:
+                - generic [ref=f3e226]: Basic Budget Tracker
+              - listitem [ref=f3e227]:
+                - generic [ref=f3e231]: Vedic Ritual Checklist
+              - listitem [ref=f3e232]:
+                - generic [ref=f3e236]: Standard Chat Support
+              - listitem [ref=f3e237]:
+                - generic [ref=f3e241]: Dynamic Muhurtham Planner
+          - button "Start Planning Free" [ref=f3e243] [cursor=pointer]
+        - generic [ref=f3e244]:
+          - generic [ref=f3e245]: Most Popular Choice
+          - generic [ref=f3e246]:
+            - generic [ref=f3e247]:
+              - heading "Ceremony Pro" [level=3] [ref=f3e248]
+              - paragraph [ref=f3e249]: Advanced analytics and complete coordination for weddings and grand events.
+            - generic [ref=f3e250]:
+              - generic [ref=f3e251]: ₹4,999
+              - generic [ref=f3e252]: / per event
+            - list [ref=f3e254]:
+              - listitem [ref=f3e255]:
+                - generic [ref=f3e259]: Unlimited Guest RSVPs & Smart Invites
+              - listitem [ref=f3e260]:
+                - generic [ref=f3e264]: Real-time Expense & Budget Analytics
+              - listitem [ref=f3e265]:
+                - generic [ref=f3e269]: Collaborative Planner Workspaces
+              - listitem [ref=f3e270]:
+                - generic [ref=f3e274]: AI Vendor Selection Assistant
+              - listitem [ref=f3e275]:
+                - generic [ref=f3e279]: Automated Milestone Reminders
+              - listitem [ref=f3e280]:
+                - generic [ref=f3e284]: Priority Support (Response under 2hrs)
+          - button "Upgrade to Pro" [ref=f3e286] [cursor=pointer]
+        - generic [ref=f3e287]:
+          - generic [ref=f3e288]:
+            - generic [ref=f3e289]:
+              - heading "Agency Elite" [level=3] [ref=f3e290]
+              - paragraph [ref=f3e291]: For professional wedding planners and event management agencies.
+            - generic [ref=f3e292]:
+              - generic [ref=f3e293]: ₹14,999
+              - generic [ref=f3e294]: / per year
+            - list [ref=f3e296]:
+              - listitem [ref=f3e297]:
+                - generic [ref=f3e301]: Manage Multiple Ceremonies Simultaneously
+              - listitem [ref=f3e302]:
+                - generic [ref=f3e306]: Custom Client Brand Portals
+              - listitem [ref=f3e307]:
+                - generic [ref=f3e311]: Advanced Multi-Vendor Analytics
+              - listitem [ref=f3e312]:
+                - generic [ref=f3e316]: Detailed CSV Export & Financial Reporting
+              - listitem [ref=f3e317]:
+                - generic [ref=f3e321]: Dedicated Account Success Manager
+              - listitem [ref=f3e322]:
+                - generic [ref=f3e326]: Featured Directory Listings
+          - button "Contact Sales" [ref=f3e328] [cursor=pointer]
+    - generic [ref=f3e330]:
+      - heading "Ready to Plan Your Next Ceremony?" [level=2] [ref=f3e331]
+      - paragraph [ref=f3e332]: Create your account today and unlock intelligent templates, budget alerts, and verified directory networks immediately.
+      - generic [ref=f3e333]:
+        - button "Get Started Free" [ref=f3e334] [cursor=pointer]
+        - button "Consult an Expert" [ref=f3e335] [cursor=pointer]
+    - generic [ref=f3e337]:
+      - generic [ref=f3e338]:
+        - generic [ref=f3e339]:
+          - link [ref=f3e340] [cursor=pointer]:
+            - /url: /
+            - img "Subhakary" [ref=f3e341]
+          - paragraph [ref=f3e342]: India's most trusted platform for booking traditional and cultural services. Making sacred ceremonies accessible to everyone.
+          - generic [ref=f3e343]:
+            - generic [ref=f3e344]: Hyderabad, Telangana, India
+            - generic [ref=f3e349]: +91 99999 99999
+            - generic [ref=f3e353]: contact@subhakary.com
+        - generic [ref=f3e358]:
+          - heading "Services" [level=4] [ref=f3e359]
+          - list [ref=f3e360]:
+            - listitem [ref=f3e361]:
+              - link "Poojari / Priest" [ref=f3e362] [cursor=pointer]:
+                - /url: /services/poojari
+            - listitem [ref=f3e363]:
+              - link "Photography" [ref=f3e364] [cursor=pointer]:
+                - /url: /services/photographer
+            - listitem [ref=f3e365]:
+              - link "Makeup Artist" [ref=f3e366] [cursor=pointer]:
+                - /url: /services/makeup-artist
+            - listitem [ref=f3e367]:
+              - link "Mehandi" [ref=f3e368] [cursor=pointer]:
+                - /url: /services/mehandi-artist
+            - listitem [ref=f3e369]:
+              - link "Decoration" [ref=f3e370] [cursor=pointer]:
+                - /url: /services/decoration
+            - listitem [ref=f3e371]:
+              - link "Catering" [ref=f3e372] [cursor=pointer]:
+                - /url: /services/catering
+            - listitem [ref=f3e373]:
+              - link "Function Halls" [ref=f3e374] [cursor=pointer]:
+                - /url: /services/function-halls
+            - listitem [ref=f3e375]:
+              - link "Event Managers" [ref=f3e376] [cursor=pointer]:
+                - /url: /services/event-managers
+        - generic [ref=f3e377]:
+          - heading "Company" [level=4] [ref=f3e378]
+          - list [ref=f3e379]:
+            - listitem [ref=f3e380]:
+              - link "About Us" [ref=f3e381] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=f3e382]:
+              - link "Planning OS" [ref=f3e383] [cursor=pointer]:
+                - /url: /planning-os
+            - listitem [ref=f3e384]:
+              - link "Become a Provider" [ref=f3e385] [cursor=pointer]:
+                - /url: /become-provider
+            - listitem [ref=f3e386]:
+              - link "Blog" [ref=f3e387] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=f3e388]:
+              - link "FAQ" [ref=f3e389] [cursor=pointer]:
+                - /url: /contact#faq
+        - generic [ref=f3e390]:
+          - heading "Support" [level=4] [ref=f3e391]
+          - list [ref=f3e392]:
+            - listitem [ref=f3e393]:
+              - link "Contact Us" [ref=f3e394] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=f3e395]:
+              - link "Privacy Policy" [ref=f3e396] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=f3e397]:
+              - link "Terms of Service" [ref=f3e398] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=f3e399]:
+              - link "Install App" [ref=f3e400] [cursor=pointer]:
+                - /url: /install
+      - generic [ref=f3e401]:
+        - heading "Popular Cities" [level=4] [ref=f3e402]
+        - generic [ref=f3e403]:
+          - link "Hyderabad" [ref=f3e404] [cursor=pointer]:
+            - /url: /services/poojari/hyderabad
+          - link "Bangalore" [ref=f3e405] [cursor=pointer]:
+            - /url: /services/poojari/bengaluru
+          - link "Chennai" [ref=f3e406] [cursor=pointer]:
+            - /url: /services/poojari/chennai
+          - link "Mumbai" [ref=f3e407] [cursor=pointer]:
+            - /url: /services/poojari/mumbai
+          - link "Delhi" [ref=f3e408] [cursor=pointer]:
+            - /url: /services/poojari/new-delhi
+          - link "Pune" [ref=f3e409] [cursor=pointer]:
+            - /url: /services/poojari/pune
+          - link "Vijayawada" [ref=f3e410] [cursor=pointer]:
+            - /url: /services/poojari/vijayawada
+          - link "Kolkata" [ref=f3e411] [cursor=pointer]:
+            - /url: /services/poojari/kolkata
+        - generic [ref=f3e412]:
+          - generic [ref=f3e413]:
+            - paragraph [ref=f3e414]: Hyderabad
+            - link "Poojari in Hyderabad" [ref=f3e415] [cursor=pointer]:
+              - /url: /services/poojari/hyderabad
+            - link "Photographer in Hyderabad" [ref=f3e416] [cursor=pointer]:
+              - /url: /services/photographer/hyderabad
+            - link "Catering in Hyderabad" [ref=f3e417] [cursor=pointer]:
+              - /url: /services/catering/hyderabad
+          - generic [ref=f3e418]:
+            - paragraph [ref=f3e419]: Bangalore
+            - link "Poojari in Bangalore" [ref=f3e420] [cursor=pointer]:
+              - /url: /services/poojari/bengaluru
+            - link "Photographer in Bangalore" [ref=f3e421] [cursor=pointer]:
+              - /url: /services/photographer/bengaluru
+            - link "Catering in Bangalore" [ref=f3e422] [cursor=pointer]:
+              - /url: /services/catering/bengaluru
+          - generic [ref=f3e423]:
+            - paragraph [ref=f3e424]: Chennai
+            - link "Poojari in Chennai" [ref=f3e425] [cursor=pointer]:
+              - /url: /services/poojari/chennai
+            - link "Photographer in Chennai" [ref=f3e426] [cursor=pointer]:
+              - /url: /services/photographer/chennai
+            - link "Catering in Chennai" [ref=f3e427] [cursor=pointer]:
+              - /url: /services/catering/chennai
+          - generic [ref=f3e428]:
+            - paragraph [ref=f3e429]: Mumbai
+            - link "Poojari in Mumbai" [ref=f3e430] [cursor=pointer]:
+              - /url: /services/poojari/mumbai
+            - link "Photographer in Mumbai" [ref=f3e431] [cursor=pointer]:
+              - /url: /services/photographer/mumbai
+            - link "Catering in Mumbai" [ref=f3e432] [cursor=pointer]:
+              - /url: /services/catering/mumbai
+      - generic [ref=f3e433]:
+        - paragraph [ref=f3e434]: © 2025 Subhakary. All rights reserved.
+        - generic [ref=f3e435]:
+          - link "Privacy" [ref=f3e436] [cursor=pointer]:
+            - /url: /privacy-policy
+          - link "Terms" [ref=f3e437] [cursor=pointer]:
+            - /url: /terms-of-service
+        - generic [ref=f3e438]:
+          - generic [ref=f3e439]: "Available in:"
+          - generic [ref=f3e440]:
+            - generic [ref=f3e441]: English
+            - generic [ref=f3e442]: తెలుగు
+            - generic [ref=f3e443]: हिंदी

@@ -1,0 +1,305 @@
+- generic:
+  - generic:
+    - list
+    - region "Notifications alt+T"
+    - generic:
+      - navigation:
+        - generic:
+          - link:
+            - /url: /
+          - button
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=1]: Provider Dashboard
+                - paragraph: Manage your bookings for Rrishi Photography Services(Sample one)
+              - generic:
+                - generic: "Status:"
+                - combobox:
+                  - generic: online
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: "0"
+                  - paragraph: Pending
+              - generic:
+                - generic:
+                  - paragraph: "4"
+                  - paragraph: Active
+              - generic:
+                - generic:
+                  - paragraph: "8"
+                  - paragraph: Completed
+            - generic:
+              - tablist:
+                - tab: Pending (0)
+                - tab [selected]: Active (4)
+                - tab: Calendar
+                - tab: Inquiries
+                - tab: Messages
+                - tab: Payments
+                - tab: History (10)
+                - tab: Profile
+              - tabpanel:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - heading [level=3]: R R
+                                - paragraph: 2000030870cse@gmail.com
+                            - generic: July 24th, 2026
+                          - generic:
+                            - generic: Accepted
+                            - generic:
+                              - button: Mark Completed
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - heading [level=3]: Maddali Keerthi
+                                - paragraph: keerthi.maddali123@gmail.com
+                            - generic:
+                              - generic: February 9th, 2026
+                              - generic: 20:10
+                          - generic:
+                            - generic: Accepted
+                            - generic:
+                              - button [disabled]: Awaiting confirmation
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - heading [level=3]: Aakash Murthy
+                                - paragraph: aakashmurthybarla5541@gmail.com
+                            - generic:
+                              - generic: February 14th, 2026
+                              - generic: 12:00
+                          - generic:
+                            - generic: Accepted
+                            - generic:
+                              - button: Mark Completed
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - heading [level=3]: Aditi
+                                - paragraph: 2000030852cse@gmail.com
+                            - generic:
+                              - generic: January 1st, 2026
+                              - generic: 17:16
+                            - paragraph:
+                              - generic: dfghjkhb
+                          - generic: Completed
+      - contentinfo:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /
+              - paragraph: India's most trusted platform for booking traditional and cultural services. Making sacred ceremonies accessible to everyone.
+              - generic:
+                - generic: Hyderabad, Telangana, India
+                - generic: +91 99999 99999
+                - generic: contact@subhakary.com
+            - generic:
+              - heading [level=4]: Services
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /services/poojari
+                    - text: Poojari / Priest
+                - listitem:
+                  - link:
+                    - /url: /services/photographer
+                    - text: Photography
+                - listitem:
+                  - link:
+                    - /url: /services/makeup-artist
+                    - text: Makeup Artist
+                - listitem:
+                  - link:
+                    - /url: /services/mehandi-artist
+                    - text: Mehandi
+                - listitem:
+                  - link:
+                    - /url: /services/decoration
+                    - text: Decoration
+                - listitem:
+                  - link:
+                    - /url: /services/catering
+                    - text: Catering
+                - listitem:
+                  - link:
+                    - /url: /services/function-halls
+                    - text: Function Halls
+                - listitem:
+                  - link:
+                    - /url: /services/event-managers
+                    - text: Event Managers
+            - generic:
+              - heading [level=4]: Company
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /about
+                    - text: About Us
+                - listitem:
+                  - link:
+                    - /url: /planning-os
+                    - text: Planning OS
+                - listitem:
+                  - link:
+                    - /url: /become-provider
+                    - text: Become a Provider
+                - listitem:
+                  - link:
+                    - /url: /blog
+                    - text: Blog
+                - listitem:
+                  - link:
+                    - /url: /contact#faq
+                    - text: FAQ
+            - generic:
+              - heading [level=4]: Support
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /contact
+                    - text: Contact Us
+                - listitem:
+                  - link:
+                    - /url: /privacy-policy
+                    - text: Privacy Policy
+                - listitem:
+                  - link:
+                    - /url: /terms-of-service
+                    - text: Terms of Service
+                - listitem:
+                  - link:
+                    - /url: /install
+                    - text: Install App
+          - generic:
+            - heading [level=4]: Popular Cities
+            - generic:
+              - link:
+                - /url: /services/poojari/hyderabad
+                - text: Hyderabad
+              - link:
+                - /url: /services/poojari/bengaluru
+                - text: Bangalore
+              - link:
+                - /url: /services/poojari/chennai
+                - text: Chennai
+              - link:
+                - /url: /services/poojari/mumbai
+                - text: Mumbai
+              - link:
+                - /url: /services/poojari/new-delhi
+                - text: Delhi
+              - link:
+                - /url: /services/poojari/pune
+                - text: Pune
+              - link:
+                - /url: /services/poojari/vijayawada
+                - text: Vijayawada
+              - link:
+                - /url: /services/poojari/kolkata
+                - text: Kolkata
+            - generic:
+              - generic:
+                - paragraph: Hyderabad
+                - link:
+                  - /url: /services/poojari/hyderabad
+                  - text: Poojari in Hyderabad
+                - link:
+                  - /url: /services/photographer/hyderabad
+                  - text: Photographer in Hyderabad
+                - link:
+                  - /url: /services/catering/hyderabad
+                  - text: Catering in Hyderabad
+              - generic:
+                - paragraph: Bangalore
+                - link:
+                  - /url: /services/poojari/bengaluru
+                  - text: Poojari in Bangalore
+                - link:
+                  - /url: /services/photographer/bengaluru
+                  - text: Photographer in Bangalore
+                - link:
+                  - /url: /services/catering/bengaluru
+                  - text: Catering in Bangalore
+              - generic:
+                - paragraph: Chennai
+                - link:
+                  - /url: /services/poojari/chennai
+                  - text: Poojari in Chennai
+                - link:
+                  - /url: /services/photographer/chennai
+                  - text: Photographer in Chennai
+                - link:
+                  - /url: /services/catering/chennai
+                  - text: Catering in Chennai
+              - generic:
+                - paragraph: Mumbai
+                - link:
+                  - /url: /services/poojari/mumbai
+                  - text: Poojari in Mumbai
+                - link:
+                  - /url: /services/photographer/mumbai
+                  - text: Photographer in Mumbai
+                - link:
+                  - /url: /services/catering/mumbai
+                  - text: Catering in Mumbai
+          - generic:
+            - paragraph: © 2025 Subhakary. All rights reserved.
+            - generic:
+              - link:
+                - /url: /privacy-policy
+                - text: Privacy
+              - link:
+                - /url: /terms-of-service
+                - text: Terms
+            - generic:
+              - generic: "Available in:"
+              - generic:
+                - generic: English
+                - generic: తెలుగు
+                - generic: हिंदी
+  - dialog [ref=f17e893]:
+    - generic [ref=f17e894]:
+      - heading "Service Completion Details" [level=2] [ref=f17e895]
+      - paragraph [ref=f17e900]: Fill in the details of the service completed for R R. The customer will verify this information.
+    - generic [ref=f17e901]:
+      - generic [ref=f17e902]:
+        - generic [ref=f17e903]: What service did you provide? *
+        - textbox "What service did you provide? *" [active] [ref=f17e907]:
+          - /placeholder: Describe the service you provided...
+      - generic [ref=f17e908]:
+        - generic [ref=f17e909]: Amount Charged (₹) *
+        - spinbutton "Amount Charged (₹) *" [ref=f17e913]
+      - generic [ref=f17e914]:
+        - generic [ref=f17e915]: Number of Days to Complete *
+        - spinbutton "Number of Days to Complete *" [ref=f17e918]
+      - generic [ref=f17e919]:
+        - text: Additional Notes (Optional)
+        - textbox "Additional Notes (Optional)" [ref=f17e920]:
+          - /placeholder: Any additional information...
+      - generic [ref=f17e921]:
+        - button "Cancel" [ref=f17e922] [cursor=pointer]
+        - button "Submit for Verification" [ref=f17e923] [cursor=pointer]
+    - button "Close" [ref=f17e924] [cursor=pointer]

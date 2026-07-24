@@ -64,6 +64,12 @@ import { cn } from "@/lib/utils";
 import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
 import { CompletionDetailsForm } from "@/components/CompletionDetailsForm";
+import { UpcomingEventsWidget } from "@/components/provider-calendar/UpcomingEventsWidget";
+import { ProviderCalendarModule } from "@/components/provider-calendar/ProviderCalendarModule";
+import { TimeSlotCapacityManager } from "@/components/provider-calendar/TimeSlotCapacityManager";
+import { ScheduleNotificationSettings } from "@/components/provider-calendar/ScheduleNotificationSettings";
+import { GoogleCalendarConnectUI } from "@/components/provider-calendar/GoogleCalendarConnectUI";
+
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600", icon: AlertCircle },
@@ -823,6 +829,113 @@ const MobileProviderDashboard = () => {
           {/* Tabs - Scrollable */}
           <div className="flex gap-2 mb-4 overflow-x-auto -mx-4 px-4 pb-2 no-scrollbar">
             {tabs.map((tab) => (
+                  onClick={() => setEditPaymentDialog({
+                    id: booking.pendingPayment.id,
+                    amount: booking.pendingPayment.amount,
+                    payment_description: booking.pendingPayment.payment_description,
+                    booking_id: booking.id,
+                  })}
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                  Edit ₹{booking.pendingPayment.amount?.toLocaleString()} Request
+                </Button>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
+
+  return (
+    <MobileLayout>
+      <div
+        ref={scrollRef}
+        className="min-h-screen bg-background pb-24"
+        onTouchStart={(e) => handleTouchStart(e, scrollRef.current?.scrollTop || 0)}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Pull to Refresh Indicator */}
+        <AnimatePresence>
+          {(isPulling || isRefreshing) && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: pullDistance, opacity: pullProgress }}
+              exit={{ height: 0, opacity: 0 }}
+              className="flex items-center justify-center overflow-hidden"
+            >
+              <Loader2 className={`h-6 w-6 text-primary ${isRefreshing ? "animate-spin" : ""}`} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="px-4 pt-4">
+          {/* Header with Status */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-xl font-bold">Dashboard</h1>
+              <p className="text-sm text-muted-foreground">{provider.business_name}</p>
+            </div>
+            <Select
+              value={provider.availability_status || "offline"}
+              onValueChange={handleStatusChange}
+            >
+              <SelectTrigger className="w-28 h-9">
+                <Circle className={`h-2 w-2 mr-2 fill-current ${getStatusColor(provider.availability_status || "offline")}`} />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="busy">Busy</SelectItem>
+                <SelectItem value="offline">Offline</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <Card className="p-3">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-primary">{pendingBookings.length}</p>
+                <p className="text-xs text-muted-foreground">Pending</p>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">{activeBookings.length}</p>
+                <p className="text-xs text-muted-foreground">Active</p>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="text-center">
+                <p className="text-2xl font-bold">{provider.total_reviews || 0}</p>
+                <p className="text-xs text-muted-foreground">Reviews</p>
+              </div>
+            </Card>
+          </div>
+
+          {/* Rating Card */}
+          {provider.rating && provider.rating > 0 && (
+            <Card className="mb-4 bg-gradient-to-r from-primary/10 to-primary/5">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Star className="h-6 w-6 text-primary fill-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{provider.rating.toFixed(1)}</p>
+                  <p className="text-xs text-muted-foreground">Average Rating</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Upcoming Events & Live Countdown Widget */}
+          <UpcomingEventsWidget onOpenCalendar={() => setActiveTab("calendar")} />
+
+          {/* Tabs - Scrollable */}
+          <div className="flex gap-2 mb-4 overflow-x-auto -mx-4 px-4 pb-2 no-scrollbar">
+            {tabs.map((tab) => (
               <Button
                 key={tab.key}
                 variant={activeTab === tab.key ? "default" : "outline"}
@@ -838,93 +951,18 @@ const MobileProviderDashboard = () => {
 
           {/* Tab Content */}
           {activeTab === "calendar" ? (
-            <div className="space-y-4">
-              {/* Weekly Off Days */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-sm">Weekly Off Days</h3>
-                      <p className="text-xs text-muted-foreground">Days you're unavailable every week</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedRecurringDays(recurringBlockedDays);
-                        setRecurringDialogOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {recurringBlockedDays.length === 0 ? (
-                      <span className="text-sm text-muted-foreground">
-                        Available all days
-                      </span>
-                    ) : (
-                      DAYS_OF_WEEK.filter((d) => recurringBlockedDays.includes(d.value)).map(
-                        (day) => (
-                          <Badge key={day.value} variant="secondary">
-                            {day.label}
-                          </Badge>
-                        )
-                      )
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="space-y-6">
+              <ProviderCalendarModule providerId={provider?.id} />
 
-              {/* Blocked Dates */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-sm">Blocked Dates</h3>
-                      <p className="text-xs text-muted-foreground">Specific dates when you're unavailable</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setBlockDateDialogOpen(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Block
-                    </Button>
-                  </div>
-                  
-                  {blockedDates.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No specific dates blocked
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {blockedDates
-                        .filter((d) => d >= new Date())
-                        .sort((a, b) => a.getTime() - b.getTime())
-                        .slice(0, 8)
-                        .map((date) => (
-                          <Badge
-                            key={date.toISOString()}
-                            variant="outline"
-                            className="flex items-center gap-1 pr-1"
-                          >
-                            <CalendarX className="h-3 w-3" />
-                            {format(date, "MMM d")}
-                            <button
-                              onClick={() => removeBlockedDateMutation.mutate(date)}
-                              className="ml-1 p-0.5 hover:bg-destructive/20 rounded"
-                              disabled={removeBlockedDateMutation.isPending}
-                            >
-                              <Trash2 className="h-3 w-3 text-destructive" />
-                            </button>
-                          </Badge>
-                        ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="pt-4 border-t border-border/40 space-y-6">
+                <h3 className="font-display text-lg font-bold text-foreground">
+                  Schedule Settings & Integrations
+                </h3>
+
+                <TimeSlotCapacityManager />
+                <ScheduleNotificationSettings />
+                <GoogleCalendarConnectUI />
+              </div>
             </div>
           ) : activeTab === "inquiries" ? (
             <div className="space-y-3">

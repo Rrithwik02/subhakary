@@ -1,0 +1,200 @@
+- generic [ref=f2e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - main [ref=f2e3]:
+    - navigation [ref=f2e4]:
+      - generic [ref=f2e5]:
+        - link [ref=f2e6] [cursor=pointer]:
+          - /url: /
+          - img "Subhakary" [ref=f2e7]
+        - button [ref=f2e8] [cursor=pointer]
+    - generic [ref=f2e11]:
+      - link [ref=f2e12] [cursor=pointer]:
+        - /url: /
+        - button "Back to Home" [ref=f2e13]
+      - generic [ref=f2e14]:
+        - heading "About Subhakary" [level=1] [ref=f2e15]
+        - paragraph [ref=f2e16]: Subhakary is your trusted partner in celebrating life's most sacred moments. We bridge the gap between traditional ceremonial service providers and modern families seeking authentic spiritual experiences.
+    - generic [ref=f2e19]:
+      - generic [ref=f2e20]:
+        - generic [ref=f2e21]: 500+
+        - generic [ref=f2e22]: Verified Providers
+      - generic [ref=f2e23]:
+        - generic [ref=f2e24]: 10,000+
+        - generic [ref=f2e25]: Happy Families
+      - generic [ref=f2e26]:
+        - generic [ref=f2e27]: 50+
+        - generic [ref=f2e28]: Cities Covered
+      - generic [ref=f2e29]:
+        - generic [ref=f2e30]: "4.8"
+        - generic [ref=f2e31]: Average Rating
+    - generic [ref=f2e33]:
+      - heading "What Drives Us" [level=2] [ref=f2e34]
+      - generic [ref=f2e35]:
+        - generic [ref=f2e38]:
+          - heading "Our Community" [level=3] [ref=f2e45]
+          - paragraph [ref=f2e46]: We've built a thriving community of verified service providers and satisfied families across India.
+        - generic [ref=f2e49]:
+          - heading "Our Values" [level=3] [ref=f2e53]
+          - paragraph [ref=f2e54]: We're committed to preserving and promoting sacred traditions while ensuring convenience and trust.
+        - generic [ref=f2e57]:
+          - heading "Our Journey" [level=3] [ref=f2e62]
+          - paragraph [ref=f2e63]: Started with a vision to make sacred ceremonies accessible, we continue to grow and serve families nationwide.
+    - generic [ref=f2e69]:
+      - heading "Our Mission" [level=3] [ref=f2e75]
+      - paragraph [ref=f2e76]: To preserve and promote sacred traditions while making them accessible to everyone through a trusted platform that connects families with qualified service providers. We believe in the power of tradition to bring families together and create lasting memories.
+    - generic [ref=f2e78]:
+      - heading "Why Choose Subhakary?" [level=2] [ref=f2e79]
+      - generic [ref=f2e80]:
+        - generic [ref=f2e81]:
+          - heading "Verified Providers" [level=3] [ref=f2e85]
+          - paragraph [ref=f2e86]: Every service provider goes through a rigorous verification process to ensure quality and authenticity.
+        - generic [ref=f2e87]:
+          - heading "Quality Assurance" [level=3] [ref=f2e92]
+          - paragraph [ref=f2e93]: We maintain high standards through customer reviews, ratings, and regular performance monitoring.
+        - generic [ref=f2e94]:
+          - heading "24/7 Support" [level=3] [ref=f2e99]
+          - paragraph [ref=f2e100]: Our dedicated support team is always available to help you with any queries or concerns.
+    - generic [ref=f2e103]:
+      - heading "Stay Connected" [level=3] [ref=f2e104]
+      - paragraph [ref=f2e105]: Subscribe to receive updates on Indian traditions, ceremony guides, and exclusive offers.
+      - generic [ref=f2e106]:
+        - textbox "Enter your email" [ref=f2e107]
+        - button "Subscribe" [ref=f2e108] [cursor=pointer]
+    - generic [ref=f2e110]:
+      - generic [ref=f2e111]:
+        - generic [ref=f2e112]:
+          - link [ref=f2e113] [cursor=pointer]:
+            - /url: /
+            - img "Subhakary" [ref=f2e114]
+          - paragraph [ref=f2e115]: India's most trusted platform for booking traditional and cultural services. Making sacred ceremonies accessible to everyone.
+          - generic [ref=f2e116]:
+            - generic [ref=f2e117]: Hyderabad, Telangana, India
+            - generic [ref=f2e122]: +91 99999 99999
+            - generic [ref=f2e126]: contact@subhakary.com
+        - generic [ref=f2e131]:
+          - heading "Services" [level=4] [ref=f2e132]
+          - list [ref=f2e133]:
+            - listitem [ref=f2e134]:
+              - link "Poojari / Priest" [ref=f2e135] [cursor=pointer]:
+                - /url: /services/poojari
+            - listitem [ref=f2e136]:
+              - link "Photography" [ref=f2e137] [cursor=pointer]:
+                - /url: /services/photographer
+            - listitem [ref=f2e138]:
+              - link "Makeup Artist" [ref=f2e139] [cursor=pointer]:
+                - /url: /services/makeup-artist
+            - listitem [ref=f2e140]:
+              - link "Mehandi" [ref=f2e141] [cursor=pointer]:
+                - /url: /services/mehandi-artist
+            - listitem [ref=f2e142]:
+              - link "Decoration" [ref=f2e143] [cursor=pointer]:
+                - /url: /services/decoration
+            - listitem [ref=f2e144]:
+              - link "Catering" [ref=f2e145] [cursor=pointer]:
+                - /url: /services/catering
+            - listitem [ref=f2e146]:
+              - link "Function Halls" [ref=f2e147] [cursor=pointer]:
+                - /url: /services/function-halls
+            - listitem [ref=f2e148]:
+              - link "Event Managers" [ref=f2e149] [cursor=pointer]:
+                - /url: /services/event-managers
+        - generic [ref=f2e150]:
+          - heading "Company" [level=4] [ref=f2e151]
+          - list [ref=f2e152]:
+            - listitem [ref=f2e153]:
+              - link "About Us" [ref=f2e154] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=f2e155]:
+              - link "Planning OS" [ref=f2e156] [cursor=pointer]:
+                - /url: /planning-os
+            - listitem [ref=f2e157]:
+              - link "Become a Provider" [ref=f2e158] [cursor=pointer]:
+                - /url: /become-provider
+            - listitem [ref=f2e159]:
+              - link "Blog" [ref=f2e160] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=f2e161]:
+              - link "FAQ" [ref=f2e162] [cursor=pointer]:
+                - /url: /contact#faq
+        - generic [ref=f2e163]:
+          - heading "Support" [level=4] [ref=f2e164]
+          - list [ref=f2e165]:
+            - listitem [ref=f2e166]:
+              - link "Contact Us" [ref=f2e167] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=f2e168]:
+              - link "Privacy Policy" [ref=f2e169] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=f2e170]:
+              - link "Terms of Service" [ref=f2e171] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=f2e172]:
+              - link "Install App" [ref=f2e173] [cursor=pointer]:
+                - /url: /install
+      - generic [ref=f2e174]:
+        - heading "Popular Cities" [level=4] [ref=f2e175]
+        - generic [ref=f2e176]:
+          - link "Hyderabad" [ref=f2e177] [cursor=pointer]:
+            - /url: /services/poojari/hyderabad
+          - link "Bangalore" [ref=f2e178] [cursor=pointer]:
+            - /url: /services/poojari/bengaluru
+          - link "Chennai" [ref=f2e179] [cursor=pointer]:
+            - /url: /services/poojari/chennai
+          - link "Mumbai" [ref=f2e180] [cursor=pointer]:
+            - /url: /services/poojari/mumbai
+          - link "Delhi" [ref=f2e181] [cursor=pointer]:
+            - /url: /services/poojari/new-delhi
+          - link "Pune" [ref=f2e182] [cursor=pointer]:
+            - /url: /services/poojari/pune
+          - link "Vijayawada" [ref=f2e183] [cursor=pointer]:
+            - /url: /services/poojari/vijayawada
+          - link "Kolkata" [ref=f2e184] [cursor=pointer]:
+            - /url: /services/poojari/kolkata
+        - generic [ref=f2e185]:
+          - generic [ref=f2e186]:
+            - paragraph [ref=f2e187]: Hyderabad
+            - link "Poojari in Hyderabad" [ref=f2e188] [cursor=pointer]:
+              - /url: /services/poojari/hyderabad
+            - link "Photographer in Hyderabad" [ref=f2e189] [cursor=pointer]:
+              - /url: /services/photographer/hyderabad
+            - link "Catering in Hyderabad" [ref=f2e190] [cursor=pointer]:
+              - /url: /services/catering/hyderabad
+          - generic [ref=f2e191]:
+            - paragraph [ref=f2e192]: Bangalore
+            - link "Poojari in Bangalore" [ref=f2e193] [cursor=pointer]:
+              - /url: /services/poojari/bengaluru
+            - link "Photographer in Bangalore" [ref=f2e194] [cursor=pointer]:
+              - /url: /services/photographer/bengaluru
+            - link "Catering in Bangalore" [ref=f2e195] [cursor=pointer]:
+              - /url: /services/catering/bengaluru
+          - generic [ref=f2e196]:
+            - paragraph [ref=f2e197]: Chennai
+            - link "Poojari in Chennai" [ref=f2e198] [cursor=pointer]:
+              - /url: /services/poojari/chennai
+            - link "Photographer in Chennai" [ref=f2e199] [cursor=pointer]:
+              - /url: /services/photographer/chennai
+            - link "Catering in Chennai" [ref=f2e200] [cursor=pointer]:
+              - /url: /services/catering/chennai
+          - generic [ref=f2e201]:
+            - paragraph [ref=f2e202]: Mumbai
+            - link "Poojari in Mumbai" [ref=f2e203] [cursor=pointer]:
+              - /url: /services/poojari/mumbai
+            - link "Photographer in Mumbai" [ref=f2e204] [cursor=pointer]:
+              - /url: /services/photographer/mumbai
+            - link "Catering in Mumbai" [ref=f2e205] [cursor=pointer]:
+              - /url: /services/catering/mumbai
+      - generic [ref=f2e206]:
+        - paragraph [ref=f2e207]: © 2025 Subhakary. All rights reserved.
+        - generic [ref=f2e208]:
+          - link "Privacy" [ref=f2e209] [cursor=pointer]:
+            - /url: /privacy-policy
+          - link "Terms" [ref=f2e210] [cursor=pointer]:
+            - /url: /terms-of-service
+        - generic [ref=f2e211]:
+          - generic [ref=f2e212]: "Available in:"
+          - generic [ref=f2e213]:
+            - generic [ref=f2e214]: English
+            - generic [ref=f2e215]: తెలుగు
+            - generic [ref=f2e216]: हिंदी

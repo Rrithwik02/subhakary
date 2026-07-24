@@ -57,6 +57,23 @@ import { ProviderPortfolioUpload } from "@/components/ProviderPortfolioUpload";
 import { useMobileLayout } from "@/hooks/useMobileLayout";
 import MobileProviderDashboard from "@/components/mobile/MobileProviderDashboard";
 import { ProviderProfileEdit } from "@/components/ProviderProfileEdit";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { ProviderChatSection } from "@/components/ProviderChatSection";
+import { ProviderInquiryChat } from "@/components/ProviderInquiryChat";
+import { ProviderLogoUpload } from "@/components/ProviderLogoUpload";
+import { ProviderPortfolioUpload } from "@/components/ProviderPortfolioUpload";
+import { useMobileLayout } from "@/hooks/useMobileLayout";
+import MobileProviderDashboard from "@/components/mobile/MobileProviderDashboard";
+import { ProviderProfileEdit } from "@/components/ProviderProfileEdit";
 import { ProviderAvailabilityManager } from "@/components/ProviderAvailabilityManager";
 import { ProviderBundleManager } from "@/components/ProviderBundleManager";
 import BookingCalendar from "@/components/BookingCalendar";
@@ -65,6 +82,12 @@ import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { AdditionalServicesManager } from "@/components/AdditionalServicesManager";
 import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
+import { UpcomingEventsWidget } from "@/components/provider-calendar/UpcomingEventsWidget";
+import { ProviderCalendarModule } from "@/components/provider-calendar/ProviderCalendarModule";
+import { TimeSlotCapacityManager } from "@/components/provider-calendar/TimeSlotCapacityManager";
+import { ScheduleNotificationSettings } from "@/components/provider-calendar/ScheduleNotificationSettings";
+import { GoogleCalendarConnectUI } from "@/components/provider-calendar/GoogleCalendarConnectUI";
+
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600" },
@@ -669,306 +692,6 @@ const DesktopProviderDashboard = () => {
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-
-      <section className="pt-32 pb-12 px-4">
-        <div className="container max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-              <div>
-                <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
-                  Provider Dashboard
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Manage your bookings for {provider.business_name}
-                </p>
-              </div>
-              
-              {/* Availability Status Toggle */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">Status:</span>
-                <Select
-                  value={provider.availability_status || "offline"}
-                  onValueChange={handleStatusChange}
-                  disabled={isUpdatingStatus}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue>
-                      <div className="flex items-center gap-2">
-                        <Circle className={`h-2 w-2 fill-current ${getStatusColor(provider.availability_status || "offline")}`} />
-                        <span className="capitalize">{provider.availability_status || "offline"}</span>
-                      </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="online">
-                      <div className="flex items-center gap-2">
-                        <Circle className="h-2 w-2 fill-current text-green-500" />
-                        <span>Online</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="busy">
-                      <div className="flex items-center gap-2">
-                        <Circle className="h-2 w-2 fill-current text-yellow-500" />
-                        <span>Busy</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="offline">
-                      <div className="flex items-center gap-2">
-                        <Circle className="h-2 w-2 fill-current text-muted-foreground" />
-                        <span>Offline</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-3xl font-bold text-yellow-600">
-                    {pendingBookings.length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-3xl font-bold text-green-600">
-                    {activeBookings.length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Active</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-3xl font-bold text-blue-600">
-                    {bookings.filter((b) => b.status === "completed").length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
-                <TabsTrigger value="pending" className="flex-1 min-w-[80px] text-xs sm:text-sm">
-                  Pending ({pendingBookings.length})
-                </TabsTrigger>
-                <TabsTrigger value="active" className="flex-1 min-w-[80px] text-xs sm:text-sm">
-                  Active ({activeBookings.length})
-                </TabsTrigger>
-                <TabsTrigger value="calendar" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
-                  <CalendarDays className="h-3 w-3 hidden sm:block" />
-                  Calendar
-                </TabsTrigger>
-                <TabsTrigger value="inquiries" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
-                  <MessageSquare className="h-3 w-3 hidden sm:block" />
-                  Inquiries
-                </TabsTrigger>
-                <TabsTrigger value="messages" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
-                  <MessageCircle className="h-3 w-3 hidden sm:block" />
-                  Messages
-                </TabsTrigger>
-                <TabsTrigger value="payments" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
-                  <CreditCard className="h-3 w-3 hidden sm:block" />
-                  Payments
-                </TabsTrigger>
-                <TabsTrigger value="history" className="flex-1 min-w-[80px] text-xs sm:text-sm">
-                  History ({pastBookings.length})
-                </TabsTrigger>
-                <TabsTrigger value="profile" className="flex-1 min-w-[80px] text-xs sm:text-sm flex items-center justify-center gap-1">
-                  <Settings className="h-3 w-3 hidden sm:block" />
-                  Profile
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="pending" className="mt-6">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(2)].map((_, i) => (
-                      <Card key={i} className="animate-pulse">
-                        <CardContent className="p-6">
-                          <div className="h-6 bg-muted rounded w-1/3 mb-2" />
-                          <div className="h-4 bg-muted rounded w-1/2" />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : pendingBookings.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-12 text-center">
-                      <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="font-display text-xl font-semibold mb-2">
-                        No pending bookings
-                      </h3>
-                      <p className="text-muted-foreground">
-                        New booking requests will appear here
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {pendingBookings.map((booking, i) => (
-                      <motion.div
-                        key={booking.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                      >
-                        <BookingCard booking={booking} showActions />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="active" className="mt-6">
-                {activeBookings.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-12 text-center">
-                      <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="font-display text-xl font-semibold mb-2">
-                        No active bookings
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Accepted bookings will appear here
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {activeBookings.map((booking, i) => (
-                      <motion.div
-                        key={booking.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                      >
-                        <BookingCard booking={booking} showActions />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="calendar" className="mt-6">
-                <BookingCalendar providerId={provider.id} />
-              </TabsContent>
-
-              <TabsContent value="inquiries" className="mt-6">
-                <ProviderInquiryChat providerId={provider.id} />
-              </TabsContent>
-
-              <TabsContent value="messages" className="mt-6">
-                <ProviderChatSection 
-                  providerId={provider.id} 
-                  providerProfileId={providerProfile?.id || ""} 
-                />
-              </TabsContent>
-
-              <TabsContent value="payments" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="font-display flex items-center gap-2">
-                      <CreditCard className="h-5 w-5" />
-                      Payment History
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PaymentHistorySection providerId={provider.id} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="history" className="mt-6">
-                {pastBookings.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-12 text-center">
-                      <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="font-display text-xl font-semibold mb-2">
-                        No booking history
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Completed and past bookings will appear here
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {pastBookings.map((booking, i) => (
-                      <motion.div
-                        key={booking.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                      >
-                        <BookingCard booking={booking} />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="profile" className="mt-6 space-y-6">
-                <ProviderLogoUpload
-                  providerId={provider.id}
-                  currentLogoUrl={provider.logo_url}
-                  businessName={provider.business_name}
-                  onLogoUpdated={() => refetch()}
-                />
-                
-                <ProviderPortfolioUpload
-                  providerId={provider.id}
-                  currentImages={provider.portfolio_images || []}
-                  onImagesUpdated={() => refetch()}
-                />
-                
-                <ProviderProfileEdit
-                  providerId={provider.id}
-                  initialData={{
-                    business_name: provider.business_name,
-                    description: provider.description,
-                    city: provider.city,
-                    address: provider.address,
-                    whatsapp_number: provider.whatsapp_number,
-                    website_url: provider.website_url,
-                    instagram_url: provider.instagram_url,
-                    facebook_url: provider.facebook_url,
-                    youtube_url: provider.youtube_url,
-                    base_price: provider.base_price,
-                    subcategory: provider.subcategory,
-                    specializations: provider.specializations,
-                  }}
-                  onProfileUpdated={() => refetch()}
-                />
-
-                <ProviderAvailabilityManager providerId={provider.id} />
-
-                <ProviderBundleManager providerId={provider.id} />
-
-                <AdditionalServicesManager 
-                  providerId={provider.id} 
-                  primaryCategoryId={provider.category_id || undefined}
-                />
-
-                {/* Danger Zone */}
-                <Card className="border-destructive/50">
-                  <CardHeader>
-                    <CardTitle className="font-display flex items-center gap-2 text-destructive">
-                      <AlertTriangle className="h-5 w-5" />
                       Danger Zone
                     </CardTitle>
                   </CardHeader>
