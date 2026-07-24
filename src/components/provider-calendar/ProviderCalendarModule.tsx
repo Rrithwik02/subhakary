@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   format, 
   startOfMonth, 
@@ -83,13 +83,13 @@ export const ProviderCalendarModule = ({ providerId = "default" }: ProviderCalen
   const [detailEvent, setDetailEvent] = useState<ScheduleEvent | null>(null);
 
   // Load events
-  const loadEvents = () => {
+  const loadEvents = useCallback(() => {
     setEvents(getProviderEvents(providerId));
-  };
+  }, [providerId]);
 
   useEffect(() => {
     loadEvents();
-  }, [providerId]);
+  }, [loadEvents]);
 
   const handlePrev = () => {
     if (viewMode === "month") setCurrentDate(subMonths(currentDate, 1));
