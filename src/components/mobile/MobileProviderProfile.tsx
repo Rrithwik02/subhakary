@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { AvailabilityStatusBadge } from "@/components/AvailabilityStatusBadge";
 import { useToast } from "@/hooks/use-toast";
@@ -370,13 +371,12 @@ const MobileProviderProfile = () => {
                   <AvailabilityStatusBadge status={(provider as any).availability_status || 'offline'} />
                 </div>
               </div>
-              {provider.logo_url && (
-                <img
-                  src={provider.logo_url}
-                  alt=""
-                  className="h-14 w-14 rounded-xl object-cover"
-                />
-              )}
+              <Avatar className="h-14 w-14 rounded-xl border border-border/50">
+                <AvatarImage src={provider.logo_url || undefined} alt={provider.business_name} className="object-cover" />
+                <AvatarFallback className="rounded-xl bg-primary/10 text-primary text-lg font-semibold">
+                  {provider.business_name?.charAt(0)?.toUpperCase() || provider.category?.icon || "S"}
+                </AvatarFallback>
+              </Avatar>
             </div>
 
             {/* Stats Row */}

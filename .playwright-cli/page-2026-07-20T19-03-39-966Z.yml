@@ -1,0 +1,173 @@
+- generic [ref=f2e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=f2e217]:
+    - navigation [ref=f2e218]:
+      - generic [ref=f2e219]:
+        - link [ref=f2e220] [cursor=pointer]:
+          - /url: /
+          - img "Subhakary" [ref=f2e221]
+        - button [ref=f2e222] [cursor=pointer]
+    - main [ref=f2e224]:
+      - button "Back" [ref=f2e225] [cursor=pointer]
+      - generic [ref=f2e226]:
+        - generic [ref=f2e227]:
+          - heading "Install Subhakary App" [level=1] [ref=f2e231]
+          - paragraph [ref=f2e232]: Install our app for a faster, smoother experience with offline access
+        - generic [ref=f2e234]:
+          - heading "Why Install?" [level=2] [ref=f2e235]
+          - list [ref=f2e236]:
+            - listitem [ref=f2e237]:
+              - generic [ref=f2e240]: Quick access from your home screen
+            - listitem [ref=f2e241]:
+              - generic [ref=f2e244]: Works offline - browse even without internet
+            - listitem [ref=f2e245]:
+              - generic [ref=f2e248]: Full screen experience without browser bars
+            - listitem [ref=f2e249]:
+              - generic [ref=f2e252]: Faster loading with cached content
+        - generic [ref=f2e254]:
+          - heading "Install on Desktop" [level=2] [ref=f2e255]
+          - paragraph [ref=f2e256]: "Look for the install icon in your browser's address bar, or:"
+          - list [ref=f2e257]:
+            - listitem [ref=f2e258]: 1. Click the menu (⋮) in Chrome
+            - listitem [ref=f2e259]: 2. Select "Install Subhakary..."
+            - listitem [ref=f2e260]: 3. Click "Install" to confirm
+        - paragraph [ref=f2e261]: No app store required • Free • Updates automatically
+    - contentinfo [ref=f2e262]:
+      - generic [ref=f2e263]:
+        - generic [ref=f2e264]:
+          - generic [ref=f2e265]:
+            - link [ref=f2e266] [cursor=pointer]:
+              - /url: /
+              - img "Subhakary" [ref=f2e267]
+            - paragraph [ref=f2e268]: India's most trusted platform for booking traditional and cultural services. Making sacred ceremonies accessible to everyone.
+            - generic [ref=f2e269]:
+              - generic [ref=f2e270]: Hyderabad, Telangana, India
+              - generic [ref=f2e275]: +91 99999 99999
+              - generic [ref=f2e279]: contact@subhakary.com
+          - generic [ref=f2e284]:
+            - heading "Services" [level=4] [ref=f2e285]
+            - list [ref=f2e286]:
+              - listitem [ref=f2e287]:
+                - link "Poojari / Priest" [ref=f2e288] [cursor=pointer]:
+                  - /url: /services/poojari
+              - listitem [ref=f2e289]:
+                - link "Photography" [ref=f2e290] [cursor=pointer]:
+                  - /url: /services/photographer
+              - listitem [ref=f2e291]:
+                - link "Makeup Artist" [ref=f2e292] [cursor=pointer]:
+                  - /url: /services/makeup-artist
+              - listitem [ref=f2e293]:
+                - link "Mehandi" [ref=f2e294] [cursor=pointer]:
+                  - /url: /services/mehandi-artist
+              - listitem [ref=f2e295]:
+                - link "Decoration" [ref=f2e296] [cursor=pointer]:
+                  - /url: /services/decoration
+              - listitem [ref=f2e297]:
+                - link "Catering" [ref=f2e298] [cursor=pointer]:
+                  - /url: /services/catering
+              - listitem [ref=f2e299]:
+                - link "Function Halls" [ref=f2e300] [cursor=pointer]:
+                  - /url: /services/function-halls
+              - listitem [ref=f2e301]:
+                - link "Event Managers" [ref=f2e302] [cursor=pointer]:
+                  - /url: /services/event-managers
+          - generic [ref=f2e303]:
+            - heading "Company" [level=4] [ref=f2e304]
+            - list [ref=f2e305]:
+              - listitem [ref=f2e306]:
+                - link "About Us" [ref=f2e307] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=f2e308]:
+                - link "Planning OS" [ref=f2e309] [cursor=pointer]:
+                  - /url: /planning-os
+              - listitem [ref=f2e310]:
+                - link "Become a Provider" [ref=f2e311] [cursor=pointer]:
+                  - /url: /become-provider
+              - listitem [ref=f2e312]:
+                - link "Blog" [ref=f2e313] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=f2e314]:
+                - link "FAQ" [ref=f2e315] [cursor=pointer]:
+                  - /url: /contact#faq
+          - generic [ref=f2e316]:
+            - heading "Support" [level=4] [ref=f2e317]
+            - list [ref=f2e318]:
+              - listitem [ref=f2e319]:
+                - link "Contact Us" [ref=f2e320] [cursor=pointer]:
+                  - /url: /contact
+              - listitem [ref=f2e321]:
+                - link "Privacy Policy" [ref=f2e322] [cursor=pointer]:
+                  - /url: /privacy-policy
+              - listitem [ref=f2e323]:
+                - link "Terms of Service" [ref=f2e324] [cursor=pointer]:
+                  - /url: /terms-of-service
+              - listitem [ref=f2e325]:
+                - link "Install App" [ref=f2e326] [cursor=pointer]:
+                  - /url: /install
+        - generic [ref=f2e327]:
+          - heading "Popular Cities" [level=4] [ref=f2e328]
+          - generic [ref=f2e329]:
+            - link "Hyderabad" [ref=f2e330] [cursor=pointer]:
+              - /url: /services/poojari/hyderabad
+            - link "Bangalore" [ref=f2e331] [cursor=pointer]:
+              - /url: /services/poojari/bengaluru
+            - link "Chennai" [ref=f2e332] [cursor=pointer]:
+              - /url: /services/poojari/chennai
+            - link "Mumbai" [ref=f2e333] [cursor=pointer]:
+              - /url: /services/poojari/mumbai
+            - link "Delhi" [ref=f2e334] [cursor=pointer]:
+              - /url: /services/poojari/new-delhi
+            - link "Pune" [ref=f2e335] [cursor=pointer]:
+              - /url: /services/poojari/pune
+            - link "Vijayawada" [ref=f2e336] [cursor=pointer]:
+              - /url: /services/poojari/vijayawada
+            - link "Kolkata" [ref=f2e337] [cursor=pointer]:
+              - /url: /services/poojari/kolkata
+          - generic [ref=f2e338]:
+            - generic [ref=f2e339]:
+              - paragraph [ref=f2e340]: Hyderabad
+              - link "Poojari in Hyderabad" [ref=f2e341] [cursor=pointer]:
+                - /url: /services/poojari/hyderabad
+              - link "Photographer in Hyderabad" [ref=f2e342] [cursor=pointer]:
+                - /url: /services/photographer/hyderabad
+              - link "Catering in Hyderabad" [ref=f2e343] [cursor=pointer]:
+                - /url: /services/catering/hyderabad
+            - generic [ref=f2e344]:
+              - paragraph [ref=f2e345]: Bangalore
+              - link "Poojari in Bangalore" [ref=f2e346] [cursor=pointer]:
+                - /url: /services/poojari/bengaluru
+              - link "Photographer in Bangalore" [ref=f2e347] [cursor=pointer]:
+                - /url: /services/photographer/bengaluru
+              - link "Catering in Bangalore" [ref=f2e348] [cursor=pointer]:
+                - /url: /services/catering/bengaluru
+            - generic [ref=f2e349]:
+              - paragraph [ref=f2e350]: Chennai
+              - link "Poojari in Chennai" [ref=f2e351] [cursor=pointer]:
+                - /url: /services/poojari/chennai
+              - link "Photographer in Chennai" [ref=f2e352] [cursor=pointer]:
+                - /url: /services/photographer/chennai
+              - link "Catering in Chennai" [ref=f2e353] [cursor=pointer]:
+                - /url: /services/catering/chennai
+            - generic [ref=f2e354]:
+              - paragraph [ref=f2e355]: Mumbai
+              - link "Poojari in Mumbai" [ref=f2e356] [cursor=pointer]:
+                - /url: /services/poojari/mumbai
+              - link "Photographer in Mumbai" [ref=f2e357] [cursor=pointer]:
+                - /url: /services/photographer/mumbai
+              - link "Catering in Mumbai" [ref=f2e358] [cursor=pointer]:
+                - /url: /services/catering/mumbai
+        - generic [ref=f2e359]:
+          - paragraph [ref=f2e360]: © 2025 Subhakary. All rights reserved.
+          - generic [ref=f2e361]:
+            - link "Privacy" [ref=f2e362] [cursor=pointer]:
+              - /url: /privacy-policy
+            - link "Terms" [ref=f2e363] [cursor=pointer]:
+              - /url: /terms-of-service
+          - generic [ref=f2e364]:
+            - generic [ref=f2e365]: "Available in:"
+            - generic [ref=f2e366]:
+              - generic [ref=f2e367]: English
+              - generic [ref=f2e368]: తెలుగు
+              - generic [ref=f2e369]: हिंदी

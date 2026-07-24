@@ -113,7 +113,7 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
 
       return conversationsWithDetails;
     },
-    enabled: !!providerId,
+    enabled: !!providerId && !!providerProfileId,
   });
 
   // Fetch messages for selected conversation
@@ -131,7 +131,7 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
       // Mark messages as read
       await supabase
         .from("chat_messages")
-        .update({ read: true })
+        .update({ read: true, delivery_status: "read" })
         .eq("booking_id", selectedConversation!.booking_id)
         .eq("receiver_id", providerProfileId)
         .eq("read", false);
@@ -216,6 +216,7 @@ export const ProviderChatSection = ({ providerId, providerProfileId }: ProviderC
         sender_id: providerProfileId,
         receiver_id: selectedConversation.customer_id,
         message: trimmedMessage,
+        delivery_status: "sent",
       });
 
       if (error) throw error;

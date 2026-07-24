@@ -1,0 +1,229 @@
+- generic [active] [ref=f17e1]:
+  - generic [ref=f17e2]:
+    - region "Notifications (F8)":
+      - list [ref=f17e681]:
+        - status [ref=f17e682]:
+          - generic [ref=f17e683]:
+            - generic [ref=f17e684]: Status updated
+            - generic [ref=f17e685]: You are now busy.
+          - button [ref=f17e686] [cursor=pointer]
+    - region "Notifications alt+T"
+    - generic [ref=f17e362]:
+      - navigation [ref=f17e363]:
+        - generic [ref=f17e364]:
+          - link [ref=f17e365] [cursor=pointer]:
+            - /url: /
+            - img "Subhakary" [ref=f17e366]
+          - button [ref=f17e367] [cursor=pointer]
+      - generic [ref=f17e484]:
+        - generic [ref=f17e485]:
+          - generic [ref=f17e486]:
+            - heading "Provider Dashboard" [level=1] [ref=f17e487]
+            - paragraph [ref=f17e488]: Manage your bookings for Rrishi Photography Services(Sample one)
+          - generic [ref=f17e489]:
+            - generic [ref=f17e490]: "Status:"
+            - combobox [ref=f17e491] [cursor=pointer]:
+              - generic: online
+        - generic [ref=f17e494]:
+          - generic [ref=f17e496]:
+            - paragraph [ref=f17e497]: "0"
+            - paragraph [ref=f17e498]: Pending
+          - generic [ref=f17e500]:
+            - paragraph [ref=f17e501]: "4"
+            - paragraph [ref=f17e502]: Active
+          - generic [ref=f17e504]:
+            - paragraph [ref=f17e505]: "8"
+            - paragraph [ref=f17e506]: Completed
+        - generic [ref=f17e507]:
+          - tablist [ref=f17e508]:
+            - tab "Pending (0)" [ref=f17e509] [cursor=pointer]
+            - tab "Active (4)" [selected] [ref=f17e646] [cursor=pointer]
+            - tab "Calendar" [ref=f17e511] [cursor=pointer]
+            - tab "Inquiries" [ref=f17e514] [cursor=pointer]
+            - tab "Messages" [ref=f17e517] [cursor=pointer]
+            - tab "Payments" [ref=f17e520] [cursor=pointer]
+            - tab "History (10)" [ref=f17e647] [cursor=pointer]
+            - tab "Profile" [ref=f17e524] [cursor=pointer]
+          - tabpanel "Active (4)" [ref=f17e691]:
+            - generic [ref=f17e692]:
+              - generic [ref=f17e696]:
+                - generic [ref=f17e697]:
+                  - generic [ref=f17e704]:
+                    - heading "R R" [level=3] [ref=f17e705]
+                    - paragraph [ref=f17e706]: 2000030870cse@gmail.com
+                  - generic [ref=f17e707]: July 24th, 2026
+                - generic [ref=f17e711]:
+                  - generic [ref=f17e712]: Accepted
+                  - button "Mark Completed" [ref=f17e714] [cursor=pointer]
+              - generic [ref=f17e718]:
+                - generic [ref=f17e719]:
+                  - generic [ref=f17e726]:
+                    - heading "Maddali Keerthi" [level=3] [ref=f17e727]
+                    - paragraph [ref=f17e728]: keerthi.maddali123@gmail.com
+                  - generic [ref=f17e729]:
+                    - generic [ref=f17e730]: February 9th, 2026
+                    - generic [ref=f17e733]: 20:10
+                - generic [ref=f17e737]:
+                  - generic [ref=f17e738]: Accepted
+                  - generic [ref=f17e739]:
+                    - button "Awaiting confirmation" [disabled]
+              - generic [ref=f17e743]:
+                - generic [ref=f17e744]:
+                  - generic [ref=f17e751]:
+                    - heading "Aakash Murthy" [level=3] [ref=f17e752]
+                    - paragraph [ref=f17e753]: aakashmurthybarla5541@gmail.com
+                  - generic [ref=f17e754]:
+                    - generic [ref=f17e755]: February 14th, 2026
+                    - generic [ref=f17e758]: 12:00
+                - generic [ref=f17e762]:
+                  - generic [ref=f17e763]: Accepted
+                  - button "Mark Completed" [ref=f17e765] [cursor=pointer]
+              - generic [ref=f17e769]:
+                - generic [ref=f17e770]:
+                  - generic [ref=f17e777]:
+                    - heading "Aditi" [level=3] [ref=f17e778]
+                    - paragraph [ref=f17e779]: 2000030852cse@gmail.com
+                  - generic [ref=f17e780]:
+                    - generic [ref=f17e781]: January 1st, 2026
+                    - generic [ref=f17e784]: 17:16
+                  - paragraph [ref=f17e788]:
+                    - generic [ref=f17e791]: dfghjkhb
+                - generic [ref=f17e792]: Completed
+      - contentinfo [ref=f17e538]:
+        - generic [ref=f17e539]:
+          - generic [ref=f17e540]:
+            - generic [ref=f17e541]:
+              - link [ref=f17e542] [cursor=pointer]:
+                - /url: /
+                - img "Subhakary" [ref=f17e543]
+              - paragraph [ref=f17e544]: India's most trusted platform for booking traditional and cultural services. Making sacred ceremonies accessible to everyone.
+              - generic [ref=f17e545]:
+                - generic [ref=f17e546]: Hyderabad, Telangana, India
+                - generic [ref=f17e551]: +91 99999 99999
+                - generic [ref=f17e555]: contact@subhakary.com
+            - generic [ref=f17e560]:
+              - heading "Services" [level=4] [ref=f17e561]
+              - list [ref=f17e562]:
+                - listitem [ref=f17e563]:
+                  - link "Poojari / Priest" [ref=f17e564] [cursor=pointer]:
+                    - /url: /services/poojari
+                - listitem [ref=f17e565]:
+                  - link "Photography" [ref=f17e566] [cursor=pointer]:
+                    - /url: /services/photographer
+                - listitem [ref=f17e567]:
+                  - link "Makeup Artist" [ref=f17e568] [cursor=pointer]:
+                    - /url: /services/makeup-artist
+                - listitem [ref=f17e569]:
+                  - link "Mehandi" [ref=f17e570] [cursor=pointer]:
+                    - /url: /services/mehandi-artist
+                - listitem [ref=f17e571]:
+                  - link "Decoration" [ref=f17e572] [cursor=pointer]:
+                    - /url: /services/decoration
+                - listitem [ref=f17e573]:
+                  - link "Catering" [ref=f17e574] [cursor=pointer]:
+                    - /url: /services/catering
+                - listitem [ref=f17e575]:
+                  - link "Function Halls" [ref=f17e576] [cursor=pointer]:
+                    - /url: /services/function-halls
+                - listitem [ref=f17e577]:
+                  - link "Event Managers" [ref=f17e578] [cursor=pointer]:
+                    - /url: /services/event-managers
+            - generic [ref=f17e579]:
+              - heading "Company" [level=4] [ref=f17e580]
+              - list [ref=f17e581]:
+                - listitem [ref=f17e582]:
+                  - link "About Us" [ref=f17e583] [cursor=pointer]:
+                    - /url: /about
+                - listitem [ref=f17e584]:
+                  - link "Planning OS" [ref=f17e585] [cursor=pointer]:
+                    - /url: /planning-os
+                - listitem [ref=f17e586]:
+                  - link "Become a Provider" [ref=f17e587] [cursor=pointer]:
+                    - /url: /become-provider
+                - listitem [ref=f17e588]:
+                  - link "Blog" [ref=f17e589] [cursor=pointer]:
+                    - /url: /blog
+                - listitem [ref=f17e590]:
+                  - link "FAQ" [ref=f17e591] [cursor=pointer]:
+                    - /url: /contact#faq
+            - generic [ref=f17e592]:
+              - heading "Support" [level=4] [ref=f17e593]
+              - list [ref=f17e594]:
+                - listitem [ref=f17e595]:
+                  - link "Contact Us" [ref=f17e596] [cursor=pointer]:
+                    - /url: /contact
+                - listitem [ref=f17e597]:
+                  - link "Privacy Policy" [ref=f17e598] [cursor=pointer]:
+                    - /url: /privacy-policy
+                - listitem [ref=f17e599]:
+                  - link "Terms of Service" [ref=f17e600] [cursor=pointer]:
+                    - /url: /terms-of-service
+                - listitem [ref=f17e601]:
+                  - link "Install App" [ref=f17e602] [cursor=pointer]:
+                    - /url: /install
+          - generic [ref=f17e603]:
+            - heading "Popular Cities" [level=4] [ref=f17e604]
+            - generic [ref=f17e605]:
+              - link "Hyderabad" [ref=f17e606] [cursor=pointer]:
+                - /url: /services/poojari/hyderabad
+              - link "Bangalore" [ref=f17e607] [cursor=pointer]:
+                - /url: /services/poojari/bengaluru
+              - link "Chennai" [ref=f17e608] [cursor=pointer]:
+                - /url: /services/poojari/chennai
+              - link "Mumbai" [ref=f17e609] [cursor=pointer]:
+                - /url: /services/poojari/mumbai
+              - link "Delhi" [ref=f17e610] [cursor=pointer]:
+                - /url: /services/poojari/new-delhi
+              - link "Pune" [ref=f17e611] [cursor=pointer]:
+                - /url: /services/poojari/pune
+              - link "Vijayawada" [ref=f17e612] [cursor=pointer]:
+                - /url: /services/poojari/vijayawada
+              - link "Kolkata" [ref=f17e613] [cursor=pointer]:
+                - /url: /services/poojari/kolkata
+            - generic [ref=f17e614]:
+              - generic [ref=f17e615]:
+                - paragraph [ref=f17e616]: Hyderabad
+                - link "Poojari in Hyderabad" [ref=f17e617] [cursor=pointer]:
+                  - /url: /services/poojari/hyderabad
+                - link "Photographer in Hyderabad" [ref=f17e618] [cursor=pointer]:
+                  - /url: /services/photographer/hyderabad
+                - link "Catering in Hyderabad" [ref=f17e619] [cursor=pointer]:
+                  - /url: /services/catering/hyderabad
+              - generic [ref=f17e620]:
+                - paragraph [ref=f17e621]: Bangalore
+                - link "Poojari in Bangalore" [ref=f17e622] [cursor=pointer]:
+                  - /url: /services/poojari/bengaluru
+                - link "Photographer in Bangalore" [ref=f17e623] [cursor=pointer]:
+                  - /url: /services/photographer/bengaluru
+                - link "Catering in Bangalore" [ref=f17e624] [cursor=pointer]:
+                  - /url: /services/catering/bengaluru
+              - generic [ref=f17e625]:
+                - paragraph [ref=f17e626]: Chennai
+                - link "Poojari in Chennai" [ref=f17e627] [cursor=pointer]:
+                  - /url: /services/poojari/chennai
+                - link "Photographer in Chennai" [ref=f17e628] [cursor=pointer]:
+                  - /url: /services/photographer/chennai
+                - link "Catering in Chennai" [ref=f17e629] [cursor=pointer]:
+                  - /url: /services/catering/chennai
+              - generic [ref=f17e630]:
+                - paragraph [ref=f17e631]: Mumbai
+                - link "Poojari in Mumbai" [ref=f17e632] [cursor=pointer]:
+                  - /url: /services/poojari/mumbai
+                - link "Photographer in Mumbai" [ref=f17e633] [cursor=pointer]:
+                  - /url: /services/photographer/mumbai
+                - link "Catering in Mumbai" [ref=f17e634] [cursor=pointer]:
+                  - /url: /services/catering/mumbai
+          - generic [ref=f17e635]:
+            - paragraph [ref=f17e636]: © 2025 Subhakary. All rights reserved.
+            - generic [ref=f17e637]:
+              - link "Privacy" [ref=f17e638] [cursor=pointer]:
+                - /url: /privacy-policy
+              - link "Terms" [ref=f17e639] [cursor=pointer]:
+                - /url: /terms-of-service
+            - generic [ref=f17e640]:
+              - generic [ref=f17e641]: "Available in:"
+              - generic [ref=f17e642]:
+                - generic [ref=f17e643]: English
+                - generic [ref=f17e644]: తెలుగు
+                - generic [ref=f17e645]: हिंदी
+  - status [ref=f17e794]: Notification Status updatedYou are now busy.

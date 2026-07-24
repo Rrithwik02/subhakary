@@ -1,0 +1,200 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - main [ref=e848]:
+    - navigation [ref=e849]:
+      - generic [ref=e850]:
+        - link [ref=e851] [cursor=pointer]:
+          - /url: /
+          - img "Subhakary" [ref=e852]
+        - button [ref=e853] [cursor=pointer]
+    - generic [ref=e856]:
+      - link [ref=e857] [cursor=pointer]:
+        - /url: /
+        - button "Back to Home" [ref=e858]
+      - generic [ref=e859]:
+        - heading "Get in Touch" [level=1] [ref=e860]
+        - paragraph [ref=e861]: Have questions or need assistance? We're here to help you with all your ceremonial service needs.
+    - generic [ref=e864]:
+      - generic [ref=e865]:
+        - heading "Email Us" [level=3] [ref=e870]
+        - paragraph [ref=e871]: support@subhakary.com
+        - paragraph [ref=e872]: We'll respond within 24 hours
+      - generic [ref=e873]:
+        - heading "Call Us" [level=3] [ref=e877]
+        - paragraph [ref=e878]: +91 9876543210
+        - paragraph [ref=e879]: Mon-Sat, 9AM-6PM IST
+      - generic [ref=e880]:
+        - heading "Visit Us" [level=3] [ref=e885]
+        - paragraph [ref=e886]: Hyderabad, Telangana
+        - paragraph [ref=e887]: India
+      - generic [ref=e888]:
+        - heading "Working Hours" [level=3] [ref=e893]
+        - paragraph [ref=e894]: "Mon - Sat: 9AM - 6PM"
+        - paragraph [ref=e895]: "Sunday: Closed"
+    - generic [ref=e899]:
+      - heading "Send Us a Message" [level=2] [ref=e900]
+      - generic [ref=e901]:
+        - generic [ref=e902]:
+          - generic [ref=e903]:
+            - text: Full Name
+            - textbox "Full Name" [ref=e904]:
+              - /placeholder: Your name
+              - text: Aarav Mehta
+          - generic [ref=e905]:
+            - text: Email Address
+            - textbox "Email Address" [active] [ref=e906]:
+              - /placeholder: your@email.com
+        - generic [ref=e907]:
+          - text: Phone Number
+          - textbox "Phone Number" [ref=e908]:
+            - /placeholder: +91 9876543210
+        - generic [ref=e909]:
+          - text: Your Message
+          - textbox "Your Message" [ref=e910]:
+            - /placeholder: Tell us how we can help you...
+            - text: I’d like help planning a traditional wedding ceremony and comparing provider options.
+        - button "Send Message" [ref=e911] [cursor=pointer]
+    - generic [ref=e914]:
+      - heading "Looking for Quick Answers?" [level=3] [ref=e915]
+      - paragraph [ref=e916]: Check out our blog for detailed guides on Indian traditions, ceremonies, and more.
+      - link [ref=e917] [cursor=pointer]:
+        - /url: /blog
+        - button "Visit Our Blog" [ref=e918]
+    - generic [ref=e920]:
+      - generic [ref=e921]:
+        - generic [ref=e922]:
+          - link [ref=e923] [cursor=pointer]:
+            - /url: /
+            - img "Subhakary" [ref=e924]
+          - paragraph [ref=e925]: India's most trusted platform for booking traditional and cultural services. Making sacred ceremonies accessible to everyone.
+          - generic [ref=e926]:
+            - generic [ref=e927]: Hyderabad, Telangana, India
+            - generic [ref=e932]: +91 99999 99999
+            - generic [ref=e936]: contact@subhakary.com
+        - generic [ref=e941]:
+          - heading "Services" [level=4] [ref=e942]
+          - list [ref=e943]:
+            - listitem [ref=e944]:
+              - link "Poojari / Priest" [ref=e945] [cursor=pointer]:
+                - /url: /services/poojari
+            - listitem [ref=e946]:
+              - link "Photography" [ref=e947] [cursor=pointer]:
+                - /url: /services/photographer
+            - listitem [ref=e948]:
+              - link "Makeup Artist" [ref=e949] [cursor=pointer]:
+                - /url: /services/makeup-artist
+            - listitem [ref=e950]:
+              - link "Mehandi" [ref=e951] [cursor=pointer]:
+                - /url: /services/mehandi-artist
+            - listitem [ref=e952]:
+              - link "Decoration" [ref=e953] [cursor=pointer]:
+                - /url: /services/decoration
+            - listitem [ref=e954]:
+              - link "Catering" [ref=e955] [cursor=pointer]:
+                - /url: /services/catering
+            - listitem [ref=e956]:
+              - link "Function Halls" [ref=e957] [cursor=pointer]:
+                - /url: /services/function-halls
+            - listitem [ref=e958]:
+              - link "Event Managers" [ref=e959] [cursor=pointer]:
+                - /url: /services/event-managers
+        - generic [ref=e960]:
+          - heading "Company" [level=4] [ref=e961]
+          - list [ref=e962]:
+            - listitem [ref=e963]:
+              - link "About Us" [ref=e964] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e965]:
+              - link "Planning OS" [ref=e966] [cursor=pointer]:
+                - /url: /planning-os
+            - listitem [ref=e967]:
+              - link "Become a Provider" [ref=e968] [cursor=pointer]:
+                - /url: /become-provider
+            - listitem [ref=e969]:
+              - link "Blog" [ref=e970] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e971]:
+              - link "FAQ" [ref=e972] [cursor=pointer]:
+                - /url: /contact#faq
+        - generic [ref=e973]:
+          - heading "Support" [level=4] [ref=e974]
+          - list [ref=e975]:
+            - listitem [ref=e976]:
+              - link "Contact Us" [ref=e977] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e978]:
+              - link "Privacy Policy" [ref=e979] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=e980]:
+              - link "Terms of Service" [ref=e981] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=e982]:
+              - link "Install App" [ref=e983] [cursor=pointer]:
+                - /url: /install
+      - generic [ref=e984]:
+        - heading "Popular Cities" [level=4] [ref=e985]
+        - generic [ref=e986]:
+          - link "Hyderabad" [ref=e987] [cursor=pointer]:
+            - /url: /services/poojari/hyderabad
+          - link "Bangalore" [ref=e988] [cursor=pointer]:
+            - /url: /services/poojari/bengaluru
+          - link "Chennai" [ref=e989] [cursor=pointer]:
+            - /url: /services/poojari/chennai
+          - link "Mumbai" [ref=e990] [cursor=pointer]:
+            - /url: /services/poojari/mumbai
+          - link "Delhi" [ref=e991] [cursor=pointer]:
+            - /url: /services/poojari/new-delhi
+          - link "Pune" [ref=e992] [cursor=pointer]:
+            - /url: /services/poojari/pune
+          - link "Vijayawada" [ref=e993] [cursor=pointer]:
+            - /url: /services/poojari/vijayawada
+          - link "Kolkata" [ref=e994] [cursor=pointer]:
+            - /url: /services/poojari/kolkata
+        - generic [ref=e995]:
+          - generic [ref=e996]:
+            - paragraph [ref=e997]: Hyderabad
+            - link "Poojari in Hyderabad" [ref=e998] [cursor=pointer]:
+              - /url: /services/poojari/hyderabad
+            - link "Photographer in Hyderabad" [ref=e999] [cursor=pointer]:
+              - /url: /services/photographer/hyderabad
+            - link "Catering in Hyderabad" [ref=e1000] [cursor=pointer]:
+              - /url: /services/catering/hyderabad
+          - generic [ref=e1001]:
+            - paragraph [ref=e1002]: Bangalore
+            - link "Poojari in Bangalore" [ref=e1003] [cursor=pointer]:
+              - /url: /services/poojari/bengaluru
+            - link "Photographer in Bangalore" [ref=e1004] [cursor=pointer]:
+              - /url: /services/photographer/bengaluru
+            - link "Catering in Bangalore" [ref=e1005] [cursor=pointer]:
+              - /url: /services/catering/bengaluru
+          - generic [ref=e1006]:
+            - paragraph [ref=e1007]: Chennai
+            - link "Poojari in Chennai" [ref=e1008] [cursor=pointer]:
+              - /url: /services/poojari/chennai
+            - link "Photographer in Chennai" [ref=e1009] [cursor=pointer]:
+              - /url: /services/photographer/chennai
+            - link "Catering in Chennai" [ref=e1010] [cursor=pointer]:
+              - /url: /services/catering/chennai
+          - generic [ref=e1011]:
+            - paragraph [ref=e1012]: Mumbai
+            - link "Poojari in Mumbai" [ref=e1013] [cursor=pointer]:
+              - /url: /services/poojari/mumbai
+            - link "Photographer in Mumbai" [ref=e1014] [cursor=pointer]:
+              - /url: /services/photographer/mumbai
+            - link "Catering in Mumbai" [ref=e1015] [cursor=pointer]:
+              - /url: /services/catering/mumbai
+      - generic [ref=e1016]:
+        - paragraph [ref=e1017]: © 2025 Subhakary. All rights reserved.
+        - generic [ref=e1018]:
+          - link "Privacy" [ref=e1019] [cursor=pointer]:
+            - /url: /privacy-policy
+          - link "Terms" [ref=e1020] [cursor=pointer]:
+            - /url: /terms-of-service
+        - generic [ref=e1021]:
+          - generic [ref=e1022]: "Available in:"
+          - generic [ref=e1023]:
+            - generic [ref=e1024]: English
+            - generic [ref=e1025]: తెలుగు
+            - generic [ref=e1026]: हिंदी

@@ -1,0 +1,243 @@
+- generic [ref=f4e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - main [ref=f4e281]:
+    - navigation [ref=f4e282]:
+      - generic [ref=f4e283]:
+        - link [ref=f4e284] [cursor=pointer]:
+          - /url: /
+          - img "Subhakary" [ref=f4e285]
+        - button [ref=f4e286] [cursor=pointer]
+    - generic [ref=f4e290]:
+      - link [ref=f4e291] [cursor=pointer]:
+        - /url: /blog
+        - button "Back to Blog" [ref=f4e292]
+      - img "Timeless Indian Wedding Traditions You Should Know" [ref=f4e294]
+      - generic [ref=f4e295]:
+        - generic [ref=f4e296]: Wedding Traditions
+        - generic [ref=f4e297]: 8 min read
+      - heading "Timeless Indian Wedding Traditions You Should Know" [level=1] [ref=f4e301]
+      - generic [ref=f4e302]:
+        - generic [ref=f4e303]: Priya Sharma
+        - generic [ref=f4e307]: December 15, 2024
+        - generic [ref=f4e310]: 8 min read
+      - generic [ref=f4e314]:
+        - button "Share" [ref=f4e315] [cursor=pointer]
+        - button "Save" [active] [ref=f4e316] [cursor=pointer]
+    - article [ref=f4e319]:
+      - heading "Introduction" [level=2] [ref=f4e320]
+      - paragraph [ref=f4e321]: Indian weddings are not just ceremonies; they are grand celebrations of culture, family, and spirituality. Known for their vibrancy, emotional depth, and elaborate rituals, Indian weddings beautifully blend tradition with joy. Whether you're attending your first Indian wedding or planning your own, understanding these timeless traditions can help you appreciate the cultural richness behind each ritual.
+      - paragraph [ref=f4e322]: In this article, we'll explore the most important Indian wedding traditions—from pre-wedding customs to post-wedding celebrations—along with their cultural meanings and modern adaptations.
+      - heading "Pre-Wedding Traditions" [level=2] [ref=f4e323]
+      - heading "1. Roka & Engagement Ceremony" [level=3] [ref=f4e324]
+      - paragraph [ref=f4e325]: The Roka marks the official start of wedding celebrations. It's a simple yet significant ritual where both families exchange gifts, sweets, and blessings. The engagement follows, where the bride and groom exchange rings.
+      - paragraph [ref=f4e326]:
+        - text: 💡
+        - strong [ref=f4e327]: "Modern Twist:"
+        - text: Many couples now host engagement parties with themes, music, and fusion cuisines while still honoring traditional blessings.
+      - heading "2. Haldi Ceremony" [level=3] [ref=f4e328]
+      - paragraph [ref=f4e329]: Held a day or two before the wedding, the Haldi ceremony involves applying a paste of turmeric, sandalwood, and rosewater on the bride and groom's face and body. It symbolizes purification, prosperity, and a natural glow.
+      - paragraph [ref=f4e330]:
+        - text: 💡
+        - strong [ref=f4e331]: "Tip:"
+        - text: If you're searching for "haldi decoration ideas," you'll notice marigold flowers and yellow drapes trending in 2024.
+      - heading "3. Mehendi Ceremony" [level=3] [ref=f4e332]
+      - paragraph [ref=f4e333]: The bride's hands and feet are decorated with intricate henna designs. Mehendi is not just about beauty—it represents joy, prosperity, and love. Families celebrate with music, dance, and colorful outfits.
+      - paragraph [ref=f4e334]:
+        - text: 💡
+        - strong [ref=f4e335]: "Fun Fact:"
+        - text: Darker mehendi color is traditionally believed to signify deeper love and affection between the couple.
+      - heading "4. Sangeet Night" [level=3] [ref=f4e336]
+      - paragraph [ref=f4e337]: Once a small family affair, the Sangeet has become one of the most fun-filled wedding events. Both families come together to sing, dance, and celebrate love. It strengthens family bonds and sets the tone for the big day.
+      - heading "Wedding Day Rituals" [level=2] [ref=f4e338]
+      - heading "5. Baraat (Groom's Procession)" [level=3] [ref=f4e339]
+      - paragraph [ref=f4e340]: The groom arrives at the wedding venue with a lively procession called the Baraat. Accompanied by music, dance, and dhol beats, it symbolizes the groom's journey to unite with his bride.
+      - paragraph [ref=f4e341]:
+        - text: 💡
+        - strong [ref=f4e342]: "Modern Update:"
+        - text: Many grooms now arrive on vintage cars, decorated horses, or even bikes instead of the traditional ghodi (horse).
+      - heading "6. Jaimala (Exchange of Garlands)" [level=3] [ref=f4e343]
+      - paragraph [ref=f4e344]: The bride and groom exchange floral garlands, symbolizing acceptance of each other as partners. This light-hearted ritual often sparks playful moments, as friends lift the groom to make it challenging for the bride to place the garland.
+      - heading "7. Kanyadaan (Giving Away the Bride)" [level=3] [ref=f4e345]
+      - paragraph [ref=f4e346]: One of the most emotional rituals, Kanyadaan is performed by the bride's parents, symbolizing their trust in the groom to take care of their daughter. It represents the union of two families.
+      - heading "8. Mangal Pheras (Sacred Vows Around the Fire)" [level=3] [ref=f4e347]
+      - paragraph [ref=f4e348]: The couple walks around the sacred fire (Agni) seven times, each round signifying a vow—such as love, respect, fidelity, and prosperity. The pheras are the most important ritual, making the marriage official in Hindu tradition.
+      - heading "9. Sindoor & Mangalsutra" [level=3] [ref=f4e349]
+      - paragraph [ref=f4e350]: The groom applies sindoor (vermillion) to the bride's hair parting and ties the mangalsutra (sacred necklace) around her neck. These mark the bride's new marital status.
+      - heading "Post-Wedding Traditions" [level=2] [ref=f4e351]
+      - heading "10. Vidaai (Farewell Ceremony)" [level=3] [ref=f4e352]
+      - paragraph [ref=f4e353]: An emotional moment where the bride bids farewell to her family and leaves for her new home. Traditionally, she throws back handfuls of rice to signify prosperity and gratitude.
+      - heading "11. Griha Pravesh (Welcoming the Bride)" [level=3] [ref=f4e354]
+      - paragraph [ref=f4e355]: At the groom's house, the bride is welcomed with an aarti and asked to gently kick a pot of rice at the entrance—symbolizing abundance and good fortune entering the new home.
+      - heading "12. Reception Party" [level=3] [ref=f4e356]
+      - paragraph [ref=f4e357]: The reception is the couple's first public appearance as husband and wife. Families and friends gather to bless the couple, often with music, dance, and a grand feast.
+      - heading "Modern Trends in Indian Wedding Traditions" [level=2] [ref=f4e358]
+      - list [ref=f4e359]:
+        - listitem [ref=f4e360]:
+          - strong [ref=f4e361]: "Eco-Friendly Weddings:"
+          - text: Couples are opting for sustainable décor, plant-based gifts, and waste-free ceremonies.
+        - listitem [ref=f4e362]:
+          - strong [ref=f4e363]: "Destination Weddings:"
+          - text: From Jaipur palaces to beach weddings in Goa, destination weddings are on the rise.
+        - listitem [ref=f4e364]:
+          - strong [ref=f4e365]: "Fusion Rituals:"
+          - text: Interfaith and intercultural weddings often merge traditions, creating unique and inclusive celebrations.
+        - listitem [ref=f4e366]:
+          - strong [ref=f4e367]: "Technology in Weddings:"
+          - text: Live-streamed weddings, wedding hashtags, and drone photography are becoming common.
+      - heading "FAQs about Indian Wedding Traditions" [level=2] [ref=f4e368]
+      - paragraph [ref=f4e369]:
+        - strong [ref=f4e370]: 1. How long does an Indian wedding last?
+        - text: Typically 3–5 days, including pre-wedding and post-wedding events.
+      - paragraph [ref=f4e371]:
+        - strong [ref=f4e372]: 2. What is the most important ritual in a Hindu wedding?
+        - text: The Mangal Pheras (seven sacred rounds) is considered the most significant.
+      - paragraph [ref=f4e373]:
+        - strong [ref=f4e374]: 3. Can Indian weddings be customized?
+        - text: Yes! Many couples adapt rituals to suit personal, cultural, or interfaith needs.
+      - heading "Conclusion" [level=2] [ref=f4e375]
+      - paragraph [ref=f4e376]: Indian wedding traditions are a beautiful blend of culture, family values, and spirituality. From the joyous Haldi to the emotional Vidaai, each ritual carries deep meaning that has been cherished for centuries.
+      - paragraph [ref=f4e377]: Whether you're a bride, groom, or guest, understanding these traditions allows you to fully appreciate the magic of an Indian wedding.
+    - generic [ref=f4e380]:
+      - heading "Enjoyed this article?" [level=3] [ref=f4e381]
+      - paragraph [ref=f4e382]: Subscribe to receive more articles on Indian traditions and cultural insights.
+      - generic [ref=f4e383]:
+        - textbox "Enter your email" [ref=f4e384]
+        - button "Subscribe" [ref=f4e385] [cursor=pointer]
+    - generic [ref=f4e387]:
+      - generic [ref=f4e388]:
+        - generic [ref=f4e389]:
+          - link [ref=f4e390] [cursor=pointer]:
+            - /url: /
+            - img "Subhakary" [ref=f4e391]
+          - paragraph [ref=f4e392]: India's most trusted platform for booking traditional and cultural services. Making sacred ceremonies accessible to everyone.
+          - generic [ref=f4e393]:
+            - generic [ref=f4e394]: Hyderabad, Telangana, India
+            - generic [ref=f4e399]: +91 99999 99999
+            - generic [ref=f4e403]: contact@subhakary.com
+        - generic [ref=f4e408]:
+          - heading "Services" [level=4] [ref=f4e409]
+          - list [ref=f4e410]:
+            - listitem [ref=f4e411]:
+              - link "Poojari / Priest" [ref=f4e412] [cursor=pointer]:
+                - /url: /services/poojari
+            - listitem [ref=f4e413]:
+              - link "Photography" [ref=f4e414] [cursor=pointer]:
+                - /url: /services/photographer
+            - listitem [ref=f4e415]:
+              - link "Makeup Artist" [ref=f4e416] [cursor=pointer]:
+                - /url: /services/makeup-artist
+            - listitem [ref=f4e417]:
+              - link "Mehandi" [ref=f4e418] [cursor=pointer]:
+                - /url: /services/mehandi-artist
+            - listitem [ref=f4e419]:
+              - link "Decoration" [ref=f4e420] [cursor=pointer]:
+                - /url: /services/decoration
+            - listitem [ref=f4e421]:
+              - link "Catering" [ref=f4e422] [cursor=pointer]:
+                - /url: /services/catering
+            - listitem [ref=f4e423]:
+              - link "Function Halls" [ref=f4e424] [cursor=pointer]:
+                - /url: /services/function-halls
+            - listitem [ref=f4e425]:
+              - link "Event Managers" [ref=f4e426] [cursor=pointer]:
+                - /url: /services/event-managers
+        - generic [ref=f4e427]:
+          - heading "Company" [level=4] [ref=f4e428]
+          - list [ref=f4e429]:
+            - listitem [ref=f4e430]:
+              - link "About Us" [ref=f4e431] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=f4e432]:
+              - link "Planning OS" [ref=f4e433] [cursor=pointer]:
+                - /url: /planning-os
+            - listitem [ref=f4e434]:
+              - link "Become a Provider" [ref=f4e435] [cursor=pointer]:
+                - /url: /become-provider
+            - listitem [ref=f4e436]:
+              - link "Blog" [ref=f4e437] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=f4e438]:
+              - link "FAQ" [ref=f4e439] [cursor=pointer]:
+                - /url: /contact#faq
+        - generic [ref=f4e440]:
+          - heading "Support" [level=4] [ref=f4e441]
+          - list [ref=f4e442]:
+            - listitem [ref=f4e443]:
+              - link "Contact Us" [ref=f4e444] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=f4e445]:
+              - link "Privacy Policy" [ref=f4e446] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=f4e447]:
+              - link "Terms of Service" [ref=f4e448] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=f4e449]:
+              - link "Install App" [ref=f4e450] [cursor=pointer]:
+                - /url: /install
+      - generic [ref=f4e451]:
+        - heading "Popular Cities" [level=4] [ref=f4e452]
+        - generic [ref=f4e453]:
+          - link "Hyderabad" [ref=f4e454] [cursor=pointer]:
+            - /url: /services/poojari/hyderabad
+          - link "Bangalore" [ref=f4e455] [cursor=pointer]:
+            - /url: /services/poojari/bengaluru
+          - link "Chennai" [ref=f4e456] [cursor=pointer]:
+            - /url: /services/poojari/chennai
+          - link "Mumbai" [ref=f4e457] [cursor=pointer]:
+            - /url: /services/poojari/mumbai
+          - link "Delhi" [ref=f4e458] [cursor=pointer]:
+            - /url: /services/poojari/new-delhi
+          - link "Pune" [ref=f4e459] [cursor=pointer]:
+            - /url: /services/poojari/pune
+          - link "Vijayawada" [ref=f4e460] [cursor=pointer]:
+            - /url: /services/poojari/vijayawada
+          - link "Kolkata" [ref=f4e461] [cursor=pointer]:
+            - /url: /services/poojari/kolkata
+        - generic [ref=f4e462]:
+          - generic [ref=f4e463]:
+            - paragraph [ref=f4e464]: Hyderabad
+            - link "Poojari in Hyderabad" [ref=f4e465] [cursor=pointer]:
+              - /url: /services/poojari/hyderabad
+            - link "Photographer in Hyderabad" [ref=f4e466] [cursor=pointer]:
+              - /url: /services/photographer/hyderabad
+            - link "Catering in Hyderabad" [ref=f4e467] [cursor=pointer]:
+              - /url: /services/catering/hyderabad
+          - generic [ref=f4e468]:
+            - paragraph [ref=f4e469]: Bangalore
+            - link "Poojari in Bangalore" [ref=f4e470] [cursor=pointer]:
+              - /url: /services/poojari/bengaluru
+            - link "Photographer in Bangalore" [ref=f4e471] [cursor=pointer]:
+              - /url: /services/photographer/bengaluru
+            - link "Catering in Bangalore" [ref=f4e472] [cursor=pointer]:
+              - /url: /services/catering/bengaluru
+          - generic [ref=f4e473]:
+            - paragraph [ref=f4e474]: Chennai
+            - link "Poojari in Chennai" [ref=f4e475] [cursor=pointer]:
+              - /url: /services/poojari/chennai
+            - link "Photographer in Chennai" [ref=f4e476] [cursor=pointer]:
+              - /url: /services/photographer/chennai
+            - link "Catering in Chennai" [ref=f4e477] [cursor=pointer]:
+              - /url: /services/catering/chennai
+          - generic [ref=f4e478]:
+            - paragraph [ref=f4e479]: Mumbai
+            - link "Poojari in Mumbai" [ref=f4e480] [cursor=pointer]:
+              - /url: /services/poojari/mumbai
+            - link "Photographer in Mumbai" [ref=f4e481] [cursor=pointer]:
+              - /url: /services/photographer/mumbai
+            - link "Catering in Mumbai" [ref=f4e482] [cursor=pointer]:
+              - /url: /services/catering/mumbai
+      - generic [ref=f4e483]:
+        - paragraph [ref=f4e484]: © 2025 Subhakary. All rights reserved.
+        - generic [ref=f4e485]:
+          - link "Privacy" [ref=f4e486] [cursor=pointer]:
+            - /url: /privacy-policy
+          - link "Terms" [ref=f4e487] [cursor=pointer]:
+            - /url: /terms-of-service
+        - generic [ref=f4e488]:
+          - generic [ref=f4e489]: "Available in:"
+          - generic [ref=f4e490]:
+            - generic [ref=f4e491]: English
+            - generic [ref=f4e492]: తెలుగు
+            - generic [ref=f4e493]: हिंदी

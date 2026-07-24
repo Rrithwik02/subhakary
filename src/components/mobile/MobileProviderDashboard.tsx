@@ -34,7 +34,6 @@ import { MobileLayout } from "./MobileLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -62,7 +61,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { PaymentHistorySection } from "@/components/PaymentHistorySection";
 import { EditPaymentDialog } from "@/components/EditPaymentDialog";
-import { CompletionDetailsForm } from "@/components/CompletionDetailsForm";
 
 const statusConfig = {
   pending: { label: "Pending", color: "bg-yellow-500/10 text-yellow-600", icon: AlertCircle },
@@ -81,8 +79,6 @@ const DAYS_OF_WEEK = [
   { value: 5, label: "Friday" },
   { value: 6, label: "Saturday" },
 ];
-
-const ENABLE_PAYMENT_REQUESTS = false;
 
 type TabType = "pending" | "active" | "calendar" | "inquiries" | "messages" | "payments" | "history" | "profile";
 
@@ -115,10 +111,6 @@ const MobileProviderDashboard = () => {
     payment_description: string | null;
     booking_id: string;
   } | null>(null);
-  const [completionFormBooking, setCompletionFormBooking] = useState<{
-    id: string;
-    customerName: string;
-  } | null>(null);
 
   // Fetch provider profile
   const { data: provider, refetch: refetchProvider } = useQuery({
@@ -146,14 +138,7 @@ const MobileProviderDashboard = () => {
     queryFn: async () => {
       const { data: bookingsData, error } = await supabase
         .from("bookings")
-        .select(`
-          *,
-          event:wedding_events!bookings_event_id_fkey(
-            id,
-            name,
-            event_date
-          )
-        `)
+        .select(`*`)
         .eq("provider_id", provider!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -175,7 +160,6 @@ const MobileProviderDashboard = () => {
           full_name: c.customer_name,
           email: c.customer_email,
           phone: c.customer_phone,
-          profile_image: c.customer_profile_image,
         }]) || []
       );
 
@@ -563,8 +547,6 @@ const MobileProviderDashboard = () => {
   const renderBookingCard = (booking: any, index: number) => {
     const status = statusConfig[booking.status as keyof typeof statusConfig];
     const StatusIcon = status.icon;
-    const customerName = booking.customer?.full_name || "Unknown customer";
-    const customerPhone = booking.status === "accepted" ? booking.customer?.phone : null;
 
     return (
       <motion.div
@@ -576,21 +558,18 @@ const MobileProviderDashboard = () => {
       >
         <div className="p-4">
           <div className="flex items-start gap-3">
-            <Avatar className="h-10 w-10 border border-border/50">
-              <AvatarImage src={booking.customer?.profile_image} alt={customerName} />
-              <AvatarFallback className="bg-secondary/10 text-secondary">
-                <User className="h-5 w-5" />
-              </AvatarFallback>
-            </Avatar>
+            <div className="h-10 w-10 rounded-full bg-secondary/10 flex items-center justify-center">
+              <User className="h-5 w-5 text-secondary" />
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-semibold">
-                    {customerName}
+                    {booking.customer?.full_name || "Customer"}
                   </h3>
-                  {customerPhone && (
+                  {booking.customer?.phone && (
                     <p className="text-xs text-muted-foreground">
-                      {customerPhone}
+                      {booking.customer.phone}
                     </p>
                   )}
                 </div>
@@ -610,16 +589,6 @@ const MobileProviderDashboard = () => {
                   </>
                 )}
               </div>
-
-              {booking.event && (
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>
-                    {booking.event.name}
-                    {booking.event.event_date ? ` • ${format(new Date(booking.event.event_date), "MMM d, yyyy")}` : ""}
-                  </span>
-                </p>
-              )}
 
               {booking.message && (
                 <p className="text-xs text-muted-foreground mt-2 line-clamp-2 flex items-start gap-1">
@@ -706,14 +675,14 @@ const MobileProviderDashboard = () => {
                   <Button
                     size="sm"
                     className="flex-1 h-9"
-                    onClick={() => setCompletionFormBooking({ id: booking.id, customerName })}
+                    onClick={() => navigate(`/provider-dashboard?complete=${booking.id}`)}
                   >
                     Mark Complete
                   </Button>
                 )}
               </div>
               {/* Payment request/edit buttons */}
-              {ENABLE_PAYMENT_REQUESTS && booking.pendingPayment ? (
+              {booking.pendingPayment ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -932,7 +901,7 @@ const MobileProviderDashboard = () => {
                   <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="font-semibold mb-1">No Inquiries</h3>
                   <p className="text-sm text-muted-foreground">
-                    Booking inquiries will appear here
+                    Customer inquiries will appear here
                   </p>
                 </div>
               ) : (
@@ -940,7 +909,7 @@ const MobileProviderDashboard = () => {
                   <Card 
                     key={inquiry.id} 
                     className="cursor-pointer"
-                    onClick={() => navigate("/provider-dashboard?tab=inquiries")}
+                    onClick={() => navigate(`/inquiry-chat/${inquiry.id}`)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
@@ -1151,19 +1120,9 @@ const MobileProviderDashboard = () => {
               )}
             </>
           )}
-      </div>
+        </div>
 
-      {completionFormBooking && (
-        <CompletionDetailsForm
-          bookingId={completionFormBooking.id}
-          customerName={completionFormBooking.customerName}
-          open={!!completionFormBooking}
-          onOpenChange={(open) => !open && setCompletionFormBooking(null)}
-          onSubmitted={() => refetch()}
-        />
-      )}
-
-      {/* Block Dates Dialog */}
+        {/* Block Dates Dialog */}
         <Dialog open={blockDateDialogOpen} onOpenChange={setBlockDateDialogOpen}>
           <DialogContent className="max-w-sm mx-4">
             <DialogHeader>

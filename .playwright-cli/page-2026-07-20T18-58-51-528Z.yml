@@ -1,0 +1,559 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - main [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - link [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img "Subhakary" [ref=e7]
+        - button [ref=e8] [cursor=pointer]
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - heading "Sacred Ceremonies & Traditional Indian Services" [level=1] [ref=e15]: Sacred Ceremonies & TraditionalIndian Services
+          - paragraph [ref=e16]: Connect with experienced pandits, catering services, photographers, and decorators - all reviewed and vetted by families like yours.
+        - generic [ref=e17]:
+          - button "Slide 1" [ref=e18] [cursor=pointer]
+          - button "Slide 2" [ref=e19] [cursor=pointer]
+          - button "Slide 3" [ref=e20] [cursor=pointer]
+        - generic [ref=e21]:
+          - button "Book a Service Provider" [ref=e22] [cursor=pointer]
+          - button "Register as a Provider" [ref=e23] [cursor=pointer]
+      - generic [ref=e25]:
+        - generic [ref=e26]: subhakary.com/quiz
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - heading "Wedding Planning Quiz" [level=3] [ref=e34]
+            - generic [ref=e35]:
+              - generic [ref=e36]:
+                - text: Bride Name
+                - generic [ref=e37]: Priya
+              - generic [ref=e38]:
+                - text: Groom Name
+                - generic [ref=e39]: Rohan
+            - generic [ref=e40]:
+              - generic [ref=e41]:
+                - text: Wedding Date
+                - generic [ref=e42]: 28-11-2026
+              - generic [ref=e46]:
+                - text: Number of Guests
+                - generic [ref=e47]: "300"
+            - generic [ref=e48]:
+              - generic [ref=e49]: Events Required
+              - generic [ref=e50]:
+                - generic [ref=e52]:
+                  - paragraph [ref=e53]: Engagement
+                  - paragraph [ref=e54]: 10% default allocation
+                - generic [ref=e59]:
+                  - paragraph [ref=e60]: Wedding
+                  - paragraph [ref=e61]: 40% default allocation
+          - generic [ref=e65]:
+            - generic [ref=e66]:
+              - heading "What you will get" [level=4] [ref=e67]
+              - generic [ref=e68]:
+                - generic [ref=e69]: Projected total budget
+                - text: ₹12,00,000
+              - list [ref=e70]:
+                - listitem [ref=e71]:
+                  - generic [ref=e72]: •
+                  - generic [ref=e73]: Budget buckets generated automatically
+                - listitem [ref=e74]:
+                  - generic [ref=e75]: •
+                  - generic [ref=e76]: Timeline & event workspaces
+            - generic [ref=e77]:
+              - paragraph [ref=e78]: Starter tasks
+              - generic [ref=e79]:
+                - paragraph [ref=e80]: ✓ Finalize photographer
+                - paragraph [ref=e81]: ✓ Book puja items
+    - generic [ref=e83]:
+      - generic [ref=e84]:
+        - generic [ref=e85]: Subhakary OS
+        - heading "Plan Like a Professional" [level=2] [ref=e86]
+        - paragraph [ref=e87]: Say goodbye to messy spreadsheets. Use our cohesive suite of event planner utilities to design the perfect traditional ceremony.
+      - generic [ref=e88]:
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - button [ref=e91] [cursor=pointer]:
+              - heading "Budget Planner" [level=3] [ref=e97]
+            - button [ref=e98] [cursor=pointer]:
+              - heading "Guest List Manager" [level=3] [ref=e106]
+            - button [ref=e107] [cursor=pointer]:
+              - heading "Ceremony Checklist" [level=3] [ref=e113]
+            - button [ref=e114] [cursor=pointer]:
+              - heading "Event Timeline" [level=3] [ref=e120]
+          - generic [ref=e121]:
+            - heading "Keep your wedding finances under control" [level=4] [ref=e122]
+            - paragraph [ref=e123]: Define your total budget, split expenses by categories (caterer, photographer, poojari, venue), and track actual payments versus estimates in real-time.
+            - link [ref=e124] [cursor=pointer]:
+              - /url: /auth
+              - button "Start Planning Now" [ref=e125]
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - generic [ref=e130]: Wedding Budget Breakdown
+              - generic [ref=e131]: Muhurtham Split
+            - generic [ref=e132]:
+              - generic [ref=e133]:
+                - generic [ref=e134]: Total Budget
+                - text: ₹15,00,000
+              - generic [ref=e135]:
+                - generic [ref=e136]: Actual Spent
+                - text: ₹12,40,000
+              - generic [ref=e137]:
+                - generic [ref=e138]: Remaining
+                - text: ₹2,60,000
+            - generic [ref=e139]:
+              - generic [ref=e141]:
+                - generic [ref=e142]: Catering & Food Services
+                - generic [ref=e143]: ₹3,60,000 (24%)
+              - generic [ref=e147]:
+                - generic [ref=e148]: Decoration & Venue setup
+                - generic [ref=e149]: ₹2,70,000 (18%)
+              - generic [ref=e153]:
+                - generic [ref=e154]: Photography & Video
+                - generic [ref=e155]: ₹1,80,000 (12%)
+          - generic [ref=e158]:
+            - generic [ref=e159]: Vetting Assured
+            - generic [ref=e163]: Subhakary OS Suite v2.0
+    - generic [ref=e165]:
+      - generic [ref=e166]:
+        - generic [ref=e167]: Inspiration Gallery
+        - heading "Ceremony Inspiration" [level=2] [ref=e168]
+        - paragraph [ref=e169]: Browse beautiful setups, authentic decor designs, and emotional moments captured at ceremonies planned through Subhakary.
+      - generic [ref=e170]:
+        - generic [ref=e171] [cursor=pointer]:
+          - img "Vibrant Mandap Decor" [ref=e172]
+          - generic [ref=e174]:
+            - generic [ref=e175]: Decoration
+            - heading "Vibrant Mandap Decor" [level=3] [ref=e176]
+        - generic [ref=e177] [cursor=pointer]:
+          - img "Sacred Homam & Puja Setup" [ref=e178]
+          - generic [ref=e180]:
+            - generic [ref=e181]: Poojari
+            - heading "Sacred Homam & Puja Setup" [level=3] [ref=e182]
+        - generic [ref=e183] [cursor=pointer]:
+          - img "Intricate Bridal Mehendi" [ref=e184]
+          - generic [ref=e186]:
+            - generic [ref=e187]: Mehandi
+            - heading "Intricate Bridal Mehendi" [level=3] [ref=e188]
+        - generic [ref=e189] [cursor=pointer]:
+          - img "Traditional South Indian Feast" [ref=e190]
+          - generic [ref=e192]:
+            - generic [ref=e193]: Catering
+            - heading "Traditional South Indian Feast" [level=3] [ref=e194]
+        - generic [ref=e195] [cursor=pointer]:
+          - img "Candid Muhurtham Shots" [ref=e196]
+          - generic [ref=e198]:
+            - generic [ref=e199]: Photography
+            - heading "Candid Muhurtham Shots" [level=3] [ref=e200]
+        - generic [ref=e201] [cursor=pointer]:
+          - img "Traditional Haldi Celebrations" [ref=e202]
+          - generic [ref=e204]:
+            - generic [ref=e205]: Event Planning
+            - heading "Traditional Haldi Celebrations" [level=3] [ref=e206]
+    - generic [ref=e208]:
+      - generic [ref=e209]:
+        - generic [ref=e210]: Our Services
+        - heading "Everything You Need for Your Special Occasion" [level=2] [ref=e211]: Everything You Need forYour Special Occasion
+        - paragraph [ref=e212]: From sacred rituals to grand celebrations, find verified professionals for every traditional service across India
+      - generic [ref=e213]:
+        - generic [ref=e216] [cursor=pointer]:
+          - heading "Poojari / Priest" [level=3] [ref=e220]
+          - paragraph [ref=e221]: Experienced pandits for all ceremonies
+          - generic [ref=e222]: Explore
+        - generic [ref=e228] [cursor=pointer]:
+          - heading "Photography" [level=3] [ref=e233]
+          - paragraph [ref=e234]: Capture every precious moment
+          - generic [ref=e235]: Explore
+        - generic [ref=e241] [cursor=pointer]:
+          - heading "Videography" [level=3] [ref=e246]
+          - paragraph [ref=e247]: Professional video coverage
+          - generic [ref=e248]: Explore
+        - generic [ref=e254] [cursor=pointer]:
+          - heading "Makeup Artist" [level=3] [ref=e259]
+          - paragraph [ref=e260]: Bridal & groom makeup services
+          - generic [ref=e261]: Explore
+        - generic [ref=e267] [cursor=pointer]:
+          - heading "Mehandi" [level=3] [ref=e274]
+          - paragraph [ref=e275]: Traditional & modern designs
+          - generic [ref=e276]: Explore
+        - generic [ref=e282] [cursor=pointer]:
+          - heading "Mangala Vadyam" [level=3] [ref=e289]
+          - paragraph [ref=e290]: Auspicious traditional music
+          - generic [ref=e291]: Explore
+        - generic [ref=e297] [cursor=pointer]:
+          - heading "Decoration" [level=3] [ref=e304]
+          - paragraph [ref=e305]: Stunning venue transformations
+          - generic [ref=e306]: Explore
+        - generic [ref=e312] [cursor=pointer]:
+          - heading "Catering" [level=3] [ref=e319]
+          - paragraph [ref=e320]: Delicious traditional cuisines
+          - generic [ref=e321]: Explore
+        - generic [ref=e327] [cursor=pointer]:
+          - heading "Function Halls" [level=3] [ref=e333]
+          - paragraph [ref=e334]: Perfect venues for your events
+          - generic [ref=e335]: Explore
+        - generic [ref=e341] [cursor=pointer]:
+          - heading "Event Managers" [level=3] [ref=e346]
+          - paragraph [ref=e347]: End-to-end event planning
+          - generic [ref=e348]: Explore
+    - generic [ref=e354]:
+      - generic [ref=e355]:
+        - generic [ref=e356]: Partner With Us
+        - heading "Grow Your Traditional Ceremony Business" [level=2] [ref=e360]
+        - paragraph [ref=e361]: Connect with thousands of local families seeking trusted priests, pandits, photographers, caterers, and decorators. Manage bookings, schedule events, and accept secure payments all in one platform.
+        - generic [ref=e362]:
+          - generic [ref=e363]: Keep 100% of your listed service rates
+          - generic [ref=e368]: Vetted verification badge to build customer trust
+          - generic [ref=e373]: Instant alerts for new booking inquiries in your city
+        - button "Register as a Provider" [ref=e378] [cursor=pointer]
+      - generic [ref=e379]:
+        - heading "Subhakary Provider Network" [level=3] [ref=e380]
+        - generic [ref=e381]:
+          - generic [ref=e382]:
+            - generic [ref=e383]: 500+
+            - text: Active Providers
+          - generic [ref=e384]:
+            - generic [ref=e385]: 10k+
+            - text: Bookings Scheduled
+          - generic [ref=e386]:
+            - generic [ref=e387]: ₹0
+            - text: Setup Fees
+          - generic [ref=e388]:
+            - generic [ref=e389]: 4.8★
+            - text: Average Rating
+        - generic [ref=e390]:
+          - paragraph [ref=e391]: "\"Joining Subhakary allowed me to streamline my wedding booking calendar and connect with clients outside my traditional local networks. It doubled my priest service bookings in just 3 months.\""
+          - generic [ref=e392]: — Shastri Ramachandra, Vedic Priest
+    - generic [ref=e394]:
+      - generic [ref=e395]:
+        - heading "About Subhakary" [level=2] [ref=e396]
+        - paragraph [ref=e397]: Subhakary is your trusted partner in celebrating life's most sacred moments. We bridge the gap between traditional ceremonial service providers and modern families seeking authentic spiritual experiences.
+      - generic [ref=e398]:
+        - generic [ref=e401]:
+          - heading "Our Community" [level=3] [ref=e408]
+          - paragraph [ref=e409]: We've built a thriving community of verified service providers and satisfied families.
+        - generic [ref=e412]:
+          - heading "Our Values" [level=3] [ref=e416]
+          - paragraph [ref=e417]: We're committed to preserving and promoting sacred traditions while ensuring convenience and trust.
+        - generic [ref=e420]:
+          - heading "Our Journey" [level=3] [ref=e425]
+          - paragraph [ref=e426]: Started with a vision to make sacred ceremonies accessible, we continue to grow and serve.
+      - generic [ref=e430]:
+        - heading "Our Mission" [level=3] [ref=e436]
+        - paragraph [ref=e437]: To preserve and promote sacred traditions while making them accessible to everyone through a trusted platform that connects families with qualified service providers.
+    - generic [ref=e439]:
+      - generic [ref=e440]:
+        - generic [ref=e441]: How It Works
+        - heading "Simple Booking Process" [level=2] [ref=e442]
+        - paragraph [ref=e443]: Whether you're looking for services or offering them, our platform makes it easy
+      - generic [ref=e444]:
+        - generic [ref=e445]:
+          - heading "For Customers" [level=3] [ref=e453]
+          - generic [ref=e454]:
+            - generic [ref=e460]:
+              - generic [ref=e461]:
+                - generic [ref=e462]: Step 1
+                - heading "Find Providers" [level=4] [ref=e463]
+              - paragraph [ref=e464]: Browse verified service providers by category, location, or use AI search
+            - generic [ref=e471]:
+              - generic [ref=e472]:
+                - generic [ref=e473]: Step 2
+                - heading "Chat & Discuss" [level=4] [ref=e474]
+              - paragraph [ref=e475]: Connect with providers to discuss your requirements before booking
+            - generic [ref=e483]:
+              - generic [ref=e484]:
+                - generic [ref=e485]: Step 3
+                - heading "Check Availability" [level=4] [ref=e486]
+              - paragraph [ref=e487]: Select your preferred date and time, then check if the provider is available
+              - paragraph [ref=e488]: No payment required. Most providers respond within a few hours.
+            - generic [ref=e496]:
+              - generic [ref=e497]:
+                - generic [ref=e498]: Step 4
+                - heading "Get Confirmation" [level=4] [ref=e499]
+              - paragraph [ref=e500]: Provider reviews and accepts your booking, you get notified instantly
+            - generic [ref=e507]:
+              - generic [ref=e508]:
+                - generic [ref=e509]: Step 5
+                - heading "Rate & Review" [level=4] [ref=e510]
+              - paragraph [ref=e511]: After service completion, share your experience to help others
+        - generic [ref=e512]:
+          - heading "For Service Providers" [level=3] [ref=e518]
+          - paragraph [ref=e519]: No upfront cost. No obligation to accept bookings.
+          - generic [ref=e520]:
+            - generic [ref=e526]:
+              - generic [ref=e527]:
+                - generic [ref=e528]: Step 1
+                - heading "Create Your Profile" [level=4] [ref=e529]
+              - paragraph [ref=e530]: Add your service details and upload a document that proves your business ownership (GST, Trade License, etc.)
+            - generic [ref=e538]:
+              - generic [ref=e539]:
+                - generic [ref=e540]: Step 2
+                - heading "Get Verified" [level=4] [ref=e541]
+              - paragraph [ref=e542]: Our team reviews your application and approves your profile
+            - generic [ref=e552]:
+              - generic [ref=e553]:
+                - generic [ref=e554]: Step 3
+                - heading "Receive Inquiries" [level=4] [ref=e555]
+              - paragraph [ref=e556]: Customers can chat with you and send booking requests
+              - paragraph [ref=e557]: You'll start receiving booking requests once customers search for your service. Try to respond within a few hours!
+            - generic [ref=e566]:
+              - generic [ref=e567]:
+                - generic [ref=e568]: Step 4
+                - heading "Manage Bookings" [level=4] [ref=e569]
+              - paragraph [ref=e570]: Accept or decline bookings, manage your calendar and availability
+            - generic [ref=e577]:
+              - generic [ref=e578]:
+                - generic [ref=e579]: Step 5
+                - heading "Get More Bookings" [level=4] [ref=e580]
+              - paragraph [ref=e581]: Build trust with reviews and receive more customer requests
+    - generic [ref=e583]:
+      - generic [ref=e584]:
+        - generic [ref=e585]: Why Choose Us
+        - heading "Trusted by Families Across India" [level=2] [ref=e586]: Trusted by FamiliesAcross India
+        - paragraph [ref=e587]: We take pride in connecting you with the most trusted and experienced service providers for your sacred ceremonies
+      - generic [ref=e588]:
+        - generic [ref=e589]:
+          - generic [ref=e594]: 100%
+          - generic [ref=e595]: Verified Providers
+          - paragraph [ref=e596]: All service providers are thoroughly verified
+        - generic [ref=e597]:
+          - generic [ref=e601]: "4.8"
+          - generic [ref=e602]: Average Rating
+          - paragraph [ref=e603]: Consistently high-quality services
+        - generic [ref=e604]:
+          - generic [ref=e609]: 24/7
+          - generic [ref=e610]: Support
+          - paragraph [ref=e611]: Round-the-clock customer assistance
+        - generic [ref=e612]:
+          - generic [ref=e619]: 10K+
+          - generic [ref=e620]: Happy Families
+          - paragraph [ref=e621]: Trusted by thousands across India
+      - generic [ref=e624]:
+        - heading "Provider Verification Badges" [level=3] [ref=e625]
+        - paragraph [ref=e626]: Our rigorous verification process ensures you only connect with genuine, experienced professionals. Look for these badges when choosing a provider.
+        - generic [ref=e627]:
+          - generic [ref=e628]: Identity Verified
+          - generic [ref=e633]: Top Rated
+          - generic [ref=e637]: 10+ Years Experience
+    - generic [ref=e650]:
+      - generic [ref=e651]:
+        - heading "Tradition & Culture Blog" [level=2] [ref=e652]
+        - paragraph [ref=e653]: Discover the rich heritage of Indian traditions, wedding customs, and ceremonial practices. Get expert guidance on performing rituals, planning celebrations, and preserving cultural values.
+      - generic [ref=e654]:
+        - heading "Featured Articles" [level=3] [ref=e655]
+        - generic [ref=e656]:
+          - article [ref=e657]:
+            - generic [ref=e658]: 💒
+            - generic [ref=e660]:
+              - generic [ref=e661]:
+                - generic [ref=e662]: Wedding Traditions
+                - generic [ref=e663]: 8 min read
+              - heading [level=4] [ref=e667]:
+                - link "Timeless Indian Wedding Traditions You Should Know" [ref=e668] [cursor=pointer]:
+                  - /url: /blog/timeless-indian-wedding-traditions
+              - generic [ref=e669]: December 15, 2024
+              - paragraph [ref=e672]: Indian weddings are not just ceremonies; they are grand celebrations of culture, family, and spirituality. Known for their vibrancy, emotional depth, and elaborate rituals.
+              - link [ref=e673] [cursor=pointer]:
+                - /url: /blog/timeless-indian-wedding-traditions
+                - button "Read More" [ref=e674]
+          - article [ref=e675]:
+            - generic [ref=e676]: 🏠
+            - generic [ref=e678]:
+              - generic [ref=e679]:
+                - generic [ref=e680]: Home Ceremonies
+                - generic [ref=e681]: 6 min read
+              - heading [level=4] [ref=e685]:
+                - 'link "Essential Indian Home Ceremonies: A Complete Guide" [ref=e686] [cursor=pointer]':
+                  - /url: /blog/essential-indian-home-ceremonies
+              - generic [ref=e687]: December 20, 2024
+              - paragraph [ref=e690]: In Indian culture, the home is considered sacred—a place where family, tradition, and spirituality meet. Explore the most popular home ceremonies and their meanings.
+              - link [ref=e691] [cursor=pointer]:
+                - /url: /blog/essential-indian-home-ceremonies
+                - button "Read More" [ref=e692]
+          - article [ref=e693]:
+            - generic [ref=e694]: 💄
+            - generic [ref=e696]:
+              - generic [ref=e697]:
+                - generic [ref=e698]: Beauty & Style
+                - generic [ref=e699]: 7 min read
+              - heading [level=4] [ref=e703]:
+                - 'link "Indian Wedding Beauty & Style Guide: Tips for Brides & Grooms" [ref=e704] [cursor=pointer]':
+                  - /url: /blog/indian-wedding-beauty-style-guide
+              - generic [ref=e705]: December 22, 2024
+              - paragraph [ref=e708]: An Indian wedding is more than a ceremony—it's a grand showcase of culture, tradition, and personal style. This complete guide covers everything from bridal makeup to groom styling.
+              - link [ref=e709] [cursor=pointer]:
+                - /url: /blog/indian-wedding-beauty-style-guide
+                - button "Read More" [ref=e710]
+      - generic [ref=e711]:
+        - heading "Explore by Category" [level=3] [ref=e712]
+        - generic [ref=e713]:
+          - link [ref=e714] [cursor=pointer]:
+            - /url: /blog?category=Wedding%20Traditions
+            - button "Wedding Traditions" [ref=e715]
+          - link [ref=e716] [cursor=pointer]:
+            - /url: /blog?category=Home%20Ceremonies
+            - button "Home Ceremonies" [ref=e717]
+          - link [ref=e718] [cursor=pointer]:
+            - /url: /blog?category=Festival%20Celebrations
+            - button "Festival Celebrations" [ref=e719]
+          - link [ref=e720] [cursor=pointer]:
+            - /url: /blog?category=Beauty%20%26%20Style
+            - button "Beauty & Style" [ref=e721]
+          - link [ref=e722] [cursor=pointer]:
+            - /url: /blog?category=Photography%20Tips
+            - button "Photography Tips" [ref=e723]
+          - link [ref=e724] [cursor=pointer]:
+            - /url: /blog?category=Catering%20Ideas
+            - button "Catering Ideas" [ref=e725]
+          - link [ref=e726] [cursor=pointer]:
+            - /url: /blog?category=Decoration%20Trends
+            - button "Decoration Trends" [ref=e727]
+      - generic [ref=e728]:
+        - heading "Stay Updated with Tradition" [level=3] [ref=e729]
+        - paragraph [ref=e730]: Subscribe to our newsletter to receive the latest articles on Indian traditions, ceremony guides, and cultural insights directly in your inbox.
+        - generic [ref=e731]:
+          - textbox "Enter your email" [ref=e732]
+          - button "Subscribe" [ref=e733] [cursor=pointer]
+      - link [ref=e735] [cursor=pointer]:
+        - /url: /blog
+        - button "View All Articles" [ref=e736]
+    - generic [ref=e738]:
+      - generic [ref=e739]:
+        - generic [ref=e740]:
+          - link [ref=e741] [cursor=pointer]:
+            - /url: /
+            - img "Subhakary" [ref=e742]
+          - paragraph [ref=e743]: India's most trusted platform for booking traditional and cultural services. Making sacred ceremonies accessible to everyone.
+          - generic [ref=e744]:
+            - generic [ref=e745]: Hyderabad, Telangana, India
+            - generic [ref=e750]: +91 99999 99999
+            - generic [ref=e754]: contact@subhakary.com
+        - generic [ref=e759]:
+          - heading "Services" [level=4] [ref=e760]
+          - list [ref=e761]:
+            - listitem [ref=e762]:
+              - link "Poojari / Priest" [ref=e763] [cursor=pointer]:
+                - /url: /services/poojari
+            - listitem [ref=e764]:
+              - link "Photography" [ref=e765] [cursor=pointer]:
+                - /url: /services/photographer
+            - listitem [ref=e766]:
+              - link "Makeup Artist" [ref=e767] [cursor=pointer]:
+                - /url: /services/makeup-artist
+            - listitem [ref=e768]:
+              - link "Mehandi" [ref=e769] [cursor=pointer]:
+                - /url: /services/mehandi-artist
+            - listitem [ref=e770]:
+              - link "Decoration" [ref=e771] [cursor=pointer]:
+                - /url: /services/decoration
+            - listitem [ref=e772]:
+              - link "Catering" [ref=e773] [cursor=pointer]:
+                - /url: /services/catering
+            - listitem [ref=e774]:
+              - link "Function Halls" [ref=e775] [cursor=pointer]:
+                - /url: /services/function-halls
+            - listitem [ref=e776]:
+              - link "Event Managers" [ref=e777] [cursor=pointer]:
+                - /url: /services/event-managers
+        - generic [ref=e778]:
+          - heading "Company" [level=4] [ref=e779]
+          - list [ref=e780]:
+            - listitem [ref=e781]:
+              - link "About Us" [ref=e782] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e783]:
+              - link "Planning OS" [ref=e784] [cursor=pointer]:
+                - /url: /planning-os
+            - listitem [ref=e785]:
+              - link "Become a Provider" [ref=e786] [cursor=pointer]:
+                - /url: /become-provider
+            - listitem [ref=e787]:
+              - link "Blog" [ref=e788] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e789]:
+              - link "FAQ" [ref=e790] [cursor=pointer]:
+                - /url: /contact#faq
+        - generic [ref=e791]:
+          - heading "Support" [level=4] [ref=e792]
+          - list [ref=e793]:
+            - listitem [ref=e794]:
+              - link "Contact Us" [ref=e795] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e796]:
+              - link "Privacy Policy" [ref=e797] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=e798]:
+              - link "Terms of Service" [ref=e799] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=e800]:
+              - link "Install App" [ref=e801] [cursor=pointer]:
+                - /url: /install
+      - generic [ref=e802]:
+        - heading "Popular Cities" [level=4] [ref=e803]
+        - generic [ref=e804]:
+          - link "Hyderabad" [ref=e805] [cursor=pointer]:
+            - /url: /services/poojari/hyderabad
+          - link "Bangalore" [ref=e806] [cursor=pointer]:
+            - /url: /services/poojari/bengaluru
+          - link "Chennai" [ref=e807] [cursor=pointer]:
+            - /url: /services/poojari/chennai
+          - link "Mumbai" [ref=e808] [cursor=pointer]:
+            - /url: /services/poojari/mumbai
+          - link "Delhi" [ref=e809] [cursor=pointer]:
+            - /url: /services/poojari/new-delhi
+          - link "Pune" [ref=e810] [cursor=pointer]:
+            - /url: /services/poojari/pune
+          - link "Vijayawada" [ref=e811] [cursor=pointer]:
+            - /url: /services/poojari/vijayawada
+          - link "Kolkata" [ref=e812] [cursor=pointer]:
+            - /url: /services/poojari/kolkata
+        - generic [ref=e813]:
+          - generic [ref=e814]:
+            - paragraph [ref=e815]: Hyderabad
+            - link "Poojari in Hyderabad" [ref=e816] [cursor=pointer]:
+              - /url: /services/poojari/hyderabad
+            - link "Photographer in Hyderabad" [ref=e817] [cursor=pointer]:
+              - /url: /services/photographer/hyderabad
+            - link "Catering in Hyderabad" [ref=e818] [cursor=pointer]:
+              - /url: /services/catering/hyderabad
+          - generic [ref=e819]:
+            - paragraph [ref=e820]: Bangalore
+            - link "Poojari in Bangalore" [ref=e821] [cursor=pointer]:
+              - /url: /services/poojari/bengaluru
+            - link "Photographer in Bangalore" [ref=e822] [cursor=pointer]:
+              - /url: /services/photographer/bengaluru
+            - link "Catering in Bangalore" [ref=e823] [cursor=pointer]:
+              - /url: /services/catering/bengaluru
+          - generic [ref=e824]:
+            - paragraph [ref=e825]: Chennai
+            - link "Poojari in Chennai" [ref=e826] [cursor=pointer]:
+              - /url: /services/poojari/chennai
+            - link "Photographer in Chennai" [ref=e827] [cursor=pointer]:
+              - /url: /services/photographer/chennai
+            - link "Catering in Chennai" [ref=e828] [cursor=pointer]:
+              - /url: /services/catering/chennai
+          - generic [ref=e829]:
+            - paragraph [ref=e830]: Mumbai
+            - link "Poojari in Mumbai" [ref=e831] [cursor=pointer]:
+              - /url: /services/poojari/mumbai
+            - link "Photographer in Mumbai" [ref=e832] [cursor=pointer]:
+              - /url: /services/photographer/mumbai
+            - link "Catering in Mumbai" [ref=e833] [cursor=pointer]:
+              - /url: /services/catering/mumbai
+      - generic [ref=e834]:
+        - paragraph [ref=e835]: © 2025 Subhakary. All rights reserved.
+        - generic [ref=e836]:
+          - link "Privacy" [ref=e837] [cursor=pointer]:
+            - /url: /privacy-policy
+          - link "Terms" [ref=e838] [cursor=pointer]:
+            - /url: /terms-of-service
+        - generic [ref=e839]:
+          - generic [ref=e840]: "Available in:"
+          - generic [ref=e841]:
+            - generic [ref=e842]: English
+            - generic [ref=e843]: తెలుగు
+            - generic [ref=e844]: हिंदी
+    - button [ref=e847] [cursor=pointer]
