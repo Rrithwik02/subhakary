@@ -224,60 +224,61 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden border-border/60 bg-card/95 shadow-sm">
-        <CardContent className="p-4 sm:p-5 lg:p-6">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <CardContent className="space-y-5 p-4 sm:p-5 lg:p-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="space-y-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Calendar workspace
+                Schedule workspace
               </p>
               <div className="flex items-center gap-2">
                 <CalendarIcon className="h-5 w-5 text-primary" />
                 <h2 className="font-display text-2xl font-semibold text-foreground">
-                  {getViewTitle(currentDate, viewMode)}
+                  Calendar, bookings, and availability in one place
                 </h2>
               </div>
               <p className="max-w-3xl text-sm text-muted-foreground">
-                Review bookings, blocked dates, and personal events from one cohesive schedule surface.
+                Keep the calendar front and center while advanced controls stay grouped below it for faster scanning.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setCurrentDate((date) => (viewMode === "month" ? subMonths(date, 1) : viewMode === "week" ? subDays(date, 7) : subDays(date, 1)))}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  onClick={() =>
+                    setCurrentDate((date) =>
+                      viewMode === "month" ? subMonths(date, 1) : viewMode === "week" ? subDays(date, 7) : subDays(date, 1)
+                    )
+                  }
+                >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 rounded-full px-3 text-xs font-medium" onClick={() => {
-                  const today = new Date();
-                  setCurrentDate(today);
-                  setSelectedDate(today);
-                }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 rounded-full px-3 text-xs font-medium"
+                  onClick={() => {
+                    const today = new Date();
+                    setCurrentDate(today);
+                    setSelectedDate(today);
+                  }}
+                >
                   Current
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setCurrentDate((date) => (viewMode === "month" ? addMonths(date, 1) : viewMode === "week" ? addDays(date, 7) : addDays(date, 1)))}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  onClick={() =>
+                    setCurrentDate((date) =>
+                      viewMode === "month" ? addMonths(date, 1) : viewMode === "week" ? addDays(date, 7) : addDays(date, 1)
+                    )
+                  }
+                >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-              </div>
-
-              <div className="flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-1">
-                {VIEW_MODES.map((mode) => {
-                  const Icon = mode.icon;
-                  return (
-                    <button
-                      key={mode.value}
-                      type="button"
-                      onClick={() => setViewMode(mode.value)}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all",
-                        viewMode === mode.value
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {mode.label}
-                    </button>
-                  );
-                })}
               </div>
 
               <Button
@@ -291,37 +292,65 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
             </div>
           </div>
 
-            <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1">
-              <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0">
+          <div className="rounded-2xl border border-border/50 bg-muted/20 px-3 py-3 sm:px-4">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <Filter className="h-3.5 w-3.5" />
                 Filter
               </span>
-            {EVENT_TYPES.map((type) => {
-              const label = type === "all" ? "All events" : EVENT_TYPE_META[type].label;
-              const count = type === "all" ? events.length : events.filter((event) => event.type === type).length;
-              const active = selectedFilter === type;
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setSelectedFilter(type)}
-                  className={cn(
-                    "inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-                    active
-                      ? "border-primary/30 bg-primary/10 text-foreground shadow-sm"
-                      : "border-border/60 bg-background text-muted-foreground hover:border-border hover:text-foreground"
-                  )}
-                >
-                  <span>{label}</span>
-                  <span className="rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+              {EVENT_TYPES.map((type) => {
+                const label = type === "all" ? "All events" : EVENT_TYPE_META[type].label;
+                const count = type === "all" ? events.length : events.filter((event) => event.type === type).length;
+                const active = selectedFilter === type;
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setSelectedFilter(type)}
+                    className={cn(
+                      "inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+                      active
+                        ? "border-primary/30 bg-primary/10 text-foreground shadow-sm"
+                        : "border-border/60 bg-background text-muted-foreground hover:border-border hover:text-foreground"
+                    )}
+                  >
+                    <span>{label}</span>
+                    <span className="rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
+              <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <LayoutGrid className="h-3.5 w-3.5" />
+                View
+              </span>
+              {VIEW_MODES.map((mode) => {
+                const Icon = mode.icon;
+                return (
+                  <button
+                    key={mode.value}
+                    type="button"
+                    onClick={() => setViewMode(mode.value)}
+                    className={cn(
+                      "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+                      viewMode === mode.value
+                        ? "border-primary/30 bg-background text-foreground shadow-sm"
+                        : "border-border/60 bg-background/70 text-muted-foreground hover:border-border hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {mode.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5">
               <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Visible items</p>
               <p className="mt-1 text-sm font-semibold text-foreground">{visibleEventCount} events</p>
@@ -654,6 +683,21 @@ const MonthView = ({
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-muted-foreground">
+        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1">
+          <span className="h-2 w-2 rounded-full bg-destructive" />
+          Blocked date
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1">
+          <span className="h-2 w-2 rounded-full bg-amber-500" />
+          Booking
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1">
+          <span className="h-2 w-2 rounded-full bg-violet-500" />
+          External event
+        </span>
+      </div>
+
       <div className="grid grid-cols-7 gap-2">
         {days.map((day) => {
           const dateStr = format(day, "yyyy-MM-dd");
@@ -682,7 +726,7 @@ const MonthView = ({
                 "bg-background/80 hover:border-primary/40 hover:bg-accent/20 hover:shadow-sm",
                 !isCurrentMonth && "opacity-40",
                 isSelected && "border-primary/60 ring-2 ring-primary/10",
-                dayCapacity.isBlocked && "border-destructive/40 bg-destructive/5",
+                dayCapacity.isBlocked && "border-destructive/40 bg-destructive/10 shadow-[inset_0_0_0_1px_rgba(239,68,68,0.08)]",
               )}
             >
               <div className="flex items-center justify-between gap-2">
@@ -692,14 +736,14 @@ const MonthView = ({
                     isToday && "bg-primary text-primary-foreground",
                     isSelected && !isToday && "bg-foreground text-background",
                     !isToday && !isSelected && "bg-muted text-foreground",
-                    dayCapacity.isBlocked && "text-destructive line-through"
+                    dayCapacity.isBlocked && "bg-destructive/15 text-destructive line-through"
                   )}
                 >
                   {day.getDate()}
                 </span>
 
                 {dayCapacity.isBlocked ? (
-                  <Badge variant="destructive" className="text-[9px]">
+                  <Badge variant="destructive" className="text-[9px] shadow-sm">
                     Blocked
                   </Badge>
                 ) : dayCapacity.bookingsCount > 0 ? (
@@ -712,10 +756,20 @@ const MonthView = ({
               </div>
 
               <div className="mt-2 flex items-center gap-1.5 px-1">
-                {hasBlockedDate && <span className="h-2 w-2 rounded-full bg-destructive" title="Blocked date" />}
+                {hasBlockedDate && (
+                  <span
+                    className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_0_3px_rgba(239,68,68,0.12)]"
+                    title="Blocked date"
+                  />
+                )}
                 {!hasBlockedDate && hasSubhakaryBooking && <span className="h-2 w-2 rounded-full bg-amber-500" title="Subhakary booking" />}
                 {!hasBlockedDate && !hasSubhakaryBooking && hasExternalBooking && (
                   <span className="h-2 w-2 rounded-full bg-violet-500" title="External booking" />
+                )}
+                {hasBlockedDate && (
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-destructive">
+                    Blocked
+                  </span>
                 )}
               </div>
 
