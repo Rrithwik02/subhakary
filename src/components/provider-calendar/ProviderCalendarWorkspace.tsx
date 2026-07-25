@@ -80,10 +80,6 @@ const EVENT_TYPES: Array<EventType | "all"> = [
   "all",
   "subhakary_booking",
   "external_booking",
-  "personal_event",
-  "vacation",
-  "holiday",
-  "leave",
   "blocked_date",
 ];
 
@@ -187,7 +183,7 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
   const visibleEventCount = filteredEvents.length;
   const blockedDayCount = new Set(
     events
-      .filter((event) => ["vacation", "holiday", "leave", "blocked_date"].includes(event.type))
+      .filter((event) => event.type === "blocked_date")
       .map((event) => event.startDate)
   ).size;
 
@@ -255,7 +251,7 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
                   setCurrentDate(today);
                   setSelectedDate(today);
                 }}>
-                  Today
+                  Current
                 </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setCurrentDate((date) => (viewMode === "month" ? addMonths(date, 1) : viewMode === "week" ? addDays(date, 7) : addDays(date, 1)))}>
                   <ChevronRight className="h-4 w-4" />
@@ -295,11 +291,11 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0">
-              <Filter className="h-3.5 w-3.5" />
-              Filter
-            </span>
+            <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0">
+                <Filter className="h-3.5 w-3.5" />
+                Filter
+              </span>
             {EVENT_TYPES.map((type) => {
               const label = type === "all" ? "All events" : EVENT_TYPE_META[type].label;
               const count = type === "all" ? events.length : events.filter((event) => event.type === type).length;
@@ -504,7 +500,7 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
                 onClick={() => openCreateDialog("external_booking")}
               >
                 <Plus className="h-4 w-4" />
-                Add event on {format(selectedDate, "MMM d")}
+                Create event
               </Button>
               <Button
                 variant="outline"
@@ -533,7 +529,12 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
         initialEventType={createDialogType}
         editingEvent={editingEvent}
         providerId={providerId}
-        onEventSaved={refreshEvents}
+        onEventSaved={(savedEvent) => {
+          const savedDate = parseISO(savedEvent.startDate);
+          setSelectedDate(savedDate);
+          setCurrentDate(savedDate);
+          void loadCalendar(savedDate).catch(() => undefined);
+        }}
       />
 
       <Dialog open={!!detailEvent} onOpenChange={(open) => !open && setDetailEvent(null)}>

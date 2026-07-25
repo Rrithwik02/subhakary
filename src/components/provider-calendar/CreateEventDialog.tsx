@@ -4,10 +4,6 @@ import {
   Calendar as CalendarIcon, 
   AlertTriangle, 
   Briefcase,
-  User,
-  Palmtree,
-  CalendarOff,
-  Coffee,
   Ban
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -76,6 +72,31 @@ export const CreateEventDialog = ({
   const [customerPhone, setCustomerPhone] = useState("");
 
   const [conflictResult, setConflictResult] = useState<ConflictCheckResult>({ hasConflict: false });
+  const isBlockedDate = eventType === "blocked_date";
+  const isLegacyMultiDayEvent = ["vacation", "holiday", "leave"].includes(eventType);
+  const eventTypeOptions = [
+    { value: "external_booking", label: "External Booking", icon: Briefcase },
+    { value: "blocked_date", label: "Blocked Date", icon: Ban },
+  ].concat(
+    editingEvent && !["external_booking", "blocked_date"].includes(editingEvent.type)
+      ? [
+          {
+            value: editingEvent.type,
+            label:
+              editingEvent.type === "personal_event"
+                ? "Personal Event"
+                : editingEvent.type === "vacation"
+                ? "Vacation"
+                : editingEvent.type === "holiday"
+                ? "Holiday"
+                : editingEvent.type === "leave"
+                ? "Leave"
+                : "Legacy Event",
+            icon: Briefcase,
+          },
+        ]
+      : []
+  );
 
   // Populate form if editing
   useEffect(() => {
@@ -106,6 +127,12 @@ export const CreateEventDialog = ({
       setCustomerPhone("");
     }
   }, [editingEvent, initialDate, initialEventType, open]);
+
+  useEffect(() => {
+    if (isBlockedDate && !isAllDay) {
+      setIsAllDay(true);
+    }
+  }, [isBlockedDate, isAllDay]);
 
   // Live Conflict Detection whenever dates/times change
   useEffect(() => {
@@ -157,7 +184,9 @@ export const CreateEventDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim()) {
+    const normalizedTitle = title.trim() || (isBlockedDate ? "Blocked date" : "");
+
+    if (!normalizedTitle) {
       toast({
         title: "Title required",
         description: "Please enter an event title.",
@@ -178,9 +207,9 @@ export const CreateEventDialog = ({
     const newEvent = await saveProviderEvent(providerId, {
       id: editingEvent?.id,
       type: eventType,
-      title: title.trim(),
+      title: normalizedTitle,
       startDate,
-      endDate: ["vacation", "holiday", "leave"].includes(eventType) ? endDate : undefined,
+      endDate: isLegacyMultiDayEvent ? endDate : undefined,
       startTime: !isAllDay ? startTime : undefined,
       endTime: !isAllDay ? endTime : undefined,
       isAllDay,
@@ -208,7 +237,7 @@ export const CreateEventDialog = ({
             {editingEvent ? "Edit Schedule Event" : "Create New Schedule Event"}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            Add external bookings, personal events, vacations, holidays, or block dates on your calendar.
+            Add external bookings or blocked dates to your schedule.
           </DialogDescription>
         </DialogHeader>
 
@@ -223,59 +252,34 @@ export const CreateEventDialog = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="external_booking">
-                        <span className="flex items-center gap-2">
-                          <Briefcase className="h-4 w-4 text-purple-500" />
-                          <span>External Booking</span>
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="personal_event">
-                        <span className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-emerald-500" />
-                          <span>Personal Event</span>
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="vacation">
-                        <span className="flex items-center gap-2">
-                          <Palmtree className="h-4 w-4 text-cyan-500" />
-                          <span>Vacation</span>
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="holiday">
-                        <span className="flex items-center gap-2">
-                          <CalendarOff className="h-4 w-4 text-rose-500" />
-                          <span>Holiday</span>
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="leave">
-                        <span className="flex items-center gap-2">
-                          <Coffee className="h-4 w-4 text-orange-500" />
-                          <span>Leave</span>
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="blocked_date">
-                        <span className="flex items-center gap-2">
-                          <Ban className="h-4 w-4 text-slate-500" />
-                          <span>Manual Blocked Date</span>
-                        </span>
-                      </SelectItem>
+                      {eventTypeOptions.map((option) => {
+                        const Icon = option.icon;
+                        return (
+                          <SelectItem key={option.value} value={option.value}>
+                            <span className="flex items-center gap-2">
+                              <Icon className="h-4 w-4 text-primary" />
+                              <span>{option.label}</span>
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="mt-4 space-y-1.5">
-                  <Label className="text-xs font-semibold">Event title *</Label>
+                  <Label className="text-xs font-semibold">Event title {isBlockedDate ? "" : "*"}</Label>
                   <Input
                     placeholder={
                       eventType === "external_booking"
                         ? "e.g. Priyesh & Sneha reception shoot"
-                        : eventType === "vacation"
-                        ? "e.g. Annual family vacation"
+                        : isBlockedDate
+                        ? "e.g. Studio closed for maintenance"
                         : "e.g. Studio maintenance"
                     }
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    required
+                    required={!isBlockedDate}
                   />
                 </div>
               </div>
@@ -283,10 +287,22 @@ export const CreateEventDialog = ({
               <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <Label className="text-xs font-semibold cursor-pointer">All-day event</Label>
-                    <p className="text-[11px] text-muted-foreground">Blocks the entire date without specific hours</p>
+                    <Label className="text-xs font-semibold cursor-pointer">
+                      {isBlockedDate ? "Blocked dates are always all-day" : "All-day event"}
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isBlockedDate
+                        ? "Manual blocked dates reserve the whole day and prevent provider availability."
+                        : "Blocks the entire date without specific hours"}
+                    </p>
                   </div>
-                  <Switch checked={isAllDay} onCheckedChange={setIsAllDay} />
+                  {isBlockedDate ? (
+                    <div className="rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                      Always on
+                    </div>
+                  ) : (
+                    <Switch checked={isAllDay} onCheckedChange={setIsAllDay} />
+                  )}
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -302,7 +318,7 @@ export const CreateEventDialog = ({
                     />
                   </div>
 
-                  {["vacation", "holiday", "leave"].includes(eventType) ? (
+                  {isLegacyMultiDayEvent ? (
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold">End date</Label>
                       <Input
@@ -314,7 +330,7 @@ export const CreateEventDialog = ({
                     </div>
                   ) : null}
 
-                  {!isAllDay && (
+                  {!isAllDay && !isBlockedDate && (
                     <>
                       <div className="space-y-1.5">
                         <Label className="text-xs font-semibold">Start time</Label>

@@ -1,262 +1,127 @@
-import { useState, useEffect } from "react";
-import { 
-  Calendar, 
-  RefreshCw, 
-  CheckCircle2, 
-  AlertCircle, 
-  Download, 
-  Upload, 
-  ArrowLeftRight, 
-  ShieldCheck, 
-  ExternalLink,
-  Zap
-} from "lucide-react";
+import { useState } from "react";
+import { Calendar, Download, Upload, Cloud, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { GoogleCalendarState } from "@/lib/providerScheduleStore";
-import {
-  fetchGoogleCalendarState,
-  saveGoogleCalendarState as saveGoogleCalendarStateApi,
-} from "@/lib/providerCalendarApi";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface GoogleCalendarConnectUIProps {
   providerId?: string;
 }
 
-export const GoogleCalendarConnectUI = ({ providerId = "default" }: GoogleCalendarConnectUIProps) => {
-  const { toast } = useToast();
-  const [state, setState] = useState<GoogleCalendarState>({
-    isConnected: false,
-    autoSync: true,
-    syncOption: "all",
-    importExternal: true,
-  });
+export const GoogleCalendarConnectUI = (_props: GoogleCalendarConnectUIProps) => {
+  const [featureOpen, setFeatureOpen] = useState(false);
+  const [featureLabel, setFeatureLabel] = useState("Google Calendar");
 
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    fetchGoogleCalendarState(providerId)
-      .then((data) => {
-        if (mounted) setState(data);
-      })
-      .catch(() => {
-        if (mounted) return;
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [providerId]);
-
-  const handleToggleConnect = () => {
-    if (state.isConnected) {
-      // Disconnect
-      const newState: GoogleCalendarState = {
-        ...state,
-        isConnected: false,
-        accountEmail: undefined,
-        lastSyncedAt: undefined,
-      };
-      setState(newState);
-      void saveGoogleCalendarStateApi(providerId, newState);
-      toast({
-        title: "Google Calendar Disconnected",
-        description: "Your Google Calendar account has been unlinked.",
-      });
-    } else {
-      // Connect flow (UI state only)
-      setIsConnecting(true);
-      setTimeout(() => {
-        const newState: GoogleCalendarState = {
-          ...state,
-          isConnected: true,
-          accountEmail: "provider.studio@gmail.com",
-          lastSyncedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " Today",
-        };
-        setState(newState);
-        void saveGoogleCalendarStateApi(providerId, newState);
-        setIsConnecting(false);
-        toast({
-          title: "Google Calendar Connected!",
-          description: "Linked to provider.studio@gmail.com. Two-way sync interface ready.",
-        });
-      }, 1200);
-    }
-  };
-
-  const handleManualSync = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      const newState = {
-        ...state,
-        lastSyncedAt: "Just now (" + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ")",
-      };
-      setState(newState);
-      void saveGoogleCalendarStateApi(providerId, newState);
-      setIsSyncing(false);
-      toast({
-        title: "Schedule Synchronized",
-        description: "Subhakary calendar and Google Calendar events are in sync.",
-      });
-    }, 1000);
-  };
-
-  const handleChange = (field: keyof GoogleCalendarState, value: any) => {
-    const newState = { ...state, [field]: value };
-    setState(newState);
-    void saveGoogleCalendarStateApi(providerId, newState);
+  const openComingSoon = (label: string) => {
+    setFeatureLabel(label);
+    setFeatureOpen(true);
   };
 
   return (
-    <Card className="border-border/50 shadow-sm bg-card">
-      <CardHeader className="p-4 md:p-6 pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
-              <Calendar className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="font-display text-lg font-bold flex items-center gap-2">
-                Google Calendar Integration
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Sync Subhakary bookings and personal events with your Google Calendar
-              </CardDescription>
-            </div>
-          </div>
-
-          <Badge className={state.isConnected ? "bg-green-500/15 text-green-600 border-green-500/30" : "bg-muted text-muted-foreground"}>
-            {state.isConnected ? "Connected" : "Not Connected"}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-4 md:p-6 space-y-6">
-        {/* Connection Header Banner */}
-        <div className="p-4 rounded-xl border border-border/40 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-background border flex items-center justify-center text-lg font-bold text-blue-600 shadow-sm">
-              G
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold">
-                {state.isConnected ? state.accountEmail : "Link Google Account"}
-              </h4>
-              <p className="text-xs text-muted-foreground">
-                {state.isConnected
-                  ? `Last synced: ${state.lastSyncedAt || "Recently"}`
-                  : "Connect to export bookings and import external Google events automatically."}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {state.isConnected && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-xs"
-                onClick={handleManualSync}
-                disabled={isSyncing}
-              >
-                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? "animate-spin" : ""}`} />
-                Sync Now
-              </Button>
-            )}
-
-            <Button
-              variant={state.isConnected ? "destructive" : "default"}
-              size="sm"
-              className={!state.isConnected ? "gradient-gold text-primary-foreground font-semibold" : ""}
-              onClick={handleToggleConnect}
-              disabled={isConnecting}
-            >
-              {isConnecting ? "Connecting..." : state.isConnected ? "Disconnect" : "Connect Google Calendar"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Sync Controls & Preferences */}
-        {state.isConnected && (
-          <div className="space-y-4 pt-2 border-t border-border/40">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Sync Preferences & Manual Controls
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Sync Scope</Label>
-                <Select
-                  value={state.syncOption}
-                  onValueChange={(v) => handleChange("syncOption", v)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Sync All Events & Bookings</SelectItem>
-                    <SelectItem value="bookings_only">Sync Subhakary Bookings Only</SelectItem>
-                  </SelectContent>
-                </Select>
+    <>
+      <Card className="border-border/50 bg-card shadow-sm">
+        <CardHeader className="p-4 pb-3 md:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
+                <Calendar className="h-5 w-5" />
               </div>
+              <div>
+                <CardTitle className="font-display text-lg font-semibold">
+                  Google Calendar Integration
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Prepare your calendar for future Google Calendar sync without showing a fake connected state.
+                </CardDescription>
+              </div>
+            </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Auto Background Sync</Label>
-                <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
-                  <span className="text-xs text-muted-foreground">Sync changes automatically</span>
-                  <Switch
-                    checked={state.autoSync}
-                    onCheckedChange={(checked) => handleChange("autoSync", checked)}
-                  />
+            <Badge className="border border-amber-500/30 bg-amber-500/10 text-amber-700">
+              Coming soon
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-5 p-4 pt-0 md:p-6 md:pt-0">
+          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-background text-sm font-semibold text-primary">
+                  <Cloud className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground">OAuth-ready placeholder</h4>
+                  <p className="text-xs text-muted-foreground">
+                    We will connect provider calendars, import external events, and export Subhakary bookings here.
+                  </p>
                 </div>
               </div>
-            </div>
-
-            {/* Manual Import / Export Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <Button
-                variant="outline"
-                className="w-full justify-center gap-2 text-xs"
-                onClick={() => {
-                  toast({
-                    title: "Import Initialized",
-                    description: "Importing external events from Google Calendar...",
-                  });
-                }}
-              >
-                <Download className="h-4 w-4 text-blue-500" />
-                Import Google Events to Subhakary
-              </Button>
 
               <Button
+                type="button"
                 variant="outline"
-                className="w-full justify-center gap-2 text-xs"
-                onClick={() => {
-                  toast({
-                    title: "Export Initialized",
-                    description: "Exporting Subhakary bookings to Google Calendar (.ics format)...",
-                  });
-                }}
+                className="gap-2"
+                onClick={() => openComingSoon("Google Calendar connection")}
               >
-                <Upload className="h-4 w-4 text-emerald-500" />
-                Export Subhakary Bookings (.ics)
+                Connect Google Calendar
               </Button>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-auto justify-start gap-3 rounded-2xl border-border/60 px-4 py-3 text-left"
+              onClick={() => openComingSoon("Import Google events")}
+            >
+              <div className="rounded-full bg-primary/10 p-2 text-primary">
+                <Download className="h-4 w-4" />
+              </div>
+              <span className="flex flex-col items-start">
+                <span className="text-sm font-semibold">Import events</span>
+                <span className="text-xs text-muted-foreground">Bring Google Calendar events into Subhakary later.</span>
+              </span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="h-auto justify-start gap-3 rounded-2xl border-border/60 px-4 py-3 text-left"
+              onClick={() => openComingSoon("Export Subhakary bookings")}
+            >
+              <div className="rounded-full bg-emerald-500/10 p-2 text-emerald-600">
+                <Upload className="h-4 w-4" />
+              </div>
+              <span className="flex flex-col items-start">
+                <span className="text-sm font-semibold">Export bookings</span>
+                <span className="text-xs text-muted-foreground">Publish bookings as an .ics feed in the future.</span>
+              </span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={featureOpen} onOpenChange={setFeatureOpen}>
+        <DialogContent className="max-w-md rounded-3xl p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl font-semibold flex items-center gap-2">
+              <Info className="h-4 w-4 text-primary" />
+              {featureLabel}
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              This integration is not live yet. We are keeping the UI honest so it does not look connected before the backend is ready.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
