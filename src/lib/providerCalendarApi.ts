@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { compareAsc, eachDayOfInterval, format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
 export type CalendarEventType =
@@ -104,36 +104,136 @@ const mapCalendarRow = (row: any): ProviderCalendarItem => ({
   updatedAt: row.updated_at ?? undefined,
 });
 
+const expandRecurringBlocks = (rows: any[], startDate: string, endDate: string) => {
+  const days = eachDayOfInterval({ start: parseISO(startDate), end: parseISO(endDate) });
+  return rows.flatMap((row) => {
+    if (row.specific_date) {
+      return [row];
+    }
+
+    return days
+      .filter((day) => day.getDay() === Number(row.day_of_week))
+      .map((day) => ({
+        ...row,
+        event_date: format(day, "yyyy-MM-dd"),
+        title: row.source === "recurring" ? "Recurring Block" : row.title,
+      }));
+  });
+};
+
+const sortCalendarItems = (a: ProviderCalendarItem, b: ProviderCalendarItem) =>
+  compareAsc(parseISO(a.startDate), parseISO(b.startDate)) ||
+  String(a.startTime ?? "00:00").localeCompare(String(b.startTime ?? "00:00")) ||
+  String(a.createdAt).localeCompare(String(b.createdAt));
+
 export async function fetchProviderCalendar(providerId: string, startDate?: string, endDate?: string) {
-  const { data, error } = await supabase.rpc("get_provider_calendar" as any, {
-    p_provider_id: providerId,
-    p_start_date: startDate ?? null,
-    p_end_date: endDate ?? null,
+  const rangeStart = startDate ?? format(new Date(), "yyyy-MM-dd");
+  const rangeEnd = endDate ?? rangeStart;
+
+  const [{ data: bookingRows, error: bookingError }, { data: blockedRows, error: blockedError }, capacity] = await Promise.all([
+    supabase
+      .from("provider_events" as any)
+      .select("*")
+      .eq("provider_id", providerId)
+      .gte("event_date", rangeStart)
+      .lte("event_date", rangeEnd)
+      .order("event_date", { ascending: true }),
+    supabase
+      .from("service_provider_availability" as any)
+      .select("*")
+      .eq("provider_id", providerId)
+      .eq("is_blocked", true)
+      .in("source", ["manual", "recurring"]),
+    fetchCapacityConfig(providerId),
+  ]);
+
+  if (bookingError) throw bookingError;
+  if (blockedError) throw blockedError;
+
+  const bookingIds = Array.from(
+    new Set(((bookingRows ?? []) as any[]).map((row) => row.booking_id).filter(Boolean))
+  ) as string[];
+
+  const bookingMetadata = bookingIds.length
+    ? await supabase
+        .from("bookings" as any)
+        .select("id,user_id")
+        .in("id", bookingIds)
+    : { data: [], error: null };
+
+  if (bookingMetadata.error) throw bookingMetadata.error;
+
+  const userIds = Array.from(
+    new Set(((bookingMetadata.data ?? []) as any[]).map((row) => row.user_id).filter(Boolean))
+  ) as string[];
+
+  const profileMetadata = userIds.length
+    ? await supabase
+        .from("profiles" as any)
+        .select("user_id,full_name,phone")
+        .in("user_id", userIds)
+    : { data: [], error: null };
+
+  if (profileMetadata.error) throw profileMetadata.error;
+
+  const customerByBookingId = new Map<string, { full_name?: string; phone?: string }>();
+  const profileByUserId = new Map(
+    ((profileMetadata.data ?? []) as any[]).map((row) => [row.user_id, { full_name: row.full_name, phone: row.phone }])
+  );
+  ((bookingMetadata.data ?? []) as any[]).forEach((row) => {
+    customerByBookingId.set(row.id, profileByUserId.get(row.user_id) ?? {});
   });
 
-  if (error) throw error;
-  return ((data ?? []) as any[]).map(mapCalendarRow);
+  const bookingItems = ((bookingRows ?? []) as any[])
+    .map((row) => ({
+      ...mapCalendarRow(row),
+      capacityLimit: capacity.maxDailyBookings,
+      bookingsCount: row.booking_status === "accepted" ? 1 : 0,
+      customerName: customerByBookingId.get(row.booking_id)?.full_name,
+      customerPhone: customerByBookingId.get(row.booking_id)?.phone,
+    }))
+    .filter((row) => row.source !== "booking" || row.type === "subhakary_booking");
+
+  const bookingCountByDate = bookingItems.reduce<Record<string, number>>((acc, item) => {
+    if (item.source === "booking" && item.bookingStatus === "accepted") {
+      acc[item.startDate] = (acc[item.startDate] ?? 0) + 1;
+    }
+    return acc;
+  }, {});
+
+  const blockedItems = expandRecurringBlocks((blockedRows ?? []) as any[], rangeStart, rangeEnd)
+    .filter((row) => row.source !== "booking")
+    .map((row) =>
+      mapCalendarRow({
+        ...row,
+        event_type: "blocked_date",
+        event_date: row.event_date,
+        all_day: true,
+        is_blocked: true,
+        capacity_limit: capacity.maxDailyBookings,
+        bookings_count: 0,
+      })
+    );
+
+  return [...bookingItems.map((item) => ({
+    ...item,
+    bookingsCount: bookingCountByDate[item.startDate] ?? item.bookingsCount ?? 0,
+  })), ...blockedItems].sort(sortCalendarItems);
 }
 
 export async function fetchTodayEvents(providerId: string) {
-  const { data, error } = await supabase.rpc("get_today_events" as any, { p_provider_id: providerId });
-  if (error) throw error;
-  return ((data ?? []) as any[]).map(mapCalendarRow);
+  const date = format(new Date(), "yyyy-MM-dd");
+  return fetchProviderCalendar(providerId, date, date);
 }
 
 export async function fetchTomorrowEvents(providerId: string) {
-  const { data, error } = await supabase.rpc("get_tomorrow_events" as any, { p_provider_id: providerId });
-  if (error) throw error;
-  return ((data ?? []) as any[]).map(mapCalendarRow);
+  const date = format(new Date(Date.now() + 24 * 60 * 60 * 1000), "yyyy-MM-dd");
+  return fetchProviderCalendar(providerId, date, date);
 }
 
 export async function fetchUpcomingEvents(providerId: string, limit = 10) {
-  const { data, error } = await supabase.rpc("get_upcoming_events" as any, {
-    p_provider_id: providerId,
-    p_limit: limit,
-  });
-  if (error) throw error;
-  return ((data ?? []) as any[]).map(mapCalendarRow);
+  const events = await fetchProviderCalendar(providerId, format(new Date(), "yyyy-MM-dd"), format(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"));
+  return events.slice(0, limit);
 }
 
 export async function fetchAvailabilitySummary(providerId: string, date = format(new Date(), "yyyy-MM-dd")) {
