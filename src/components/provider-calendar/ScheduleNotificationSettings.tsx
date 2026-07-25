@@ -20,11 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  NotificationSettings, 
-  getNotificationSettings, 
-  saveNotificationSettings 
-} from "@/lib/providerScheduleStore";
+import { NotificationSettings } from "@/lib/providerScheduleStore";
+import {
+  fetchNotificationSettings,
+  saveNotificationSettings as saveNotificationSettingsApi,
+} from "@/lib/providerCalendarApi";
 
 interface ScheduleNotificationSettingsProps {
   providerId?: string;
@@ -42,7 +42,17 @@ export const ScheduleNotificationSettings = ({ providerId = "default" }: Schedul
   });
 
   useEffect(() => {
-    setSettings(getNotificationSettings(providerId));
+    let mounted = true;
+    fetchNotificationSettings(providerId)
+      .then((data) => {
+        if (mounted) setSettings(data);
+      })
+      .catch(() => {
+        if (mounted) return;
+      });
+    return () => {
+      mounted = false;
+    };
   }, [providerId]);
 
   const handleChange = (field: keyof NotificationSettings, value: any) => {
@@ -50,7 +60,7 @@ export const ScheduleNotificationSettings = ({ providerId = "default" }: Schedul
   };
 
   const handleSave = () => {
-    saveNotificationSettings(settings, providerId);
+    void saveNotificationSettingsApi(providerId, settings);
     toast({
       title: "Notification Preferences Saved",
       description: "Your calendar and schedule alert settings have been updated.",

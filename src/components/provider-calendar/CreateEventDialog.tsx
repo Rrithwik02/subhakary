@@ -41,12 +41,13 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   EventType, 
   ScheduleEvent, 
-  EVENT_TYPE_META, 
-  saveProviderEvent, 
-  getProviderEvents, 
-  checkScheduleConflict, 
+  EVENT_TYPE_META,
   ConflictCheckResult 
 } from "@/lib/providerScheduleStore";
+import {
+  saveProviderEvent,
+  validateProviderEventRequest,
+} from "@/lib/providerCalendarApi";
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -114,23 +115,50 @@ export const CreateEventDialog = ({
   useEffect(() => {
     if (!open) return;
 
-    const allEvents = getProviderEvents(providerId);
-    const result = checkScheduleConflict(
-      {
-        startDate,
-        endDate: isAllDay ? endDate : startDate,
-        startTime,
-        endTime,
-        isAllDay,
-        ignoreEventId: editingEvent?.id,
-      },
-      allEvents
-    );
+    let mounted = true;
 
-    setConflictResult(result);
+    const runValidation = async () => {
+      try {
+        const result = await validateProviderEventRequest({
+          providerId,
+          eventType,
+          eventDate: startDate,
+          startTime: isAllDay ? null : startTime,
+          endTime: isAllDay ? null : endTime,
+          allDay: isAllDay,
+          eventId: editingEvent?.id ?? null,
+        });
+
+        if (mounted) {
+          setConflictResult(
+            result.valid
+              ? { hasConflict: false }
+              : {
+                  hasConflict: true,
+                  conflictType: result.conflict_type,
+                  message: result.message,
+                }
+          );
+        }
+      } catch (error: any) {
+        if (mounted) {
+          setConflictResult({
+            hasConflict: true,
+            conflictType: "time_overlap",
+            message: error.message || "Could not validate event.",
+          });
+        }
+      }
+    };
+
+    runValidation();
+
+    return () => {
+      mounted = false;
+    };
   }, [startDate, endDate, startTime, endTime, isAllDay, eventType, editingEvent, open, providerId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim()) {
@@ -151,9 +179,8 @@ export const CreateEventDialog = ({
       return;
     }
 
-    const newEvent = saveProviderEvent({
+    const newEvent = await saveProviderEvent(providerId, {
       id: editingEvent?.id,
-      providerId,
       type: eventType,
       title: title.trim(),
       startDate,
@@ -166,7 +193,7 @@ export const CreateEventDialog = ({
       customerName: customerName.trim() || undefined,
       customerPhone: customerPhone.trim() || undefined,
       status: ["vacation", "holiday", "leave", "blocked_date"].includes(eventType) ? "blocked" : "confirmed",
-    }, providerId);
+    });
 
     toast({
       title: editingEvent ? "Event Updated" : "Event Created",

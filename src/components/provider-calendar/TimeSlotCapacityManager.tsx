@@ -16,14 +16,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  TimeSlotConfig, 
-  ServiceCapacityConfig, 
-  getTimeSlots, 
-  saveTimeSlots, 
-  getCapacityConfig, 
-  saveCapacityConfig 
-} from "@/lib/providerScheduleStore";
+import { ServiceCapacityConfig } from "@/lib/providerScheduleStore";
+import {
+  fetchProviderTimeSlots,
+  fetchCapacityConfig,
+  saveProviderTimeSlots,
+  saveCapacityConfig as saveCapacityConfigApi,
+  TimeSlotConfig,
+} from "@/lib/providerCalendarApi";
 
 interface TimeSlotCapacityManagerProps {
   providerId?: string;
@@ -41,8 +41,26 @@ export const TimeSlotCapacityManager = ({ providerId = "default" }: TimeSlotCapa
   });
 
   useEffect(() => {
-    setSlots(getTimeSlots(providerId));
-    setCapacity(getCapacityConfig(providerId));
+    let mounted = true;
+    Promise.all([
+      fetchProviderTimeSlots(providerId),
+      fetchCapacityConfig(providerId),
+    ]).then(([loadedSlots, loadedCapacity]) => {
+      if (!mounted) return;
+      setSlots(loadedSlots);
+      setCapacity({
+        serviceType: loadedCapacity.serviceLabel,
+        maxDailyBookings: loadedCapacity.maxDailyBookings,
+        defaultSlotCapacity: loadedCapacity.maxDailyBookings,
+        allowOverbooking: false,
+      });
+    }).catch(() => {
+      if (!mounted) return;
+    });
+
+    return () => {
+      mounted = false;
+    };
   }, [providerId]);
 
   const handleToggleSlot = (id: string) => {
@@ -56,8 +74,13 @@ export const TimeSlotCapacityManager = ({ providerId = "default" }: TimeSlotCapa
   };
 
   const handleSaveAll = () => {
-    saveTimeSlots(slots, providerId);
-    saveCapacityConfig(capacity, providerId);
+    void saveProviderTimeSlots(providerId, slots);
+    void saveCapacityConfigApi(providerId, {
+      providerId,
+      categorySlug: capacity.serviceType.toLowerCase().replace(/\s+/g, "-"),
+      serviceLabel: capacity.serviceType,
+      maxDailyBookings: capacity.maxDailyBookings,
+    });
     toast({
       title: "Schedule Settings Saved",
       description: "Your time slots and service capacity configuration have been updated.",

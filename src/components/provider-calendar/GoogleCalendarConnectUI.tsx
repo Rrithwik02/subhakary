@@ -24,11 +24,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  GoogleCalendarState, 
-  getGoogleCalendarState, 
-  saveGoogleCalendarState 
-} from "@/lib/providerScheduleStore";
+import { GoogleCalendarState } from "@/lib/providerScheduleStore";
+import {
+  fetchGoogleCalendarState,
+  saveGoogleCalendarState as saveGoogleCalendarStateApi,
+} from "@/lib/providerCalendarApi";
 
 interface GoogleCalendarConnectUIProps {
   providerId?: string;
@@ -47,7 +47,17 @@ export const GoogleCalendarConnectUI = ({ providerId = "default" }: GoogleCalend
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    setState(getGoogleCalendarState(providerId));
+    let mounted = true;
+    fetchGoogleCalendarState(providerId)
+      .then((data) => {
+        if (mounted) setState(data);
+      })
+      .catch(() => {
+        if (mounted) return;
+      });
+    return () => {
+      mounted = false;
+    };
   }, [providerId]);
 
   const handleToggleConnect = () => {
@@ -60,7 +70,7 @@ export const GoogleCalendarConnectUI = ({ providerId = "default" }: GoogleCalend
         lastSyncedAt: undefined,
       };
       setState(newState);
-      saveGoogleCalendarState(newState, providerId);
+      void saveGoogleCalendarStateApi(providerId, newState);
       toast({
         title: "Google Calendar Disconnected",
         description: "Your Google Calendar account has been unlinked.",
@@ -76,7 +86,7 @@ export const GoogleCalendarConnectUI = ({ providerId = "default" }: GoogleCalend
           lastSyncedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " Today",
         };
         setState(newState);
-        saveGoogleCalendarState(newState, providerId);
+        void saveGoogleCalendarStateApi(providerId, newState);
         setIsConnecting(false);
         toast({
           title: "Google Calendar Connected!",
@@ -94,7 +104,7 @@ export const GoogleCalendarConnectUI = ({ providerId = "default" }: GoogleCalend
         lastSyncedAt: "Just now (" + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ")",
       };
       setState(newState);
-      saveGoogleCalendarState(newState, providerId);
+      void saveGoogleCalendarStateApi(providerId, newState);
       setIsSyncing(false);
       toast({
         title: "Schedule Synchronized",
@@ -106,7 +116,7 @@ export const GoogleCalendarConnectUI = ({ providerId = "default" }: GoogleCalend
   const handleChange = (field: keyof GoogleCalendarState, value: any) => {
     const newState = { ...state, [field]: value };
     setState(newState);
-    saveGoogleCalendarState(newState, providerId);
+    void saveGoogleCalendarStateApi(providerId, newState);
   };
 
   return (

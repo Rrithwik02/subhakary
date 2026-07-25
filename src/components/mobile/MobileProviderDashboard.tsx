@@ -262,11 +262,11 @@ const MobileProviderDashboard = () => {
 
   // Availability helpers
   const blockedDates = availability
-    .filter((a) => a.specific_date && a.is_blocked)
+    .filter((a) => a.specific_date && a.is_blocked && a.source !== "booking")
     .map((a) => new Date(a.specific_date!));
   
   const recurringBlockedDays = availability
-    .filter((a) => a.day_of_week !== null && a.is_blocked)
+    .filter((a) => a.day_of_week !== null && a.is_blocked && a.source !== "booking")
     .map((a) => a.day_of_week!);
 
   const isDateBlocked = (date: Date) => {
@@ -283,6 +283,7 @@ const MobileProviderDashboard = () => {
         specific_date: format(date, "yyyy-MM-dd"),
         is_blocked: true,
         is_available: false,
+        source: "manual",
         start_time: "00:00",
         end_time: "23:59",
       }));
@@ -311,7 +312,8 @@ const MobileProviderDashboard = () => {
         .from("service_provider_availability")
         .delete()
         .eq("provider_id", provider!.id)
-        .eq("specific_date", format(date, "yyyy-MM-dd"));
+        .eq("specific_date", format(date, "yyyy-MM-dd"))
+        .eq("source", "manual");
 
       if (error) throw error;
     },
@@ -339,6 +341,7 @@ const MobileProviderDashboard = () => {
           day_of_week: day,
           is_blocked: true,
           is_available: false,
+          source: "recurring",
           start_time: "00:00",
           end_time: "23:59",
         }));

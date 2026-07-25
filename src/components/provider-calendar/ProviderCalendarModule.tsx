@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { 
   format, 
   startOfMonth, 
@@ -55,12 +55,15 @@ import {
   EventType, 
   ScheduleEvent, 
   EVENT_TYPE_META, 
-  getProviderEvents, 
-  deleteProviderEvent, 
   getDayCapacitySummary,
-  getCapacityConfig
 } from "@/lib/providerScheduleStore";
 import { CreateEventDialog } from "./CreateEventDialog";
+import {
+  fetchProviderCalendar,
+  deleteProviderEvent,
+  deleteBlockedDate,
+  fetchCapacityConfig,
+} from "@/lib/providerCalendarApi";
 
 type ViewMode = "month" | "week" | "day" | "agenda";
 
@@ -75,6 +78,7 @@ export const ProviderCalendarModule = ({ providerId = "default" }: ProviderCalen
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [events, setEvents] = useState<ScheduleEvent[]>([]);
+  const [capacityConfig, setCapacityConfig] = useState({ serviceType: "Service", maxDailyBookings: 1, defaultSlotCapacity: 1, allowOverbooking: false });
   const [selectedFilter, setSelectedFilter] = useState<EventType | "all">("all");
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -82,14 +86,41 @@ export const ProviderCalendarModule = ({ providerId = "default" }: ProviderCalen
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
   const [detailEvent, setDetailEvent] = useState<ScheduleEvent | null>(null);
 
-  // Load events
-  const loadEvents = useCallback(() => {
-    setEvents(getProviderEvents(providerId));
-  }, [providerId]);
+  const refreshEvents = () => {
+    void fetchProviderCalendar(providerId).then((loadedEvents) => {
+      setEvents(loadedEvents as ScheduleEvent[]);
+    });
+  };
 
   useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+    let mounted = true;
+    const startDate = format(startOfMonth(subMonths(currentDate, 1)), "yyyy-MM-dd");
+    const endDate = format(endOfMonth(addMonths(currentDate, 2)), "yyyy-MM-dd");
+
+    Promise.all([
+      fetchProviderCalendar(providerId, startDate, endDate),
+      fetchCapacityConfig(providerId),
+    ])
+      .then(([loadedEvents, loadedCapacity]) => {
+        if (!mounted) return;
+        setEvents(loadedEvents as ScheduleEvent[]);
+        setCapacityConfig({
+          serviceType: loadedCapacity.serviceLabel,
+          maxDailyBookings: loadedCapacity.maxDailyBookings,
+          defaultSlotCapacity: loadedCapacity.maxDailyBookings,
+          allowOverbooking: false,
+        });
+      })
+      .catch(() => {
+        if (mounted) {
+          setEvents([]);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [providerId, currentDate]);
 
   const handlePrev = () => {
     if (viewMode === "month") setCurrentDate(subMonths(currentDate, 1));
@@ -109,18 +140,32 @@ export const ProviderCalendarModule = ({ providerId = "default" }: ProviderCalen
   };
 
   const handleDeleteEvent = (id: string) => {
-    deleteProviderEvent(id, providerId);
+    const target = events.find((event) => event.id === id);
+    if (!target) return;
+
+    if (target.source === "booking") {
+      toast({
+        title: "Read-only booking",
+        description: "Subhakary bookings are managed through the booking flow and cannot be deleted here.",
+      });
+      return;
+    }
+
+    if (target.type === "blocked_date") {
+      void deleteBlockedDate(providerId, id);
+    } else {
+      void deleteProviderEvent(providerId, id, target.source);
+    }
+
     toast({ title: "Event Deleted", description: "Event has been removed from your schedule." });
     setDetailEvent(null);
-    loadEvents();
+    refreshEvents();
   };
 
   const filteredEvents = events.filter((e) => {
     if (selectedFilter === "all") return true;
     return e.type === selectedFilter;
   });
-
-  const capacityConfig = getCapacityConfig();
 
   // Selected Day capacity summary
   const selectedDayCapacity = getDayCapacitySummary(selectedDate, events, capacityConfig.maxDailyBookings);
@@ -350,10 +395,10 @@ export const ProviderCalendarModule = ({ providerId = "default" }: ProviderCalen
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         initialDate={selectedDate}
-        editingEvent={editingEvent}
-        providerId={providerId}
-        onEventSaved={() => loadEvents()}
-      />
+      editingEvent={editingEvent}
+      providerId={providerId}
+      onEventSaved={refreshEvents}
+    />
 
       {/* Event Details Dialog */}
       <Dialog open={!!detailEvent} onOpenChange={(o) => !o && setDetailEvent(null)}>
@@ -411,6 +456,7 @@ export const ProviderCalendarModule = ({ providerId = "default" }: ProviderCalen
               <Button
                 variant="destructive"
                 size="sm"
+                disabled={detailEvent.source === "booking"}
                 onClick={() => handleDeleteEvent(detailEvent.id)}
               >
                 <Trash2 className="h-4 w-4 mr-1" /> Delete
@@ -419,6 +465,7 @@ export const ProviderCalendarModule = ({ providerId = "default" }: ProviderCalen
               <Button
                 variant="outline"
                 size="sm"
+                disabled={detailEvent.source === "booking"}
                 onClick={() => {
                   setEditingEvent(detailEvent);
                   setDetailEvent(null);

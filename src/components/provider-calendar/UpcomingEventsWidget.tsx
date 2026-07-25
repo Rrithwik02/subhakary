@@ -21,9 +21,9 @@ import { Button } from "@/components/ui/button";
 import { 
   ScheduleEvent, 
   EVENT_TYPE_META, 
-  getProviderEvents, 
   getNextEventCountdown 
 } from "@/lib/providerScheduleStore";
+import { fetchProviderCalendar } from "@/lib/providerCalendarApi";
 
 interface UpcomingEventsWidgetProps {
   events?: ScheduleEvent[];
@@ -61,11 +61,26 @@ export const UpcomingEventsWidget = ({
   const [activeTab, setActiveTab] = useState<"today" | "tomorrow" | "this_week">("today");
 
   useEffect(() => {
+    let mounted = true;
+
     if (propEvents) {
       setEvents(propEvents);
-    } else {
-      setEvents(getProviderEvents(providerId));
+      return;
     }
+
+    fetchProviderCalendar(providerId)
+      .then((items) => {
+        if (mounted) {
+          setEvents(items as any);
+        }
+      })
+      .catch(() => {
+        if (mounted) setEvents([]);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, [propEvents, providerId]);
 
   const today = new Date();
