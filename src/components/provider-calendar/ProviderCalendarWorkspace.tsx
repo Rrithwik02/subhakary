@@ -18,6 +18,7 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Plus,
   Filter,
   Clock,
@@ -31,14 +32,17 @@ import {
   CalendarOff,
   Coffee,
   Ban,
-  LayoutGrid,
-  List,
-  CalendarDays,
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -68,13 +72,6 @@ type ViewMode = "month" | "week" | "day" | "agenda";
 interface ProviderCalendarWorkspaceProps {
   providerId?: string;
 }
-
-const VIEW_MODES: Array<{ value: ViewMode; label: string; icon: typeof LayoutGrid }> = [
-  { value: "month", label: "Month", icon: LayoutGrid },
-  { value: "week", label: "Week", icon: List },
-  { value: "day", label: "Day", icon: CalendarDays },
-  { value: "agenda", label: "Agenda", icon: List },
-];
 
 const EVENT_TYPES: Array<EventType | "all"> = [
   "all",
@@ -107,10 +104,11 @@ const getEventIcon = (type: ScheduleEvent["type"]) => {
   }
 };
 
-const getViewTitle = (date: Date, mode: ViewMode) => {
-  if (mode === "day") return format(date, "EEEE, MMMM d, yyyy");
-  if (mode === "agenda") return "Agenda";
-  return format(date, "MMMM yyyy");
+const VIEW_MODE_LABELS: Record<ViewMode, string> = {
+  month: "Month",
+  week: "Week",
+  day: "Day",
+  agenda: "Agenda",
 };
 
 export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCalendarWorkspaceProps) => {
@@ -325,28 +323,37 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
 
             <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
               <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <LayoutGrid className="h-3.5 w-3.5" />
+                <Filter className="h-3.5 w-3.5" />
                 View
               </span>
-              {VIEW_MODES.map((mode) => {
-                const Icon = mode.icon;
-                return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <button
-                    key={mode.value}
                     type="button"
-                    onClick={() => setViewMode(mode.value)}
                     className={cn(
                       "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-                      viewMode === mode.value
-                        ? "border-primary/30 bg-background text-foreground shadow-sm"
-                        : "border-border/60 bg-background/70 text-muted-foreground hover:border-border hover:text-foreground"
+                      "border-border/60 bg-background/70 text-foreground hover:border-border"
                     )}
                   >
-                    <Icon className="h-3.5 w-3.5" />
-                    {mode.label}
+                    {VIEW_MODE_LABELS[viewMode]}
+                    <ChevronDown className="h-3.5 w-3.5" />
                   </button>
-                );
-              })}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-36 rounded-2xl border-border/60">
+                  {(["month", "week", "day", "agenda"] as ViewMode[]).map((mode) => (
+                    <DropdownMenuItem
+                      key={mode}
+                      onClick={() => setViewMode(mode)}
+                      className={cn(
+                        "cursor-pointer rounded-xl text-sm",
+                        viewMode === mode && "bg-primary/10 text-foreground"
+                      )}
+                    >
+                      {VIEW_MODE_LABELS[mode]}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
