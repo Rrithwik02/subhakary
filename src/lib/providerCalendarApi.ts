@@ -143,7 +143,7 @@ export async function fetchProviderCalendar(providerId: string, startDate?: stri
       .select("*")
       .eq("provider_id", providerId)
       .eq("is_blocked", true)
-      .in("source", ["manual", "recurring"]),
+      .or("source.is.null,source.eq.manual,source.eq.recurring"),
     fetchCapacityConfig(providerId),
   ]);
 

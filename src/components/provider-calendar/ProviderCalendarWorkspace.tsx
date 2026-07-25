@@ -661,6 +661,9 @@ const MonthView = ({
           const isCurrentMonth = isSameMonth(day, currentMonth);
           const dayCapacity = getDayCapacitySummary(day, events, maxCapacity);
           const isToday = isSameDay(day, new Date());
+          const hasBlockedDate = dayCapacity.dayEvents.some((event) => event.type === "blocked_date");
+          const hasSubhakaryBooking = dayCapacity.dayEvents.some((event) => event.type === "subhakary_booking");
+          const hasExternalBooking = dayCapacity.dayEvents.some((event) => event.type === "external_booking");
 
           return (
             <div
@@ -679,7 +682,7 @@ const MonthView = ({
                 "bg-background/80 hover:border-primary/40 hover:bg-accent/20 hover:shadow-sm",
                 !isCurrentMonth && "opacity-40",
                 isSelected && "border-primary/60 ring-2 ring-primary/10",
-                dayCapacity.isBlocked && "border-slate-400/40",
+                dayCapacity.isBlocked && "border-destructive/40 bg-destructive/5",
               )}
             >
               <div className="flex items-center justify-between gap-2">
@@ -688,7 +691,8 @@ const MonthView = ({
                     "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors",
                     isToday && "bg-primary text-primary-foreground",
                     isSelected && !isToday && "bg-foreground text-background",
-                    !isToday && !isSelected && "bg-muted text-foreground"
+                    !isToday && !isSelected && "bg-muted text-foreground",
+                    dayCapacity.isBlocked && "text-destructive line-through"
                   )}
                 >
                   {day.getDate()}
@@ -704,6 +708,14 @@ const MonthView = ({
                   </Badge>
                 ) : (
                   <span className="text-[10px] text-muted-foreground">{dayCapacity.remaining} open</span>
+                )}
+              </div>
+
+              <div className="mt-2 flex items-center gap-1.5 px-1">
+                {hasBlockedDate && <span className="h-2 w-2 rounded-full bg-destructive" title="Blocked date" />}
+                {!hasBlockedDate && hasSubhakaryBooking && <span className="h-2 w-2 rounded-full bg-amber-500" title="Subhakary booking" />}
+                {!hasBlockedDate && !hasSubhakaryBooking && hasExternalBooking && (
+                  <span className="h-2 w-2 rounded-full bg-violet-500" title="External booking" />
                 )}
               </div>
 
