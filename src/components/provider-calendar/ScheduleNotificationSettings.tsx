@@ -1,6 +1,13 @@
-import { useState } from "react";
-import { Bell, Mail, Smartphone, Calendar, Save, Info } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { 
+  Bell, 
+  Mail, 
+  Smartphone, 
+  Calendar, 
+  Save, 
+  CheckCircle2 
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -11,150 +18,149 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  NotificationSettings, 
+  getNotificationSettings, 
+  saveNotificationSettings 
+} from "@/lib/providerScheduleStore";
 
 interface ScheduleNotificationSettingsProps {
   providerId?: string;
 }
 
-export const ScheduleNotificationSettings = (_props: ScheduleNotificationSettingsProps) => {
-  const [featureOpen, setFeatureOpen] = useState(false);
-  const [featureLabel, setFeatureLabel] = useState("Notification settings");
-  const [emailTiming, setEmailTiming] = useState("24h");
-  const [digestTiming, setDigestTiming] = useState("daily");
+export const ScheduleNotificationSettings = ({ providerId }: ScheduleNotificationSettingsProps) => {
+  const { toast } = useToast();
+  const [settings, setSettings] = useState<NotificationSettings>({
+    emailReminders: true,
+    emailTiming: "24h",
+    pushNotifications: true,
+    bookingUpdates: true,
+    scheduleSummaries: "daily",
+    summaryTime: "08:00",
+  });
 
-  const openComingSoon = (label: string) => {
-    setFeatureLabel(label);
-    setFeatureOpen(true);
+  useEffect(() => {
+    setSettings(getNotificationSettings(providerId));
+  }, [providerId]);
+
+  const handleChange = (field: keyof NotificationSettings, value: any) => {
+    setSettings((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    saveNotificationSettings(settings, providerId);
+    toast({
+      title: "Notification Preferences Saved",
+      description: "Your schedule reminder and alert preferences have been updated.",
+    });
   };
 
   return (
-    <>
-      <Card className="border-border/50 bg-card shadow-sm">
-        <CardHeader className="p-4 pb-3 md:p-6">
-          <div className="flex items-center justify-between gap-3">
+    <Card className="border border-stone-200/60 shadow-xs bg-stone-50/40 rounded-2xl p-4 sm:p-6 space-y-6">
+      <div className="space-y-1">
+        <h3 className="font-serif text-lg font-normal text-stone-800 flex items-center gap-2">
+          <Bell className="h-5 w-5 text-amber-600" />
+          Schedule Notification Settings
+        </h3>
+        <p className="text-xs text-stone-500">Configure email reminders, push notifications, and daily summaries</p>
+      </div>
+
+      <div className="space-y-4">
+        {/* Email Reminders */}
+        <div className="p-3.5 rounded-xl bg-white border border-stone-200/60 space-y-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Bell className="h-5 w-5" />
-              </div>
+              <Mail className="h-4 w-4 text-amber-600" />
               <div>
-                <CardTitle className="font-display text-lg font-semibold">
-                  Schedule Notification Settings
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Notification preferences are visible here, but they are not wired to a live backend yet.
-                </CardDescription>
+                <Label className="text-xs font-semibold text-stone-800 cursor-pointer">Email Reminders</Label>
+                <p className="text-[11px] text-stone-400">Receive upcoming booking reminders via email</p>
               </div>
             </div>
-
-            <div className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-medium text-amber-700">
-              Coming soon
-            </div>
+            <Switch
+              checked={settings.emailReminders}
+              onCheckedChange={(checked) => handleChange("emailReminders", checked)}
+            />
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-4 p-4 pt-0 md:p-6 md:pt-0">
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-amber-500" />
-                <div>
-                  <Label className="text-sm font-semibold cursor-pointer">Email reminders</Label>
-                  <p className="text-xs text-muted-foreground">Will send one-day-before and event-day reminders.</p>
-                </div>
-              </div>
-              <Switch checked={false} onCheckedChange={() => openComingSoon("Email reminders")} />
-            </div>
-
-            <div className="mt-4 space-y-1.5">
-              <Label className="text-xs font-semibold">Reminder timing</Label>
-              <Select value={emailTiming} onValueChange={(value) => { setEmailTiming(value); openComingSoon("Reminder timing"); }}>
-                <SelectTrigger className="w-full sm:w-[240px]">
+          {settings.emailReminders && (
+            <div className="pl-7 space-y-1">
+              <Label className="text-[11px] font-semibold text-stone-600">Reminder Timing</Label>
+              <Select
+                value={settings.emailTiming}
+                onValueChange={(v) => handleChange("emailTiming", v)}
+              >
+                <SelectTrigger className="w-full sm:w-[220px] h-8 text-xs border-stone-200 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="24h">24 hours before</SelectItem>
-                  <SelectItem value="1d">1 day before</SelectItem>
-                  <SelectItem value="event_day">Event day</SelectItem>
+                  <SelectItem value="1h">1 Hour Before Event</SelectItem>
+                  <SelectItem value="24h">24 Hours Before Event</SelectItem>
+                  <SelectItem value="48h">48 Hours Before Event</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Smartphone className="h-5 w-5 text-purple-500" />
-                <div>
-                  <Label className="text-sm font-semibold cursor-pointer">Push notifications</Label>
-                  <p className="text-xs text-muted-foreground">Mobile alerts for booking updates and schedule changes.</p>
-                </div>
-              </div>
-              <Switch checked={false} onCheckedChange={() => openComingSoon("Push notifications")} />
+        {/* Mobile Push */}
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-stone-200/60">
+          <div className="flex items-center gap-3">
+            <Smartphone className="h-4 w-4 text-purple-600" />
+            <div>
+              <Label className="text-xs font-semibold text-stone-800 cursor-pointer">Push Notifications</Label>
+              <p className="text-[11px] text-stone-400">Real-time mobile push notifications for schedule updates</p>
             </div>
           </div>
+          <Switch
+            checked={settings.pushNotifications}
+            onCheckedChange={(checked) => handleChange("pushNotifications", checked)}
+          />
+        </div>
 
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-emerald-500" />
-                <div>
-                  <Label className="text-sm font-semibold cursor-pointer">Booking updates</Label>
-                  <p className="text-xs text-muted-foreground">Real-time updates for accepted, cancelled, or rescheduled bookings.</p>
-                </div>
-              </div>
-              <Switch checked={false} onCheckedChange={() => openComingSoon("Booking updates")} />
+        {/* Instant Booking Updates */}
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-stone-200/60">
+          <div className="flex items-center gap-3">
+            <Calendar className="h-4 w-4 text-emerald-600" />
+            <div>
+              <Label className="text-xs font-semibold text-stone-800 cursor-pointer">Instant Booking Updates</Label>
+              <p className="text-[11px] text-stone-400">Get notified immediately when bookings are created or modified</p>
             </div>
           </div>
+          <Switch
+            checked={settings.bookingUpdates}
+            onCheckedChange={(checked) => handleChange("bookingUpdates", checked)}
+          />
+        </div>
 
-          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Schedule summary digest</Label>
-              <Select value={digestTiming} onValueChange={(value) => { setDigestTiming(value); openComingSoon("Schedule summary digest"); }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily digest</SelectItem>
-                  <SelectItem value="weekly">Weekly digest</SelectItem>
-                  <SelectItem value="off">Off</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+        {/* Digest */}
+        <div className="space-y-1.5 p-3.5 rounded-xl bg-white border border-stone-200/60">
+          <Label className="text-xs font-semibold text-stone-800">Schedule Digest</Label>
+          <Select
+            value={settings.scheduleSummaries}
+            onValueChange={(v) => handleChange("scheduleSummaries", v)}
+          >
+            <SelectTrigger className="w-full h-8 text-xs border-stone-200 rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">Daily Morning Schedule Digest</SelectItem>
+              <SelectItem value="weekly">Weekly Digest (Every Monday)</SelectItem>
+              <SelectItem value="off">Disabled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              className="gap-2"
-              onClick={() => openComingSoon("Notification preferences")}
-            >
-              <Save className="h-4 w-4" />
-              Save notification preferences
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog open={featureOpen} onOpenChange={setFeatureOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl font-semibold flex items-center gap-2">
-              <Info className="h-4 w-4 text-primary" />
-              {featureLabel}
-            </DialogTitle>
-            <DialogDescription className="text-sm">
-              This control is not wired to a live notification service yet. We are showing the UI only so the backend integration can be added cleanly later.
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    </>
+      <div className="pt-2 flex justify-end">
+        <Button
+          className="bg-[#D97706] hover:bg-[#b46205] text-white text-xs font-medium px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-xs"
+          onClick={handleSave}
+        >
+          <Save className="h-4 w-4" />
+          Save Notification Preferences
+        </Button>
+      </div>
+    </Card>
   );
 };

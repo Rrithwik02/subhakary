@@ -122,6 +122,7 @@ const STORAGE_KEYS = {
   CAPACITY: "subhakary_provider_capacity",
   NOTIFICATIONS: "subhakary_provider_notifications",
   GOOGLE_CAL: "subhakary_provider_google_cal",
+  WEEKLY_OFF: "subhakary_provider_weekly_off",
 };
 
 const DEFAULT_PROVIDER_SCOPE = "default";
@@ -324,6 +325,13 @@ export const getGoogleCalendarState = (providerId?: string): GoogleCalendarState
 
 export const saveGoogleCalendarState = (state: GoogleCalendarState, providerId?: string) => {
   writeScopedStorage(STORAGE_KEYS.GOOGLE_CAL, providerId, state);
+};
+
+export const getWeeklyOffDays = (providerId?: string): number[] =>
+  readScopedStorage(STORAGE_KEYS.WEEKLY_OFF, providerId, [0, 6]);
+
+export const saveWeeklyOffDays = (days: number[], providerId?: string) => {
+  writeScopedStorage(STORAGE_KEYS.WEEKLY_OFF, providerId, days);
 };
 
 // Conflict Detection Engine
