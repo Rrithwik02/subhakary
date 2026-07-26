@@ -1,4 +1,4 @@
-import { format, isSameDay, parseISO, addDays, isAfter, isBefore, isWithinInterval, startOfDay, endOfDay, differenceInMinutes, differenceInHours } from "date-fns";
+import { format, isSameDay, parseISO, isAfter, isBefore, isWithinInterval, startOfDay, endOfDay, differenceInMinutes, differenceInHours } from "date-fns";
 
 export type EventType = 
   | "subhakary_booking"
@@ -157,82 +157,7 @@ const writeScopedStorage = <T,>(baseKey: string, providerId: string | undefined,
 };
 
 // Initial Mock Seed Data if local storage is empty
-const INITIAL_MOCK_EVENTS: ScheduleEvent[] = [
-  {
-    id: "evt-1",
-    providerId: "default",
-    type: "subhakary_booking",
-    title: "Ananya & Rahul Wedding Photography",
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    startTime: "09:00",
-    endTime: "14:00",
-    isAllDay: false,
-    location: "Grand Palace Hall, Jubilee Hills, Hyderabad",
-    notes: "Full ceremony & couple photoshoot requested.",
-    customerName: "Ananya Sharma",
-    customerPhone: "+91 98765 43210",
-    status: "confirmed",
-    capacityUsed: 1,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "evt-2",
-    providerId: "default",
-    type: "external_booking",
-    title: "Corporate Gala Dinner Shoot",
-    startDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
-    startTime: "18:00",
-    endTime: "22:00",
-    isAllDay: false,
-    location: "Taj Krishna, Banjara Hills",
-    notes: "External client directly booked via WhatsApp.",
-    customerName: "Venkatesh Rao",
-    customerPhone: "+91 91234 56789",
-    status: "confirmed",
-    capacityUsed: 1,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "evt-3",
-    providerId: "default",
-    type: "vacation",
-    title: "Family Trip to Coorg",
-    startDate: format(addDays(new Date(), 4), "yyyy-MM-dd"),
-    endDate: format(addDays(new Date(), 6), "yyyy-MM-dd"),
-    isAllDay: true,
-    notes: "Out of town. Phone unavailable.",
-    status: "blocked",
-    capacityUsed: 2,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "evt-4",
-    providerId: "default",
-    type: "personal_event",
-    title: "Equipment Calibration & Maintenance",
-    startDate: format(addDays(new Date(), 2), "yyyy-MM-dd"),
-    startTime: "11:00",
-    endTime: "13:00",
-    isAllDay: false,
-    location: "Studio Loft",
-    notes: "Checking camera lenses and lighting gear.",
-    status: "confirmed",
-    capacityUsed: 0,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "evt-5",
-    providerId: "default",
-    type: "holiday",
-    title: "Ganesh Chaturthi Festival",
-    startDate: format(addDays(new Date(), 10), "yyyy-MM-dd"),
-    isAllDay: true,
-    notes: "Public Holiday",
-    status: "blocked",
-    capacityUsed: 2,
-    createdAt: new Date().toISOString(),
-  },
-];
+const INITIAL_MOCK_EVENTS: ScheduleEvent[] = [];
 
 const DEFAULT_TIME_SLOTS: TimeSlotConfig[] = [
   { id: "slot-morning", name: "Morning", startTime: "08:00", endTime: "12:00", maxCapacity: 1, isEnabled: true },
@@ -265,11 +190,7 @@ const DEFAULT_GOOGLE_CAL: GoogleCalendarState = {
 
 // Store Helper API
 export const getProviderEvents = (providerId?: string): ScheduleEvent[] => {
-  const fallbackEvents = providerId && providerId !== DEFAULT_PROVIDER_SCOPE
-    ? INITIAL_MOCK_EVENTS.map((event) => ({ ...event, providerId }))
-    : INITIAL_MOCK_EVENTS;
-
-  return readScopedStorage(STORAGE_KEYS.EVENTS, providerId, fallbackEvents);
+  return readScopedStorage(STORAGE_KEYS.EVENTS, providerId, INITIAL_MOCK_EVENTS);
 };
 
 export const saveProviderEvent = (

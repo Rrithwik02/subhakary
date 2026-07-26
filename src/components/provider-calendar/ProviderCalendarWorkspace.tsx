@@ -698,7 +698,7 @@ const MonthView = ({
   return (
     <div className="space-y-3">
       <CalendarNavigation title={format(currentMonth, "MMMM yyyy")} onPrevious={onPrevious} onNext={onNext} />
-      <div className="grid grid-cols-7 gap-2 rounded-2xl border border-border/60 bg-muted/25 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="grid grid-cols-7 gap-1.5 rounded-2xl border border-border/60 bg-muted/25 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div key={day} className="py-1.5">
             {day}
@@ -721,7 +721,7 @@ const MonthView = ({
         </span>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1.5">
         {days.map((day) => {
           const dateStr = format(day, "yyyy-MM-dd");
           const isSelected = isSameDay(day, selectedDate);
@@ -745,7 +745,7 @@ const MonthView = ({
                 }
               }}
               className={cn(
-                "group min-h-[118px] rounded-2xl border p-2.5 text-left transition-all",
+                "group min-h-[92px] rounded-2xl border p-2 text-left transition-all",
                 "bg-background/80 hover:border-primary/40 hover:bg-accent/20 hover:shadow-sm",
                 !isCurrentMonth && "opacity-40",
                 isSelected && "border-primary/60 ring-2 ring-primary/10",
@@ -796,8 +796,8 @@ const MonthView = ({
                 )}
               </div>
 
-              <div className="mt-2 space-y-1 overflow-hidden">
-                {dayCapacity.dayEvents.slice(0, 3).map((event) => {
+              <div className="mt-1.5 space-y-1 overflow-hidden">
+                {dayCapacity.dayEvents.slice(0, 2).map((event) => {
                   const meta = EVENT_TYPE_META[event.type];
                   return (
                     <button
@@ -808,7 +808,7 @@ const MonthView = ({
                         onEventClick(event);
                       }}
                       className={cn(
-                        "w-full rounded-lg border px-2 py-1 text-left text-[10px] font-medium leading-tight transition-transform hover:-translate-y-px",
+                        "w-full rounded-lg border px-2 py-0.5 text-left text-[9px] font-medium leading-tight transition-transform hover:-translate-y-px",
                         meta.bgSoft
                       )}
                     >
@@ -817,9 +817,9 @@ const MonthView = ({
                   );
                 })}
 
-                {dayCapacity.dayEvents.length > 3 && (
-                  <div className="px-1 text-[10px] font-medium text-muted-foreground">
-                    +{dayCapacity.dayEvents.length - 3} more
+                {dayCapacity.dayEvents.length > 2 && (
+                  <div className="px-1 text-[9px] font-medium text-muted-foreground">
+                    +{dayCapacity.dayEvents.length - 2} more
                   </div>
                 )}
               </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { 
+import {
   Calendar as CalendarIcon, 
   Clock, 
   MapPin, 
@@ -10,10 +10,6 @@ import {
   Plus, 
   Sparkles,
   Briefcase,
-  User,
-  Palmtree,
-  CalendarOff,
-  Coffee,
   Ban
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -207,30 +203,6 @@ export const CreateEventDialog = ({
                     <span>External Booking</span>
                   </span>
                 </SelectItem>
-                <SelectItem value="personal_event">
-                  <span className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-emerald-600" />
-                    <span>Personal Event</span>
-                  </span>
-                </SelectItem>
-                <SelectItem value="vacation">
-                  <span className="flex items-center gap-2">
-                    <Palmtree className="h-4 w-4 text-cyan-600" />
-                    <span>Vacation</span>
-                  </span>
-                </SelectItem>
-                <SelectItem value="holiday">
-                  <span className="flex items-center gap-2">
-                    <CalendarOff className="h-4 w-4 text-rose-600" />
-                    <span>Holiday</span>
-                  </span>
-                </SelectItem>
-                <SelectItem value="leave">
-                  <span className="flex items-center gap-2">
-                    <Coffee className="h-4 w-4 text-orange-600" />
-                    <span>Leave</span>
-                  </span>
-                </SelectItem>
                 <SelectItem value="blocked_date">
                   <span className="flex items-center gap-2">
                     <Ban className="h-4 w-4 text-stone-600" />
@@ -248,8 +220,6 @@ export const CreateEventDialog = ({
               placeholder={
                 eventType === "external_booking"
                   ? "e.g. Priyesh & Sneha Reception shoot"
-                  : eventType === "vacation"
-                  ? "e.g. Annual Family Vacation"
                   : "e.g. Studio Maintenance"
               }
               value={title}
