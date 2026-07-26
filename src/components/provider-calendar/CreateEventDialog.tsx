@@ -54,7 +54,6 @@ interface CreateEventDialogProps {
   initialDate?: Date;
   editingEvent?: ScheduleEvent | null;
   onEventSaved?: (event: ScheduleEvent) => void;
-  providerId?: string;
 }
 
 export const CreateEventDialog = ({
@@ -63,7 +62,6 @@ export const CreateEventDialog = ({
   initialDate,
   editingEvent,
   onEventSaved,
-  providerId,
 }: CreateEventDialogProps) => {
   const { toast } = useToast();
 
@@ -110,11 +108,11 @@ export const CreateEventDialog = ({
     }
   }, [editingEvent, initialDate, open]);
 
-  // Conflict detection
+  // Live Conflict Detection whenever dates/times change
   useEffect(() => {
     if (!open) return;
 
-    const allEvents = getProviderEvents(providerId);
+    const allEvents = getProviderEvents();
     const result = checkScheduleConflict(
       {
         startDate,
@@ -128,7 +126,7 @@ export const CreateEventDialog = ({
     );
 
     setConflictResult(result);
-  }, [startDate, endDate, startTime, endTime, isAllDay, eventType, editingEvent, open, providerId]);
+  }, [startDate, endDate, startTime, endTime, isAllDay, eventType, editingEvent, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,25 +149,22 @@ export const CreateEventDialog = ({
       return;
     }
 
-    const newEvent = saveProviderEvent(
-      {
-        id: editingEvent?.id,
-        providerId: providerId || "default",
-        type: eventType,
-        title: title.trim(),
-        startDate,
-        endDate: ["vacation", "holiday", "leave"].includes(eventType) ? endDate : undefined,
-        startTime: !isAllDay ? startTime : undefined,
-        endTime: !isAllDay ? endTime : undefined,
-        isAllDay,
-        location: location.trim() || undefined,
-        notes: notes.trim() || undefined,
-        customerName: customerName.trim() || undefined,
-        customerPhone: customerPhone.trim() || undefined,
-        status: ["vacation", "holiday", "leave", "blocked_date"].includes(eventType) ? "blocked" : "confirmed",
-      },
-      providerId
-    );
+    const newEvent = saveProviderEvent({
+      id: editingEvent?.id,
+      providerId: "default",
+      type: eventType,
+      title: title.trim(),
+      startDate,
+      endDate: ["vacation", "holiday", "leave"].includes(eventType) ? endDate : undefined,
+      startTime: !isAllDay ? startTime : undefined,
+      endTime: !isAllDay ? endTime : undefined,
+      isAllDay,
+      location: location.trim() || undefined,
+      notes: notes.trim() || undefined,
+      customerName: customerName.trim() || undefined,
+      customerPhone: customerPhone.trim() || undefined,
+      status: ["vacation", "holiday", "leave", "blocked_date"].includes(eventType) ? "blocked" : "confirmed",
+    });
 
     toast({
       title: editingEvent ? "Event Updated" : "Event Created",
@@ -182,58 +177,58 @@ export const CreateEventDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg w-[95vw] rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto font-sans bg-white border-stone-200">
+      <DialogContent className="max-w-lg w-[95vw] rounded-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif text-xl font-normal text-stone-800 flex items-center gap-2">
+          <DialogTitle className="font-display text-xl font-bold flex items-center gap-2">
             {editingEvent ? "Edit Schedule Event" : "Create New Schedule Event"}
           </DialogTitle>
-          <DialogDescription className="text-xs text-stone-500">
+          <DialogDescription className="text-xs">
             Add external bookings, personal events, vacations, holidays, or block dates on your calendar.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 my-2">
-          {/* Event Category Select */}
+          {/* Event Type Select */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-stone-700">Event Category</Label>
+            <Label className="text-xs font-semibold">Event Category</Label>
             <Select value={eventType} onValueChange={(v) => setEventType(v as EventType)}>
-              <SelectTrigger className="w-full h-9 text-xs border-stone-200 rounded-xl">
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="external_booking">
                   <span className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4 text-purple-600" />
+                    <Briefcase className="h-4 w-4 text-purple-500" />
                     <span>External Booking</span>
                   </span>
                 </SelectItem>
                 <SelectItem value="personal_event">
                   <span className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-emerald-600" />
+                    <User className="h-4 w-4 text-emerald-500" />
                     <span>Personal Event</span>
                   </span>
                 </SelectItem>
                 <SelectItem value="vacation">
                   <span className="flex items-center gap-2">
-                    <Palmtree className="h-4 w-4 text-cyan-600" />
+                    <Palmtree className="h-4 w-4 text-cyan-500" />
                     <span>Vacation</span>
                   </span>
                 </SelectItem>
                 <SelectItem value="holiday">
                   <span className="flex items-center gap-2">
-                    <CalendarOff className="h-4 w-4 text-rose-600" />
+                    <CalendarOff className="h-4 w-4 text-rose-500" />
                     <span>Holiday</span>
                   </span>
                 </SelectItem>
                 <SelectItem value="leave">
                   <span className="flex items-center gap-2">
-                    <Coffee className="h-4 w-4 text-orange-600" />
+                    <Coffee className="h-4 w-4 text-orange-500" />
                     <span>Leave</span>
                   </span>
                 </SelectItem>
                 <SelectItem value="blocked_date">
                   <span className="flex items-center gap-2">
-                    <Ban className="h-4 w-4 text-stone-600" />
+                    <Ban className="h-4 w-4 text-slate-500" />
                     <span>Manual Blocked Date</span>
                   </span>
                 </SelectItem>
@@ -243,7 +238,7 @@ export const CreateEventDialog = ({
 
           {/* Title */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-stone-700">Event Title *</Label>
+            <Label className="text-xs font-semibold">Event Title *</Label>
             <Input
               placeholder={
                 eventType === "external_booking"
@@ -254,16 +249,15 @@ export const CreateEventDialog = ({
               }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="h-9 text-xs border-stone-200 rounded-xl"
               required
             />
           </div>
 
           {/* All Day Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 border border-stone-200/60">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40 border border-border/50">
             <div>
-              <Label className="text-xs font-semibold text-stone-700 cursor-pointer">All-Day Event</Label>
-              <p className="text-[11px] text-stone-400">Blocks the date without specific hours</p>
+              <Label className="text-xs font-semibold cursor-pointer">All-Day Event</Label>
+              <p className="text-[11px] text-muted-foreground">Blocks the entire date without specific hours</p>
             </div>
             <Switch checked={isAllDay} onCheckedChange={setIsAllDay} />
           </div>
@@ -271,7 +265,7 @@ export const CreateEventDialog = ({
           {/* Dates & Times */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-stone-700">Start Date</Label>
+              <Label className="text-xs font-semibold">Start Date</Label>
               <Input
                 type="date"
                 value={startDate}
@@ -279,19 +273,17 @@ export const CreateEventDialog = ({
                   setStartDate(e.target.value);
                   if (e.target.value > endDate) setEndDate(e.target.value);
                 }}
-                className="h-9 text-xs border-stone-200 rounded-xl"
               />
             </div>
 
             {["vacation", "holiday", "leave"].includes(eventType) ? (
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-stone-700">End Date</Label>
+                <Label className="text-xs font-semibold">End Date</Label>
                 <Input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   min={startDate}
-                  className="h-9 text-xs border-stone-200 rounded-xl"
                 />
               </div>
             ) : null}
@@ -299,46 +291,42 @@ export const CreateEventDialog = ({
             {!isAllDay && (
               <>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-stone-700">Start Time</Label>
+                  <Label className="text-xs font-semibold">Start Time</Label>
                   <Input
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="h-9 text-xs border-stone-200 rounded-xl"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-stone-700">End Time</Label>
+                  <Label className="text-xs font-semibold">End Time</Label>
                   <Input
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="h-9 text-xs border-stone-200 rounded-xl"
                   />
                 </div>
               </>
             )}
           </div>
 
-          {/* Client Details */}
+          {/* Client Info (for external bookings) */}
           {eventType === "external_booking" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-purple-50 border border-purple-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-purple-500/5 border border-purple-500/20">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-stone-700">Client Name</Label>
+                <Label className="text-xs font-semibold">Client Name</Label>
                 <Input
                   placeholder="Client Full Name"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="h-9 text-xs border-purple-200 rounded-xl bg-white"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-stone-700">Phone Number</Label>
+                <Label className="text-xs font-semibold">Phone Number</Label>
                 <Input
                   placeholder="+91 Mobile Number"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="h-9 text-xs border-purple-200 rounded-xl bg-white"
                 />
               </div>
             </div>
@@ -346,30 +334,28 @@ export const CreateEventDialog = ({
 
           {/* Location */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-stone-700">Location / Venue</Label>
+            <Label className="text-xs font-semibold">Location / Venue</Label>
             <Input
               placeholder="e.g. Hotel Novotel, Hyderabad"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="h-9 text-xs border-stone-200 rounded-xl"
             />
           </div>
 
           {/* Notes */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-stone-700">Notes & Details</Label>
+            <Label className="text-xs font-semibold">Notes & Details</Label>
             <Textarea
               placeholder="Any special requirements, equipment list, or notes..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="text-xs border-stone-200 rounded-xl"
               rows={2}
             />
           </div>
 
-          {/* Conflict Alert */}
+          {/* Live Conflict Warning Alert */}
           {conflictResult.hasConflict && (
-            <Alert variant="destructive" className="border-rose-200 bg-rose-50 text-rose-800">
+            <Alert variant="destructive" className="border-rose-500/50 bg-rose-500/10 text-rose-800 dark:text-rose-200">
               <AlertTriangle className="h-4 w-4 text-rose-600" />
               <AlertTitle className="text-xs font-bold">Schedule Conflict Detected!</AlertTitle>
               <AlertDescription className="text-xs">
@@ -378,13 +364,13 @@ export const CreateEventDialog = ({
             </Alert>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-stone-100">
-            <Button type="button" variant="outline" className="rounded-xl border-stone-200" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-border/40">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button 
               type="submit" 
-              className="bg-[#D97706] hover:bg-[#b46205] text-white font-medium text-xs rounded-xl"
+              className="gradient-gold text-primary-foreground font-semibold"
               disabled={conflictResult.hasConflict && conflictResult.conflictType === "blocked_date"}
             >
               {editingEvent ? "Save Changes" : "Create Event"}

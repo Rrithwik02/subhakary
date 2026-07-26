@@ -53,7 +53,6 @@ export const ProviderAvailabilityManager = ({
         .from("service_provider_availability")
         .select("*")
         .eq("provider_id", providerId)
-        .neq("source", "booking")
         .order("specific_date", { ascending: true });
       if (error) throw error;
       return data;
@@ -77,7 +76,6 @@ export const ProviderAvailabilityManager = ({
         specific_date: format(date, "yyyy-MM-dd"),
         is_blocked: true,
         is_available: false,
-        source: "manual",
         start_time: "00:00",
         end_time: "23:59",
       }));
@@ -106,8 +104,7 @@ export const ProviderAvailabilityManager = ({
         .from("service_provider_availability")
         .delete()
         .eq("provider_id", providerId)
-        .eq("specific_date", format(date, "yyyy-MM-dd"))
-        .eq("source", "manual");
+        .eq("specific_date", format(date, "yyyy-MM-dd"));
 
       if (error) throw error;
     },
@@ -137,7 +134,6 @@ export const ProviderAvailabilityManager = ({
           day_of_week: day,
           is_blocked: true,
           is_available: false,
-          source: "recurring",
           start_time: "00:00",
           end_time: "23:59",
         }));
