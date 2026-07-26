@@ -83,9 +83,9 @@ const mapCalendarRow = (row: any): ProviderCalendarItem => ({
   providerId: row.provider_id,
   type: (row.event_type ?? "personal_event") as CalendarEventType,
   title: row.title,
-  startDate: row.event_date,
+  startDate: row.event_date ?? row.specific_date,
   endDate: row.event_type === "vacation" || row.event_type === "leave" || row.event_type === "holiday"
-    ? row.event_date
+    ? (row.event_date ?? row.specific_date)
     : undefined,
   startTime: row.start_time ?? undefined,
   endTime: row.end_time ?? undefined,
