@@ -15,3 +15,6 @@ verify_jwt = false
 [functions.audit-log]
 verify_jwt = false
 
+[functions.dispatch-provider-event-reminders]
+verify_jwt = false
+

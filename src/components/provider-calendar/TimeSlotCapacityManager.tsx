@@ -25,7 +25,11 @@ import {
   saveCapacityConfig 
 } from "@/lib/providerScheduleStore";
 
-export const TimeSlotCapacityManager = () => {
+interface TimeSlotCapacityManagerProps {
+  providerId?: string;
+}
+
+export const TimeSlotCapacityManager = ({ providerId }: TimeSlotCapacityManagerProps) => {
   const { toast } = useToast();
 
   const [slots, setSlots] = useState<TimeSlotConfig[]>([]);
@@ -37,9 +41,9 @@ export const TimeSlotCapacityManager = () => {
   });
 
   useEffect(() => {
-    setSlots(getTimeSlots());
-    setCapacity(getCapacityConfig());
-  }, []);
+    setSlots(getTimeSlots(providerId));
+    setCapacity(getCapacityConfig(providerId));
+  }, [providerId]);
 
   const handleToggleSlot = (id: string) => {
     setSlots((prev) =>
@@ -52,138 +56,110 @@ export const TimeSlotCapacityManager = () => {
   };
 
   const handleSaveAll = () => {
-    saveTimeSlots(slots);
-    saveCapacityConfig(capacity);
+    saveTimeSlots(slots, providerId);
+    saveCapacityConfig(capacity, providerId);
     toast({
-      title: "Schedule Settings Saved",
-      description: "Your time slots and service capacity configuration have been updated.",
+      title: "Capacity & Time Slots Saved",
+      description: "Your daily booking limits and time slot configurations have been updated.",
     });
   };
 
   return (
-    <div className="space-y-6">
-      {/* Capacity Visualization & Rules */}
-      <Card className="border-border/50 shadow-sm bg-card">
-        <CardHeader className="p-4 md:p-6 pb-2">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl gradient-gold flex items-center justify-center text-primary-foreground">
-              <Layers className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="font-display text-lg font-bold">
-                Capacity Visualization & Limits
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Configure maximum bookings per day based on your service type
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
+    <Card className="border border-stone-200/60 shadow-xs bg-stone-50/40 rounded-2xl p-4 sm:p-6 space-y-6">
+      <div className="space-y-1">
+        <h3 className="font-serif text-lg font-normal text-stone-800 flex items-center gap-2">
+          <Sliders className="h-5 w-5 text-amber-600" />
+          Service Capacity & Time Slots
+        </h3>
+        <p className="text-xs text-stone-500">Configure daily booking limits and morning/afternoon/evening time slots</p>
+      </div>
 
-        <CardContent className="p-4 md:p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Service Category</Label>
-              <Input
-                value={capacity.serviceType}
-                onChange={(e) => handleCapacityChange("serviceType", e.target.value)}
-                placeholder="e.g. Photography, Catering, Decor"
-              />
-            </div>
+      {/* Daily Capacity Rules */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-white border border-stone-200/60 shadow-xs">
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-stone-700">Service Category</Label>
+          <Input
+            value={capacity.serviceType}
+            onChange={(e) => handleCapacityChange("serviceType", e.target.value)}
+            className="h-9 text-xs border-stone-200 rounded-xl"
+            placeholder="e.g. Photography, Catering, Decor"
+          />
+        </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Max Daily Bookings (Slots)</Label>
-              <Input
-                type="number"
-                min={1}
-                max={20}
-                value={capacity.maxDailyBookings}
-                onChange={(e) => handleCapacityChange("maxDailyBookings", parseInt(e.target.value) || 1)}
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Determines when calendar days switch to "Fully Booked".
-              </p>
-            </div>
-          </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-stone-700">Max Daily Bookings</Label>
+          <Input
+            type="number"
+            min={1}
+            max={20}
+            value={capacity.maxDailyBookings}
+            onChange={(e) => handleCapacityChange("maxDailyBookings", parseInt(e.target.value) || 1)}
+            className="h-9 text-xs border-stone-200 rounded-xl font-mono"
+          />
+          <p className="text-[11px] text-stone-400">
+            Determines when calendar days switch to "Fully Booked".
+          </p>
+        </div>
+      </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
-            <div className="space-y-0.5">
-              <Label className="text-xs font-semibold">Allow Overbooking</Label>
-              <p className="text-[11px] text-muted-foreground">
-                If enabled, you can accept additional bookings even after max daily limit is reached.
-              </p>
-            </div>
-            <Switch
-              checked={capacity.allowOverbooking}
-              onCheckedChange={(checked) => handleCapacityChange("allowOverbooking", checked)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Allow Overbooking Switch */}
+      <div className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-stone-200/60">
+        <div className="space-y-0.5">
+          <Label className="text-xs font-semibold text-stone-700">Allow Overbooking</Label>
+          <p className="text-[11px] text-stone-400">
+            Permit accepting extra bookings even after daily capacity is reached.
+          </p>
+        </div>
+        <Switch
+          checked={capacity.allowOverbooking}
+          onCheckedChange={(checked) => handleCapacityChange("allowOverbooking", checked)}
+        />
+      </div>
 
-      {/* Time Slot Management */}
-      <Card className="border-border/50 shadow-sm bg-card">
-        <CardHeader className="p-4 md:p-6 pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <Clock className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="font-display text-lg font-bold">
-                  Time Slot Management
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Define morning, afternoon, evening, or custom time slots for bookings
-                </CardDescription>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-4 md:p-6 space-y-4">
-          <div className="space-y-3">
-            {slots.map((slot) => (
-              <div
-                key={slot.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-border/50 bg-card hover:bg-accent/20 transition-all gap-3"
-              >
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={slot.isEnabled}
-                    onCheckedChange={() => handleToggleSlot(slot.id)}
-                  />
-                  <div>
-                    <h4 className="text-sm font-semibold flex items-center gap-2">
-                      {slot.name}
-                      <Badge variant="outline" className="text-[10px] font-mono">
-                        {slot.startTime} - {slot.endTime}
-                      </Badge>
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      Max Capacity: {slot.maxCapacity} client(s) per slot
-                    </p>
-                  </div>
-                </div>
-
-                <Badge className={slot.isEnabled ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" : "bg-muted text-muted-foreground"}>
-                  {slot.isEnabled ? "Active Slot" : "Disabled"}
-                </Badge>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-2 flex justify-end">
-            <Button
-              className="gradient-gold text-primary-foreground font-semibold flex items-center gap-2"
-              onClick={handleSaveAll}
+      {/* Predefined Time Slots */}
+      <div className="space-y-3 pt-2">
+        <h4 className="text-xs font-semibold text-stone-700">Predefined Time Slots</h4>
+        <div className="space-y-2">
+          {slots.map((slot) => (
+            <div
+              key={slot.id}
+              className="flex items-center justify-between p-3.5 rounded-xl border border-stone-200/60 bg-white hover:border-amber-500/30 transition-all text-xs"
             >
-              <Save className="h-4 w-4" />
-              Save Capacity & Slot Settings
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={slot.isEnabled}
+                  onCheckedChange={() => handleToggleSlot(slot.id)}
+                />
+                <div>
+                  <h5 className="font-semibold text-stone-800 flex items-center gap-2">
+                    {slot.name}
+                    <span className="text-[11px] text-stone-500 font-mono font-normal">
+                      ({slot.startTime} - {slot.endTime})
+                    </span>
+                  </h5>
+                  <p className="text-[11px] text-stone-400">
+                    Max Capacity: {slot.maxCapacity} client per slot
+                  </p>
+                </div>
+              </div>
+
+              <Badge className={slot.isEnabled ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-stone-100 text-stone-500 border-stone-200"}>
+                {slot.isEnabled ? "Active" : "Disabled"}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pt-2 flex justify-end">
+        <Button
+          className="bg-[#D97706] hover:bg-[#b46205] text-white text-xs font-medium px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-xs"
+          onClick={handleSaveAll}
+        >
+          <Save className="h-4 w-4" />
+          Save Capacity & Slots Settings
+        </Button>
+      </div>
+    </Card>
   );
 };

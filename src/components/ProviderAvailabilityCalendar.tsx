@@ -46,7 +46,7 @@ export const ProviderAvailabilityCalendar = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_provider_availability")
-        .select("specific_date, day_of_week, is_blocked")
+        .select("specific_date, day_of_week, is_blocked, source")
         .eq("provider_id", providerId);
 
       if (error) throw error;
@@ -60,12 +60,12 @@ export const ProviderAvailabilityCalendar = ({
   
   // Get specifically blocked dates
   const specificBlockedDates = blockedDates
-    .filter((b) => b.specific_date && b.is_blocked)
+    .filter((b) => b.specific_date && b.is_blocked && b.source !== "booking")
     .map((b) => new Date(b.specific_date!));
 
   // Get recurring blocked days of week
   const blockedDaysOfWeek = blockedDates
-    .filter((b) => b.day_of_week !== null && b.is_blocked)
+    .filter((b) => b.day_of_week !== null && b.is_blocked && b.source !== "booking")
     .map((b) => b.day_of_week);
 
   // Check if a date is blocked (either specifically or by day of week)

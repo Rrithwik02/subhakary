@@ -95,6 +95,7 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
         .select("*")
         .eq("provider_id", providerId)
         .eq("is_blocked", true)
+        .neq("source", "booking")
         .not("specific_date", "is", null);
 
       if (error) throw error;
@@ -126,6 +127,7 @@ const BookingCalendar = ({ providerId }: BookingCalendarProps) => {
             provider_id: providerId,
             specific_date: dateStr,
             is_blocked: true,
+            source: "manual",
             start_time: "00:00",
             end_time: "23:59",
           });
