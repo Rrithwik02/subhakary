@@ -112,6 +112,42 @@ const VIEW_MODE_LABELS: Record<ViewMode, string> = {
   agenda: "Agenda",
 };
 
+const getViewTitle = (date: Date, mode: ViewMode) => {
+  if (mode === "day") return format(date, "EEEE, MMMM d, yyyy");
+  if (mode === "agenda") return "Agenda";
+  return format(date, "MMMM yyyy");
+};
+
+const CalendarNavigation = ({
+  title,
+  onPrevious,
+  onNext,
+}: {
+  title: string;
+  onPrevious: () => void;
+  onNext: () => void;
+}) => (
+  <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/85 px-2 py-2">
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 rounded-full"
+      onClick={onPrevious}
+    >
+      <ChevronLeft className="h-4 w-4" />
+    </Button>
+    <p className="text-sm font-medium text-foreground">{title}</p>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 rounded-full"
+      onClick={onNext}
+    >
+      <ChevronRight className="h-4 w-4" />
+    </Button>
+  </div>
+);
+
 export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCalendarWorkspaceProps) => {
   const { toast } = useToast();
 
@@ -219,75 +255,36 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
   };
 
   const selectedDayLabel = format(selectedDate, "EEE, MMM d");
+  const handlePrevious = () => {
+    setCurrentDate((date) =>
+      viewMode === "month" ? subMonths(date, 1) : viewMode === "week" ? subDays(date, 7) : subDays(date, 1)
+    );
+  };
+
+  const handleNext = () => {
+    setCurrentDate((date) =>
+      viewMode === "month" ? addMonths(date, 1) : viewMode === "week" ? addDays(date, 7) : addDays(date, 1)
+    );
+  };
 
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden border-border/60 bg-card/95 shadow-sm">
         <CardContent className="space-y-5 p-4 sm:p-5 lg:p-6">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Schedule workspace
-              </p>
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-2xl font-semibold text-foreground">
-                  Calendar, bookings, and availability in one place
-                </h2>
-              </div>
-              <p className="max-w-3xl text-sm text-muted-foreground">
-                Keep the calendar front and center while advanced controls stay grouped below it for faster scanning.
-              </p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Visible items</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{visibleEventCount} events</p>
             </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() =>
-                    setCurrentDate((date) =>
-                      viewMode === "month" ? subMonths(date, 1) : viewMode === "week" ? subDays(date, 7) : subDays(date, 1)
-                    )
-                  }
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 rounded-full px-3 text-xs font-medium"
-                  onClick={() => {
-                    const today = new Date();
-                    setCurrentDate(today);
-                    setSelectedDate(today);
-                  }}
-                >
-                  Current
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() =>
-                    setCurrentDate((date) =>
-                      viewMode === "month" ? addMonths(date, 1) : viewMode === "week" ? addDays(date, 7) : addDays(date, 1)
-                    )
-                  }
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <Button
-                size="sm"
-                className="gradient-gold text-primary-foreground font-semibold"
-                onClick={() => openCreateDialog("external_booking")}
-              >
-                <Plus className="h-4 w-4" />
-                Create event
-              </Button>
+            <div className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Blocked days</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{blockedDayCount} days</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Service capacity</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                {capacityConfig.maxDailyBookings} booking{capacityConfig.maxDailyBookings === 1 ? "" : "s"} per day
+              </p>
             </div>
           </div>
 
@@ -321,26 +318,39 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
                 );
               })}
             </div>
+          </div>
+        </CardContent>
+      </Card>
 
-            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
-              <span className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <Filter className="h-3.5 w-3.5" />
-                View
-              </span>
+      <Card className="overflow-hidden border-border/60 bg-card/95 shadow-sm">
+        <CardContent className="p-4 sm:p-5 lg:p-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="space-y-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Calendar Workspace
+              </p>
+              <h2 className="font-display text-2xl font-semibold text-foreground">
+                Calendar, bookings, and availability in one place
+              </h2>
+              <p className="max-w-3xl text-sm text-muted-foreground">
+                Review bookings, blocked dates, and personal events from one cohesive schedule surface.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
-                      "border-border/60 bg-background/70 text-foreground hover:border-border"
-                    )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-11 rounded-full border-border/60 px-4 text-sm font-medium"
                   >
-                    {VIEW_MODE_LABELS[viewMode]}
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
+                    <Filter className="h-4 w-4" />
+                    Filters
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-36 rounded-2xl border-border/60">
+                <DropdownMenuContent align="end" className="w-40 rounded-2xl border-border/60">
                   {(["month", "week", "day", "agenda"] as ViewMode[]).map((mode) => (
                     <DropdownMenuItem
                       key={mode}
@@ -355,23 +365,15 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          </div>
 
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Visible items</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{visibleEventCount} events</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Blocked days</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{blockedDayCount} days</p>
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2.5">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Service capacity</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">
-                {capacityConfig.maxDailyBookings} booking{capacityConfig.maxDailyBookings === 1 ? "" : "s"} per day
-              </p>
+              <Button
+                size="sm"
+                className="h-11 rounded-full gradient-gold px-4 text-primary-foreground font-semibold"
+                onClick={() => openCreateDialog("external_booking")}
+              >
+                <Plus className="h-4 w-4" />
+                Create event
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -388,6 +390,8 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
                 onSelectDate={setSelectedDate}
                 onEventClick={setDetailEvent}
                 maxCapacity={capacityConfig.maxDailyBookings}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
               />
             )}
 
@@ -397,6 +401,8 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
                 events={filteredEvents}
                 onSelectDate={setSelectedDate}
                 onEventClick={setDetailEvent}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
               />
             )}
 
@@ -405,6 +411,8 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
                 selectedDate={selectedDate}
                 events={filteredEvents}
                 onEventClick={setDetailEvent}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
               />
             )}
 
@@ -412,6 +420,8 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
               <AgendaView
                 events={filteredEvents}
                 onEventClick={setDetailEvent}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
               />
             )}
           </CardContent>
@@ -667,6 +677,8 @@ const MonthView = ({
   onSelectDate,
   onEventClick,
   maxCapacity,
+  onPrevious,
+  onNext,
 }: {
   currentMonth: Date;
   events: ScheduleEvent[];
@@ -674,6 +686,8 @@ const MonthView = ({
   onSelectDate: (d: Date) => void;
   onEventClick: (e: ScheduleEvent) => void;
   maxCapacity: number;
+  onPrevious: () => void;
+  onNext: () => void;
 }) => {
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
@@ -683,6 +697,7 @@ const MonthView = ({
 
   return (
     <div className="space-y-3">
+      <CalendarNavigation title={format(currentMonth, "MMMM yyyy")} onPrevious={onPrevious} onNext={onNext} />
       <div className="grid grid-cols-7 gap-2 rounded-2xl border border-border/60 bg-muted/25 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div key={day} className="py-1.5">
@@ -821,18 +836,24 @@ const WeekView = ({
   events,
   onSelectDate,
   onEventClick,
+  onPrevious,
+  onNext,
 }: {
   currentDate: Date;
   events: ScheduleEvent[];
   onSelectDate: (d: Date) => void;
   onEventClick: (e: ScheduleEvent) => void;
+  onPrevious: () => void;
+  onNext: () => void;
 }) => {
   const weekStart = startOfWeek(currentDate);
   const weekEnd = endOfWeek(weekStart);
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-7">
+    <div className="space-y-3">
+      <CalendarNavigation title={getViewTitle(currentDate, "week")} onPrevious={onPrevious} onNext={onNext} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-7">
       {days.map((day) => {
         const dayCapacity = getDayCapacitySummary(day, events);
         return (
@@ -880,6 +901,7 @@ const WeekView = ({
           </div>
         );
       })}
+      </div>
     </div>
   );
 };
@@ -888,15 +910,20 @@ const DayView = ({
   selectedDate,
   events,
   onEventClick,
+  onPrevious,
+  onNext,
 }: {
   selectedDate: Date;
   events: ScheduleEvent[];
   onEventClick: (e: ScheduleEvent) => void;
+  onPrevious: () => void;
+  onNext: () => void;
 }) => {
   const dayCapacity = getDayCapacitySummary(selectedDate, events);
 
   return (
     <div className="space-y-4">
+      <CalendarNavigation title={getViewTitle(selectedDate, "day")} onPrevious={onPrevious} onNext={onNext} />
       <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
         <h3 className="font-display text-lg font-semibold text-foreground">
           {format(selectedDate, "EEEE, MMMM d, yyyy")}
@@ -957,14 +984,19 @@ const DayView = ({
 const AgendaView = ({
   events,
   onEventClick,
+  onPrevious,
+  onNext,
 }: {
   events: ScheduleEvent[];
   onEventClick: (e: ScheduleEvent) => void;
+  onPrevious: () => void;
+  onNext: () => void;
 }) => {
   const sortedEvents = [...events].sort((a, b) => a.startDate.localeCompare(b.startDate));
 
   return (
     <div className="space-y-4">
+      <CalendarNavigation title={getViewTitle(new Date(), "agenda")} onPrevious={onPrevious} onNext={onNext} />
       <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
         <h3 className="font-display text-lg font-semibold text-foreground">Agenda</h3>
         <p className="mt-1 text-sm text-muted-foreground">A clean list of all currently visible schedule items.</p>
