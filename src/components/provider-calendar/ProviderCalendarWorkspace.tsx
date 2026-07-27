@@ -5,6 +5,9 @@ import {
   format,
   endOfMonth,
   startOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
   parseISO,
   subDays,
   subMonths,
@@ -29,6 +32,7 @@ import {
   Ban,
   CalendarDays,
   CheckCircle2,
+  List,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,6 +66,7 @@ import {
   fetchProviderCalendar,
 } from "@/lib/providerCalendarApi";
 import { CreateEventDialog } from "./CreateEventDialog";
+import { ProviderCalendarViewBoundary } from "./ProviderCalendarViewBoundary";
 import { ProviderCalendarMonthSurface } from "./ProviderCalendarMonthSurface";
 
 type ViewMode = "month" | "week" | "day" | "agenda";
@@ -157,7 +162,6 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
     allowOverbooking: false,
   });
   const [selectedFilter, setSelectedFilter] = useState<EventType | "all">("all");
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createDialogType, setCreateDialogType] = useState<EventType>("external_booking");
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
@@ -207,8 +211,8 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
   }, [events, selectedFilter]);
 
   const selectedDayCapacity = useMemo(
-    () => getDayCapacitySummary(selectedDate, events, capacityConfig.maxDailyBookings),
-    [selectedDate, events, capacityConfig.maxDailyBookings]
+    () => getDayCapacitySummary(currentDate, events, capacityConfig.maxDailyBookings),
+    [currentDate, events, capacityConfig.maxDailyBookings]
   );
 
   const visibleEventCount = filteredEvents.length;
@@ -250,16 +254,28 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
     refreshEvents();
   };
 
-  const selectedDayLabel = format(selectedDate, "EEE, MMM d");
+  const selectedDayLabel = format(currentDate, "EEE, MMM d");
   const handlePrevious = () => {
     setCurrentDate((date) =>
-      viewMode === "month" ? subMonths(date, 1) : viewMode === "week" ? subDays(date, 7) : subDays(date, 1)
+      viewMode === "month"
+        ? subMonths(date, 1)
+        : viewMode === "week"
+        ? subDays(date, 7)
+        : viewMode === "agenda"
+        ? subMonths(date, 1)
+        : subDays(date, 1)
     );
   };
 
   const handleNext = () => {
     setCurrentDate((date) =>
-      viewMode === "month" ? addMonths(date, 1) : viewMode === "week" ? addDays(date, 7) : addDays(date, 1)
+      viewMode === "month"
+        ? addMonths(date, 1)
+        : viewMode === "week"
+        ? addDays(date, 7)
+        : viewMode === "agenda"
+        ? addMonths(date, 1)
+        : addDays(date, 1)
     );
   };
 
@@ -382,41 +398,48 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
               <ProviderCalendarMonthSurface
                 currentMonth={currentDate}
                 events={filteredEvents}
-                selectedDate={selectedDate}
-                onSelectDate={setSelectedDate}
+                selectedDate={currentDate}
+                onSelectDate={setCurrentDate}
                 maxCapacity={capacityConfig.maxDailyBookings}
                 onMonthChange={setCurrentDate}
               />
             )}
 
             {viewMode === "week" && (
-              <WeekView
-                currentDate={currentDate}
-                events={filteredEvents}
-                onSelectDate={setSelectedDate}
-                onEventClick={setDetailEvent}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-              />
+              <ProviderCalendarViewBoundary viewKey={`week-${viewMode}-${currentDate.toISOString()}`}>
+                <WeekView
+                  currentDate={currentDate}
+                  events={filteredEvents}
+                  onSelectDate={setCurrentDate}
+                  onEventClick={setDetailEvent}
+                  onPrevious={handlePrevious}
+                  onNext={handleNext}
+                />
+              </ProviderCalendarViewBoundary>
             )}
 
             {viewMode === "day" && (
-              <DayView
-                selectedDate={selectedDate}
-                events={filteredEvents}
-                onEventClick={setDetailEvent}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-              />
+              <ProviderCalendarViewBoundary viewKey={`day-${viewMode}-${currentDate.toISOString()}`}>
+                <DayView
+                  selectedDate={currentDate}
+                  events={filteredEvents}
+                  onEventClick={setDetailEvent}
+                  onPrevious={handlePrevious}
+                  onNext={handleNext}
+                />
+              </ProviderCalendarViewBoundary>
             )}
 
             {viewMode === "agenda" && (
-              <AgendaView
-                events={filteredEvents}
-                onEventClick={setDetailEvent}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-              />
+              <ProviderCalendarViewBoundary viewKey={`agenda-${viewMode}-${currentDate.toISOString()}`}>
+                <AgendaView
+                  currentDate={currentDate}
+                  events={filteredEvents}
+                  onEventClick={setDetailEvent}
+                  onPrevious={handlePrevious}
+                  onNext={handleNext}
+                />
+              </ProviderCalendarViewBoundary>
             )}
           </CardContent>
         </Card>
@@ -566,13 +589,12 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
       <CreateEventDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        initialDate={selectedDate}
+        initialDate={currentDate}
         initialEventType={createDialogType}
         editingEvent={editingEvent}
         providerId={providerId}
         onEventSaved={(savedEvent) => {
           const savedDate = parseISO(savedEvent.startDate);
-          setSelectedDate(savedDate);
           setCurrentDate(savedDate);
           void loadCalendar(savedDate).catch(() => undefined);
         }}
@@ -815,11 +837,13 @@ const DayView = ({
 };
 
 const AgendaView = ({
+  currentDate,
   events,
   onEventClick,
   onPrevious,
   onNext,
 }: {
+  currentDate: Date;
   events: ScheduleEvent[];
   onEventClick: (e: ScheduleEvent) => void;
   onPrevious: () => void;
@@ -829,7 +853,7 @@ const AgendaView = ({
 
   return (
     <div className="space-y-4">
-      <CalendarNavigation title={getViewTitle(new Date(), "agenda")} onPrevious={onPrevious} onNext={onNext} />
+      <CalendarNavigation title={getViewTitle(currentDate, "agenda")} onPrevious={onPrevious} onNext={onNext} />
       <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
         <h3 className="font-display text-lg font-semibold text-foreground">Agenda</h3>
         <p className="mt-1 text-sm text-muted-foreground">A clean list of all currently visible schedule items.</p>
