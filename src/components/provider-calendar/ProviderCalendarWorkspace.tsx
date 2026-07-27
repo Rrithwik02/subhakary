@@ -2,15 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   addDays,
   addMonths,
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
   format,
-  isSameDay,
-  isSameMonth,
-  parseISO,
+  endOfMonth,
   startOfMonth,
-  startOfWeek,
+  parseISO,
   subDays,
   subMonths,
 } from "date-fns";
@@ -67,6 +62,7 @@ import {
   fetchProviderCalendar,
 } from "@/lib/providerCalendarApi";
 import { CreateEventDialog } from "./CreateEventDialog";
+import { ProviderCalendarMonthSurface } from "./ProviderCalendarMonthSurface";
 
 type ViewMode = "month" | "week" | "day" | "agenda";
 
@@ -383,15 +379,13 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
         <Card className="overflow-hidden border-border/60 bg-card/95 shadow-sm">
           <CardContent className="p-3 sm:p-4 lg:p-5">
             {viewMode === "month" && (
-              <MonthView
+              <ProviderCalendarMonthSurface
                 currentMonth={currentDate}
                 events={filteredEvents}
                 selectedDate={selectedDate}
                 onSelectDate={setSelectedDate}
-                onEventClick={setDetailEvent}
                 maxCapacity={capacityConfig.maxDailyBookings}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
+                onMonthChange={setCurrentDate}
               />
             )}
 
@@ -666,167 +660,6 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
           </DialogContent>
         )}
       </Dialog>
-    </div>
-  );
-};
-
-const MonthView = ({
-  currentMonth,
-  events,
-  selectedDate,
-  onSelectDate,
-  onEventClick,
-  maxCapacity,
-  onPrevious,
-  onNext,
-}: {
-  currentMonth: Date;
-  events: ScheduleEvent[];
-  selectedDate: Date;
-  onSelectDate: (d: Date) => void;
-  onEventClick: (e: ScheduleEvent) => void;
-  maxCapacity: number;
-  onPrevious: () => void;
-  onNext: () => void;
-}) => {
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart);
-  const endDate = endOfWeek(monthEnd);
-  const days = eachDayOfInterval({ start: startDate, end: endDate });
-
-  return (
-    <div className="space-y-3">
-      <CalendarNavigation title={format(currentMonth, "MMMM yyyy")} onPrevious={onPrevious} onNext={onNext} />
-      <div className="grid grid-cols-7 gap-1.5 rounded-2xl border border-border/60 bg-muted/25 p-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day} className="py-1.5">
-            {day}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-muted-foreground">
-        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1">
-          <span className="h-2 w-2 rounded-full bg-destructive" />
-          Blocked date
-        </span>
-        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1">
-          <span className="h-2 w-2 rounded-full bg-amber-500" />
-          Booking
-        </span>
-        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background px-2.5 py-1">
-          <span className="h-2 w-2 rounded-full bg-violet-500" />
-          External event
-        </span>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1.5">
-        {days.map((day) => {
-          const dateStr = format(day, "yyyy-MM-dd");
-          const isSelected = isSameDay(day, selectedDate);
-          const isCurrentMonth = isSameMonth(day, currentMonth);
-          const dayCapacity = getDayCapacitySummary(day, events, maxCapacity);
-          const isToday = isSameDay(day, new Date());
-          const hasBlockedDate = dayCapacity.dayEvents.some((event) => event.type === "blocked_date");
-          const hasSubhakaryBooking = dayCapacity.dayEvents.some((event) => event.type === "subhakary_booking");
-          const hasExternalBooking = dayCapacity.dayEvents.some((event) => event.type === "external_booking");
-
-          return (
-            <div
-              key={dateStr}
-              onClick={() => onSelectDate(day)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onSelectDate(day);
-                }
-              }}
-              className={cn(
-                "group min-h-[92px] rounded-2xl border p-2 text-left transition-all",
-                "bg-background/80 hover:border-primary/40 hover:bg-accent/20 hover:shadow-sm",
-                !isCurrentMonth && "opacity-40",
-                isSelected && "border-primary/60 ring-2 ring-primary/10",
-                dayCapacity.isBlocked && "border-destructive/40 bg-destructive/10 shadow-[inset_0_0_0_1px_rgba(239,68,68,0.08)]",
-              )}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span
-                  className={cn(
-                    "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors",
-                    isToday && "bg-primary text-primary-foreground",
-                    isSelected && !isToday && "bg-foreground text-background",
-                    !isToday && !isSelected && "bg-muted text-foreground",
-                    dayCapacity.isBlocked && "bg-destructive/15 text-destructive line-through"
-                  )}
-                >
-                  {day.getDate()}
-                </span>
-
-                {dayCapacity.isBlocked ? (
-                  <Badge variant="destructive" className="text-[9px] shadow-sm">
-                    Blocked
-                  </Badge>
-                ) : dayCapacity.bookingsCount > 0 ? (
-                  <Badge className="bg-amber-500/15 text-amber-700 border border-amber-500/25 text-[9px]">
-                    {dayCapacity.bookingsCount}/{maxCapacity}
-                  </Badge>
-                ) : (
-                  <span className="text-[10px] text-muted-foreground">{dayCapacity.remaining} open</span>
-                )}
-              </div>
-
-              <div className="mt-2 flex items-center gap-1.5 px-1">
-                {hasBlockedDate && (
-                  <span
-                    className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_0_3px_rgba(239,68,68,0.12)]"
-                    title="Blocked date"
-                  />
-                )}
-                {!hasBlockedDate && hasSubhakaryBooking && <span className="h-2 w-2 rounded-full bg-amber-500" title="Subhakary booking" />}
-                {!hasBlockedDate && !hasSubhakaryBooking && hasExternalBooking && (
-                  <span className="h-2 w-2 rounded-full bg-violet-500" title="External booking" />
-                )}
-                {hasBlockedDate && (
-                  <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-destructive">
-                    Blocked
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-1.5 space-y-1 overflow-hidden">
-                {dayCapacity.dayEvents.slice(0, 2).map((event) => {
-                  const meta = EVENT_TYPE_META[event.type];
-                  return (
-                    <button
-                      key={event.id}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEventClick(event);
-                      }}
-                      className={cn(
-                        "w-full rounded-lg border px-2 py-0.5 text-left text-[9px] font-medium leading-tight transition-transform hover:-translate-y-px",
-                        meta.bgSoft
-                      )}
-                    >
-                      <span className="block truncate">{event.title}</span>
-                    </button>
-                  );
-                })}
-
-                {dayCapacity.dayEvents.length > 2 && (
-                  <div className="px-1 text-[9px] font-medium text-muted-foreground">
-                    +{dayCapacity.dayEvents.length - 2} more
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 };
