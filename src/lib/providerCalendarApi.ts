@@ -66,7 +66,12 @@ export interface NotificationSettings {
 export interface GoogleCalendarState {
   isConnected: boolean;
   accountEmail?: string;
+  accountName?: string;
+  calendarId?: string;
+  calendarName?: string;
+  timezone?: string;
   lastSyncedAt?: string;
+  connectedAt?: string;
   autoSync: boolean;
   syncOption: "all" | "bookings_only";
   importExternal: boolean;
@@ -84,9 +89,11 @@ const mapCalendarRow = (row: any): ProviderCalendarItem => ({
   type: (row.event_type ?? "personal_event") as CalendarEventType,
   title: row.title,
   startDate: row.event_date ?? row.specific_date,
-  endDate: row.event_type === "vacation" || row.event_type === "leave" || row.event_type === "holiday"
-    ? (row.event_date ?? row.specific_date)
-    : undefined,
+  endDate: row.end_date ?? (
+    row.event_type === "vacation" || row.event_type === "leave" || row.event_type === "holiday"
+      ? (row.event_date ?? row.specific_date)
+      : undefined
+  ),
   startTime: row.start_time ?? undefined,
   endTime: row.end_time ?? undefined,
   isAllDay: Boolean(row.all_day),
@@ -137,6 +144,7 @@ export async function fetchProviderCalendar(providerId: string, startDate?: stri
       .eq("provider_id", providerId)
       .gte("event_date", rangeStart)
       .lte("event_date", rangeEnd)
+      .neq("sync_status", "deleted")
       .order("event_date", { ascending: true }),
     supabase
       .from("service_provider_availability" as any)
@@ -426,10 +434,10 @@ export async function fetchNotificationSettings(providerId: string): Promise<Not
   if (error && error.code !== "PGRST116") throw error;
 
   return {
-    emailReminders: data?.email_enabled ?? true,
+    emailReminders: data?.email_enabled ?? false,
     emailTiming: (data?.schedule_email_timing ?? "24h") as "1h" | "24h" | "48h",
-    pushNotifications: data?.push_enabled ?? true,
-    bookingUpdates: data?.booking_updates ?? true,
+    pushNotifications: data?.push_enabled ?? false,
+    bookingUpdates: data?.booking_updates ?? false,
     scheduleSummaries: (data?.frequency === "weekly" ? "weekly" : data?.frequency === "off" ? "off" : "daily") as "daily" | "weekly" | "off",
     summaryTime: data?.schedule_summary_time ?? "08:00",
   };
@@ -474,7 +482,12 @@ export async function fetchGoogleCalendarState(providerId: string): Promise<Goog
   return {
     isConnected: data?.sync_status === "connected",
     accountEmail: data?.google_account_email ?? undefined,
+    accountName: data?.google_account_name ?? undefined,
+    calendarId: data?.google_calendar_id ?? undefined,
+    calendarName: data?.google_calendar_name ?? undefined,
+    timezone: data?.google_calendar_timezone ?? undefined,
     lastSyncedAt: data?.last_synced_at ?? undefined,
+    connectedAt: data?.google_connected_at ?? undefined,
     autoSync: data?.auto_sync ?? true,
     syncOption: (data?.sync_scope ?? "all") as "all" | "bookings_only",
     importExternal: data?.import_external ?? false,
@@ -488,11 +501,16 @@ export async function saveGoogleCalendarState(providerId: string, state: GoogleC
       {
         provider_id: providerId,
         google_account_email: state.accountEmail ?? null,
+        google_account_name: state.accountName ?? null,
+        google_calendar_id: state.calendarId ?? null,
+        google_calendar_name: state.calendarName ?? null,
+        google_calendar_timezone: state.timezone ?? null,
         sync_status: state.isConnected ? "connected" : "disconnected",
         sync_scope: state.syncOption,
         auto_sync: state.autoSync,
         import_external: state.importExternal,
         last_synced_at: state.lastSyncedAt ?? null,
+        google_connected_at: state.connectedAt ?? null,
       },
       { onConflict: "provider_id" }
     );
@@ -556,6 +574,7 @@ export async function saveProviderEvent(
     title: event.title,
     event_type: event.type,
     event_date: event.startDate,
+    end_date: event.endDate ?? event.startDate,
     start_time: event.isAllDay ? null : event.startTime ?? null,
     end_time: event.isAllDay ? null : event.endTime ?? null,
     all_day: event.isAllDay,
@@ -576,7 +595,7 @@ export async function saveProviderEvent(
 }
 
 export async function deleteProviderEvent(providerId: string, id: string, source?: string) {
-  if (source === "booking") return;
+  if (source === "booking" || source === "google_calendar") return;
 
   const { error } = await supabase
     .from("provider_events" as any)

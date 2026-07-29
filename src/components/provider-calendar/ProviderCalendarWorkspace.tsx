@@ -232,10 +232,10 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
     const target = events.find((event) => event.id === id);
     if (!target) return;
 
-    if (target.source === "booking") {
+    if (target.source === "booking" || target.source === "google_calendar") {
       toast({
-        title: "Read-only booking",
-        description: "Subhakary bookings are managed through the booking flow and cannot be deleted here.",
+        title: "Read-only event",
+        description: "Subhakary bookings and Google Calendar imports cannot be deleted here.",
       });
       return;
     }
@@ -658,7 +658,7 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
               <Button
                 variant="destructive"
                 size="sm"
-                disabled={detailEvent.source === "booking"}
+                disabled={detailEvent.source === "booking" || detailEvent.source === "google_calendar"}
                 onClick={() => handleDeleteEvent(detailEvent.id)}
               >
                 <Trash2 className="mr-1 h-4 w-4" />
@@ -667,7 +667,7 @@ export const ProviderCalendarWorkspace = ({ providerId = "default" }: ProviderCa
               <Button
                 variant="outline"
                 size="sm"
-                disabled={detailEvent.source === "booking"}
+                disabled={detailEvent.source === "booking" || detailEvent.source === "google_calendar"}
                 onClick={() => {
                   setEditingEvent(detailEvent);
                   setDetailEvent(null);

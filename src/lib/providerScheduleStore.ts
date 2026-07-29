@@ -173,11 +173,11 @@ const DEFAULT_CAPACITY: ServiceCapacityConfig = {
 };
 
 const DEFAULT_NOTIFICATIONS: NotificationSettings = {
-  emailReminders: true,
+  emailReminders: false,
   emailTiming: "24h",
-  pushNotifications: true,
-  bookingUpdates: true,
-  scheduleSummaries: "daily",
+  pushNotifications: false,
+  bookingUpdates: false,
+  scheduleSummaries: "off",
   summaryTime: "08:00",
 };
 

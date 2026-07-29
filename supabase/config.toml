@@ -18,3 +18,10 @@ verify_jwt = false
 [functions.dispatch-provider-event-reminders]
 verify_jwt = false
 
+[functions.google-calendar-connect]
+
+[functions.google-calendar-disconnect]
+
+[functions.google-calendar-sync]
+verify_jwt = false
+
