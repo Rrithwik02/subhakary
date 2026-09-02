@@ -1,4 +1,4 @@
-import { CalendarDays, Bell, Clock, Cloud, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, Bell, Cloud, SlidersHorizontal } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProviderAvailabilityManager } from "@/components/ProviderAvailabilityManager";
@@ -19,34 +19,14 @@ export const ProviderScheduleSettingsPanel = ({
       className="overflow-hidden border-border/60 bg-card/95 shadow-sm"
     >
       <CardHeader className="border-b border-border/40 bg-muted/15 px-4 py-4 sm:px-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="font-display text-lg font-semibold flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-primary" />
-              Schedule settings
-            </CardTitle>
-            <CardDescription className="max-w-2xl text-sm text-muted-foreground">
-              Advanced availability controls stay in one place so the calendar can remain the main workspace.
-            </CardDescription>
-          </div>
-
-          <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-            <span className="rounded-full border border-border/60 bg-background px-2.5 py-1">
-              Availability
-            </span>
-            <span className="rounded-full border border-border/60 bg-background px-2.5 py-1">
-              Capacity
-            </span>
-            <span className="rounded-full border border-border/60 bg-background px-2.5 py-1">
-              Time slots
-            </span>
-            <span className="rounded-full border border-border/60 bg-background px-2.5 py-1">
-              Notifications
-            </span>
-            <span className="rounded-full border border-border/60 bg-background px-2.5 py-1">
-              Google Calendar
-            </span>
-          </div>
+        <div className="space-y-1">
+          <CardTitle className="font-display text-lg font-semibold flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-primary" />
+            Schedule settings
+          </CardTitle>
+          <CardDescription className="max-w-2xl text-sm text-muted-foreground">
+            Advanced availability controls stay in one place so the calendar can remain the main workspace.
+          </CardDescription>
         </div>
       </CardHeader>
 
