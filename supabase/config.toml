@@ -25,3 +25,24 @@ verify_jwt = false
 [functions.google-calendar-sync]
 verify_jwt = false
 
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.provider-search]
+verify_jwt = false
+
+[functions.provider-details]
+verify_jwt = false
+
+[functions.create-request]
+verify_jwt = false
+
+[functions.customer]
+verify_jwt = false
+
+[functions.my-requests]
+verify_jwt = false
+
+[functions.send-message]
+verify_jwt = false
+
