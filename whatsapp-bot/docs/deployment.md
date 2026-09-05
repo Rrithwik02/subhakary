@@ -36,7 +36,8 @@ npx supabase secrets set `
   SUPABASE_SERVICE_ROLE_KEY="<service-role-key>" `
   WHATSAPP_VERIFY_TOKEN="<long-random-verification-token>" `
   WHATSAPP_ACCESS_TOKEN="<meta-cloud-api-token>" `
-  WHATSAPP_PHONE_NUMBER_ID="<meta-phone-number-id>" `
+  WHATSAPP_PHONE_NUMBER_ID="1315672724957946" `
+  WHATSAPP_BUSINESS_ACCOUNT_ID="4077582609205589" `
   WHATSAPP_APP_SECRET="<meta-app-secret>"
 ```
 
@@ -61,12 +62,13 @@ JWT verification is disabled only for these routes because Meta cannot provide a
 In Meta for Developers:
 
 1. Open the Subhakary app and add or open the WhatsApp product.
-2. Open WhatsApp > API Setup and copy the `Phone number ID` and create a permanent system-user token with permission to send WhatsApp messages.
-3. Open WhatsApp > Configuration > Edit callback URL.
-4. Set the callback URL to `https://wgpfhqmhmtfjvyghbxbl.supabase.co/functions/v1/whatsapp-webhook`.
-5. Set the Verify Token to the exact `WHATSAPP_VERIFY_TOKEN` value.
-6. Complete verification and subscribe the `messages` webhook field.
-7. Add the test recipient in API Setup, or complete business verification before production messaging.
+2. Open WhatsApp > API Setup and confirm Phone number ID `1315672724957946`; create a permanent system-user token with permission to send WhatsApp messages.
+3. Confirm the WhatsApp Business Account ID is `4077582609205589`.
+4. Open WhatsApp > Configuration > Edit callback URL.
+5. Set the callback URL to `https://wgpfhqmhmtfjvyghbxbl.supabase.co/functions/v1/whatsapp-webhook`.
+6. Set the Verify Token to the exact `WHATSAPP_VERIFY_TOKEN` value.
+7. Complete verification and subscribe the `messages` webhook field.
+8. Add test recipient `+1 555 664 5231` in API Setup, or complete business verification before production messaging.
 
 Meta sends `X-Hub-Signature-256`; the function validates it with `WHATSAPP_APP_SECRET`. Do not require `x-whatsapp-bot-secret` on the Meta callback.
 

@@ -51,9 +51,9 @@ select id, name, slug, description, icon,
     when 'videography' then 20
     when 'catering' then 30
     when 'makeup' then 40
-    when 'decorations' then 50
-    when 'functionhalls' then 60
-    when 'priests' then 70
+    when 'decoration' then 50
+    when 'function-halls' then 60
+    when 'poojari' then 70
     else 100
   end
 from public.service_categories
@@ -90,13 +90,13 @@ cross join (values
   ('venue_type', 'What type of venue should we plan for?', 'text', false, 50, null::jsonb),
   ('ceremony_type', 'What ceremony should the priest support?', 'text', false, 50, null::jsonb)
 ) as q(key, label, type, required, sort_order, options)
-where ws.slug in ('photography', 'videography', 'catering', 'makeup', 'decorations', 'functionhalls', 'priests')
+where ws.slug in ('photography', 'videography', 'catering', 'makeup', 'decoration', 'function-halls', 'poojari')
   and ((ws.slug in ('photography', 'videography') and q.key = 'event_days')
-    or (ws.slug in ('catering', 'functionhalls') and q.key = 'guest_count')
+    or (ws.slug in ('catering', 'function-halls') and q.key = 'guest_count')
     or (ws.slug = 'catering' and q.key = 'food_preference')
     or (ws.slug = 'makeup' and q.key in ('people_count', 'makeup_type'))
-    or (ws.slug = 'decorations' and q.key = 'venue_type')
-    or (ws.slug = 'priests' and q.key = 'ceremony_type'))
+    or (ws.slug = 'decoration' and q.key = 'venue_type')
+    or (ws.slug = 'poojari' and q.key = 'ceremony_type'))
 on conflict (service_slug, key) do update set
   label = excluded.label, type = excluded.type, required = excluded.required,
   sort_order = excluded.sort_order, options = excluded.options;
@@ -124,20 +124,20 @@ values
   ('makeup', 'makeup-hd', 'HD Makeup', 30),
   ('makeup', 'makeup-party', 'Party Makeup', 40),
   ('makeup', 'makeup-hair', 'Hair Styling', 50),
-  ('decorations', 'decor-stage', 'Stage Decoration', 10),
-  ('decorations', 'decor-floral', 'Floral Decoration', 20),
-  ('decorations', 'decor-entrance', 'Entrance Decoration', 30),
-  ('decorations', 'decor-mandap', 'Mandap Decoration', 40),
-  ('decorations', 'decor-theme', 'Theme Decoration', 50),
-  ('functionhalls', 'venue-indoor', 'Indoor Hall', 10),
-  ('functionhalls', 'venue-outdoor', 'Outdoor Lawn', 20),
-  ('functionhalls', 'venue-banquet', 'Banquet Hall', 30),
-  ('functionhalls', 'venue-convention', 'Convention Center', 40),
-  ('functionhalls', 'venue-ac', 'AC Hall', 50),
-  ('priests', 'priest-vedic', 'Vedic Rituals', 10),
-  ('priests', 'priest-marriage', 'Wedding Ceremony', 20),
-  ('priests', 'priest-homam', 'Homam / Havan', 30),
-  ('priests', 'priest-grihapravesh', 'Griha Pravesh', 40)
+  ('decoration', 'decor-stage', 'Stage Decoration', 10),
+  ('decoration', 'decor-floral', 'Floral Decoration', 20),
+  ('decoration', 'decor-entrance', 'Entrance Decoration', 30),
+  ('decoration', 'decor-mandap', 'Mandap Decoration', 40),
+  ('decoration', 'decor-theme', 'Theme Decoration', 50),
+  ('function-halls', 'venue-indoor', 'Indoor Hall', 10),
+  ('function-halls', 'venue-outdoor', 'Outdoor Lawn', 20),
+  ('function-halls', 'venue-banquet', 'Banquet Hall', 30),
+  ('function-halls', 'venue-convention', 'Convention Center', 40),
+  ('function-halls', 'venue-ac', 'AC Hall', 50),
+  ('poojari', 'priest-vedic', 'Vedic Rituals', 10),
+  ('poojari', 'priest-marriage', 'Wedding Ceremony', 20),
+  ('poojari', 'priest-homam', 'Homam / Havan', 30),
+  ('poojari', 'priest-grihapravesh', 'Griha Pravesh', 40)
 on conflict (service_slug, requirement_id) do update set label = excluded.label, sort_order = excluded.sort_order;
 
 create sequence if not exists public.whatsapp_request_code_seq;
