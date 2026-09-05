@@ -2,6 +2,8 @@
 
 This deploys the bot to the project configured in `supabase/config.toml`.
 
+The Meta-provided test phone number is not a customer recipient. Use an actual WhatsApp number that Meta has authorized as a test recipient in WhatsApp > API Setup.
+
 ## 1. Supabase
 
 From the repository root:
