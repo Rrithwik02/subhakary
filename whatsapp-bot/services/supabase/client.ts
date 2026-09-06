@@ -4,13 +4,13 @@ export type SupabaseService = SupabaseClient;
 
 export function createServiceClient(): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL");
-  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const secretKey = Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!url || !serviceRole) {
+  if (!url || !secretKey) {
     throw new Error("Missing Supabase service credentials");
   }
 
-  return createClient(url, serviceRole, {
+  return createClient(url, secretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
@@ -23,4 +23,3 @@ export function createAnonymousClient(): SupabaseClient | null {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
-

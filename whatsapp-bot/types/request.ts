@@ -31,6 +31,7 @@ export type WhatsappRequestRecord = {
   service_answers: Record<string, unknown>;
   recommendation_requested: boolean;
   notes: string | null;
+  source_whatsapp_message_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -56,4 +57,3 @@ export type ConversationState = {
   requestId?: string | null;
   draft?: Record<string, unknown>;
 };
-

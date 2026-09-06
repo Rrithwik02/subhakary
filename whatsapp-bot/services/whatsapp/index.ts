@@ -117,6 +117,30 @@ export async function upsertWhatsappConversation(
   return data as Record<string, unknown>;
 }
 
+export async function updateWhatsappConversationIfUnchanged(
+  supabase: SupabaseClient,
+  conversationId: string,
+  expectedUpdatedAt: string,
+  state: ConversationState,
+) {
+  const { data, error } = await supabase
+    .from("whatsapp_conversations")
+    .update({
+      conversation_state: state.state,
+      current_step: state.step ?? null,
+      state_payload: state,
+      last_inbound_at: new Date().toISOString(),
+    })
+    .eq("id", conversationId)
+    .eq("updated_at", expectedUpdatedAt)
+    .select("*")
+    .maybeSingle();
+
+  if (error) throw new Error("Failed to update WhatsApp conversation");
+  if (!data) throw new Error("Conversation changed while processing another WhatsApp event");
+  return data as Record<string, unknown>;
+}
+
 export async function appendWhatsappEvent(
   supabase: SupabaseClient,
   payload: {
@@ -140,4 +164,3 @@ export async function appendWhatsappEvent(
     throw new Error(`Failed to append WhatsApp event: ${error.message}`);
   }
 }
-

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createServiceClient } from "../../../whatsapp-bot/services/supabase/client.ts";
 import { BOT_CONFIG } from "../../../whatsapp-bot/config/bot-config.ts";
 import { MESSAGES } from "../../../whatsapp-bot/config/messages.ts";
 import { renderRequestReview } from "../../../whatsapp-bot/flows/request.ts";
@@ -10,7 +11,7 @@ import { listRequestsByCustomer, createWhatsappRequest, addRequestProviders } fr
 import { searchProviders, listServiceCategories } from "../../../whatsapp-bot/services/provider-search/index.ts";
 import { sendWhatsAppMessage } from "../../../whatsapp-bot/services/whatsapp/send-message.ts";
 import { listWhatsappQuestions, listWhatsappRequirements } from "../../../whatsapp-bot/services/catalog/index.ts";
-import { appendWhatsappEvent, extractIncomingMessage, nextState, upsertWhatsappConversation, upsertWhatsappCustomer } from "../../../whatsapp-bot/services/whatsapp/index.ts";
+import { appendWhatsappEvent, extractIncomingMessage, nextState, updateWhatsappConversationIfUnchanged, upsertWhatsappConversation, upsertWhatsappCustomer } from "../../../whatsapp-bot/services/whatsapp/index.ts";
 import { verifyMetaWebhookSignature } from "../../../whatsapp-bot/services/whatsapp/auth.ts";
 import type { ConversationState } from "../../../whatsapp-bot/types/request.ts";
 import type { ServiceCategoryRecord } from "../../../whatsapp-bot/types/service.ts";
@@ -149,21 +150,21 @@ async function getCustomerProfileByPhone(supabase: ReturnType<typeof createClien
 async function loadConversation(
   supabase: ReturnType<typeof createClient>,
   customerId: string,
-): Promise<{ id: string; customer_id: string; conversation_state: string; current_step: string | null; state_payload: unknown } | null> {
+): Promise<{ id: string; customer_id: string; conversation_state: string; current_step: string | null; state_payload: unknown; updated_at: string } | null> {
   const { data } = await supabase
     .from("whatsapp_conversations")
-    .select("id, customer_id, conversation_state, current_step, state_payload")
+    .select("id, customer_id, conversation_state, current_step, state_payload, updated_at")
     .eq("customer_id", customerId)
     .maybeSingle();
-  return data as { id: string; customer_id: string; conversation_state: string; current_step: string | null; state_payload: unknown } | null;
+  return data as { id: string; customer_id: string; conversation_state: string; current_step: string | null; state_payload: unknown; updated_at: string } | null;
 }
 
 async function storeInboundMessage(
   supabase: ReturnType<typeof createClient>,
   conversationId: string,
   incoming: { messageId: string; text: string | null; raw: unknown },
-) {
-  await supabase.from("whatsapp_messages").upsert(
+) : Promise<boolean> {
+  const { data, error } = await supabase.from("whatsapp_messages").insert(
     {
       conversation_id: conversationId,
       whatsapp_message_id: incoming.messageId,
@@ -173,8 +174,13 @@ async function storeInboundMessage(
       payload: incoming.raw as Record<string, unknown>,
       delivery_status: "received",
     },
-    { onConflict: "whatsapp_message_id" },
-  );
+  ).select("id").maybeSingle();
+
+  if (error) {
+    if (error.code === "23505") return false;
+    throw new Error("Failed to claim inbound WhatsApp event");
+  }
+  return Boolean(data?.id);
 }
 
 async function storeOutboundMessage(
@@ -355,6 +361,7 @@ async function routeMessage(
   state: ConversationState,
   incomingText: string | null,
   selectionId: string | null,
+  sourceWhatsappMessageId: string,
 ) {
   const text = normalizeText(incomingText);
   const selection = normalizeText(selectionId ?? incomingText);
@@ -603,30 +610,12 @@ async function routeMessage(
     if (selectionText === "providers:recommend" || selectionText.includes("let subhakary recommend") || selectionText.includes("recommend")) {
       const providerBatch = await buildProviderResponse(supabase, state, 1, BOT_CONFIG.maxSelectedProviders);
       const selectedProviders = providerBatch.searchResult.providers.slice(0, 3).map((provider) => provider.id);
-      const request = await createWhatsappRequest(supabase, {
-        customerId,
-        requestType: "recommendation",
-        status: "NEW",
-        serviceCategoryId: state.serviceCategoryId ?? null,
-        serviceCategoryName: typeof state.draft?.serviceCategoryName === "string" ? String(state.draft.serviceCategoryName) : null,
-        serviceCategorySlug: categorySlug,
-        locationName: typeof state.draft?.location === "string" ? String(state.draft.location) : null,
-        eventType: typeof state.draft?.event_type === "string" ? String(state.draft.event_type) : null,
-        eventDate: typeof state.draft?.event_date === "string" ? String(state.draft.event_date) : null,
-        guestCount: typeof state.draft?.guest_count === "number" ? Number(state.draft.guest_count) : null,
-        budgetRange: typeof state.draft?.budget_range === "string" ? String(state.draft.budget_range) : null,
-        selectedRequirementIds: state.selectedRequirementIds ?? [],
-        selectedProviderIds: selectedProviders,
-        recommendationRequested: true,
-        serviceAnswers: state.draft ?? {},
-      });
-      await addRequestProviders(supabase, request.id, selectedProviders, true);
 
       return {
         nextState: nextState(state, {
           state: "request_review",
           step: "request_review",
-          requestId: request.id,
+          requestId: null,
           selectedProviderIds: selectedProviders,
           recommendationRequested: true,
         }),
@@ -708,7 +697,7 @@ async function routeMessage(
     if (selection.includes("request:submit") || selection.includes("submit_request") || selection.includes("submit request")) {
       const request = await createWhatsappRequest(supabase, {
         customerId,
-        requestType: "service_request",
+        requestType: state.recommendationRequested ? "recommendation" : "service_request",
         status: "NEW",
         serviceCategoryId: state.serviceCategoryId ?? null,
         serviceCategoryName: typeof state.draft?.serviceCategoryName === "string" ? String(state.draft.serviceCategoryName) : null,
@@ -722,6 +711,7 @@ async function routeMessage(
         selectedProviderIds: state.selectedProviderIds ?? [],
         recommendationRequested: Boolean(state.recommendationRequested),
         serviceAnswers: state.draft ?? {},
+        sourceWhatsappMessageId,
       });
 
       await addRequestProviders(supabase, request.id, state.selectedProviderIds ?? [], Boolean(state.recommendationRequested));
@@ -866,14 +856,16 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRole) {
+  if (!supabaseUrl) {
     return json({ error: "Missing Supabase configuration" }, 500);
   }
 
-  const supabase = createClient(supabaseUrl, serviceRole, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  let supabase: ReturnType<typeof createClient>;
+  try {
+    supabase = createServiceClient();
+  } catch {
+    return json({ error: "Missing Supabase configuration" }, 500);
+  }
 
   const outcomes: Array<{ messageId: string; status: string }> = [];
 
@@ -902,11 +894,15 @@ serve(async (req) => {
       conversationRecord = await upsertWhatsappConversation(supabase, customer.id, initialState);
     }
 
-    await storeInboundMessage(supabase, conversationRecord.id, {
+    const claimed = await storeInboundMessage(supabase, conversationRecord.id, {
       messageId: incoming.messageId,
       text: incoming.text,
       raw: incoming.raw,
     });
+    if (!claimed) {
+      outcomes.push({ messageId: incoming.messageId, status: "duplicate" });
+      continue;
+    }
 
     const route = await routeMessage(
       supabase,
@@ -915,11 +911,13 @@ serve(async (req) => {
       currentState,
       incoming.text,
       incoming.buttonId ?? incoming.listId,
+      incoming.messageId,
     );
 
-    const nextConversation = await upsertWhatsappConversation(
+    const nextConversation = await updateWhatsappConversationIfUnchanged(
       supabase,
-      customer.id,
+      conversationRecord.id,
+      conversationRecord.updated_at,
       route.nextState,
     );
 
@@ -929,16 +927,7 @@ serve(async (req) => {
       interactive: route.replyInteractive,
     });
 
-    const outboundId = outboundResult.ok
-      ? (() => {
-          try {
-            const parsed = outboundResult.body ? JSON.parse(outboundResult.body) : null;
-            return parsed?.messages?.[0]?.id ?? crypto.randomUUID();
-          } catch {
-            return crypto.randomUUID();
-          }
-        })()
-      : crypto.randomUUID();
+    const outboundId = outboundResult.messageId ?? crypto.randomUUID();
 
     await storeOutboundMessage(supabase, nextConversation.id, outboundId, route.replyText);
     await appendWhatsappEvent(supabase, {

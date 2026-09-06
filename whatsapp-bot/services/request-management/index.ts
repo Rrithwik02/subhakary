@@ -19,12 +19,34 @@ export type CreateWhatsappRequestInput = {
   recommendationRequested?: boolean;
   serviceAnswers?: Record<string, unknown>;
   notes?: string | null;
+  sourceWhatsappMessageId?: string | null;
 };
 
 export async function createWhatsappRequest(
   supabase: SupabaseClient,
   input: CreateWhatsappRequestInput,
 ): Promise<WhatsappRequestRecord> {
+  const selectedProviderIds = Array.from(new Set(input.selectedProviderIds ?? []));
+  if (selectedProviderIds.length > BOT_CONFIG.maxSelectedProviders) {
+    throw new Error(`A maximum of ${BOT_CONFIG.maxSelectedProviders} providers may be selected`);
+  }
+
+  if (selectedProviderIds.length > 0) {
+    if (!input.serviceCategoryId) throw new Error("A service category is required when selecting providers");
+    const { data: providers, error: providerError } = await supabase
+      .from("service_providers")
+      .select("id, category_id, status")
+      .in("id", selectedProviderIds)
+      .eq("category_id", input.serviceCategoryId)
+      .eq("status", "approved");
+
+    if (providerError) throw new Error("Failed to validate selected providers");
+    const approvedIds = new Set((providers ?? []).map((provider) => provider.id));
+    if (approvedIds.size !== selectedProviderIds.length) {
+      throw new Error("One or more selected providers are not available for this service");
+    }
+  }
+
   const payload = {
     customer_id: input.customerId,
     request_type: input.requestType,
@@ -39,10 +61,11 @@ export async function createWhatsappRequest(
     guest_count: input.guestCount ?? null,
     budget_range: input.budgetRange ?? null,
     selected_requirement_ids: input.selectedRequirementIds ?? [],
-    selected_provider_ids: input.selectedProviderIds ?? [],
+    selected_provider_ids: selectedProviderIds,
     recommendation_requested: Boolean(input.recommendationRequested),
     service_answers: input.serviceAnswers ?? {},
     notes: input.notes ?? null,
+    source_whatsapp_message_id: input.sourceWhatsappMessageId ?? null,
   };
 
   const { data, error } = await supabase
@@ -52,6 +75,14 @@ export async function createWhatsappRequest(
     .single();
 
   if (error) {
+    if (input.sourceWhatsappMessageId) {
+      const { data: existing } = await supabase
+        .from("whatsapp_requests")
+        .select("*")
+        .eq("source_whatsapp_message_id", input.sourceWhatsappMessageId)
+        .maybeSingle();
+      if (existing) return existing as WhatsappRequestRecord;
+    }
     throw new Error(`Failed to create WhatsApp request: ${error.message}`);
   }
 
@@ -98,4 +129,3 @@ export async function listRequestsByCustomer(
 
   return (data ?? []) as WhatsappRequestRecord[];
 }
-

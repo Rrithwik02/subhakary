@@ -27,9 +27,8 @@ serve(async (req) => {
       imageUrl: body.imageUrl ?? null,
       caption: body.caption ?? undefined,
     });
-    return json(result, result.ok ? 200 : 502);
+    return json(result.ok ? { ok: true, messageId: result.messageId } : { ok: false, error: result.error }, result.ok ? 200 : 502);
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "Message send failed" }, 500);
   }
 });
-
