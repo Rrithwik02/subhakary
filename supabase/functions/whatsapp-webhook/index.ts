@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createServiceClient } from "../../../whatsapp-bot/services/supabase/client.ts";
+import type { SupabaseService } from "../../../whatsapp-bot/services/supabase/client.ts";
+import { toJson } from "../../../whatsapp-bot/types/database.ts";
 import { BOT_CONFIG } from "../../../whatsapp-bot/config/bot-config.ts";
 import { MESSAGES } from "../../../whatsapp-bot/config/messages.ts";
 import { renderRequestReview } from "../../../whatsapp-bot/flows/request.ts";
@@ -11,7 +12,7 @@ import { listRequestsByCustomer, createWhatsappRequest, addRequestProviders } fr
 import { searchProviders, listServiceCategories } from "../../../whatsapp-bot/services/provider-search/index.ts";
 import { sendWhatsAppMessage } from "../../../whatsapp-bot/services/whatsapp/send-message.ts";
 import { listWhatsappQuestions, listWhatsappRequirements } from "../../../whatsapp-bot/services/catalog/index.ts";
-import { appendWhatsappEvent, extractIncomingMessage, nextState, updateWhatsappConversationIfUnchanged, upsertWhatsappConversation, upsertWhatsappCustomer } from "../../../whatsapp-bot/services/whatsapp/index.ts";
+import { appendWhatsappEvent, extractIncomingMessage, nextState, updateWhatsappConversationIfUnchanged, upsertWhatsappConversation, upsertWhatsappCustomer, type WhatsappConversationRecord } from "../../../whatsapp-bot/services/whatsapp/index.ts";
 import { verifyMetaWebhookSignature } from "../../../whatsapp-bot/services/whatsapp/auth.ts";
 import type { ConversationState } from "../../../whatsapp-bot/types/request.ts";
 import type { ServiceCategoryRecord } from "../../../whatsapp-bot/types/service.ts";
@@ -48,7 +49,7 @@ function getConversationState(raw: unknown): ConversationState {
   };
 }
 
-async function questionSequence(supabase: ReturnType<typeof createClient>, categorySlug: string | null | undefined) {
+async function questionSequence(supabase: SupabaseService, categorySlug: string | null | undefined) {
   return listWhatsappQuestions(supabase, categorySlug);
 }
 
@@ -92,13 +93,13 @@ function formatCategoryList(categories: ServiceCategoryRecord[]) {
   ].join("\n");
 }
 
-async function selectedRequirementsText(supabase: ReturnType<typeof createClient>, categorySlug: string | null | undefined, ids: string[]) {
+async function selectedRequirementsText(supabase: SupabaseService, categorySlug: string | null | undefined, ids: string[]) {
   const requirements = categorySlug ? await listWhatsappRequirements(supabase, categorySlug) : [];
   const lookup = new Map(requirements.map((item) => [item.requirement_id, item.label]));
   return ids.map((id) => lookup.get(id) ?? id).filter(Boolean);
 }
 
-async function resolveRequirementIds(supabase: ReturnType<typeof createClient>, categorySlug: string | null | undefined, input: string): Promise<string[]> {
+async function resolveRequirementIds(supabase: SupabaseService, categorySlug: string | null | undefined, input: string): Promise<string[]> {
   const options = categorySlug ? await listWhatsappRequirements(supabase, categorySlug) : [];
   const normalized = normalizeText(input).replace(/^requirement:/, "");
   if (!normalized) return [];
@@ -138,7 +139,7 @@ function mergeUnique(values: string[], additions: string[]) {
   return Array.from(new Set([...values, ...additions]));
 }
 
-async function getCustomerProfileByPhone(supabase: ReturnType<typeof createClient>, phone: string) {
+async function getCustomerProfileByPhone(supabase: SupabaseService, phone: string) {
   const { data } = await supabase
     .from("profiles")
     .select("id, full_name, phone")
@@ -148,19 +149,19 @@ async function getCustomerProfileByPhone(supabase: ReturnType<typeof createClien
 }
 
 async function loadConversation(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseService,
   customerId: string,
-): Promise<{ id: string; customer_id: string; conversation_state: string; current_step: string | null; state_payload: unknown; updated_at: string } | null> {
+): Promise<WhatsappConversationRecord | null> {
   const { data } = await supabase
     .from("whatsapp_conversations")
     .select("id, customer_id, conversation_state, current_step, state_payload, updated_at")
     .eq("customer_id", customerId)
     .maybeSingle();
-  return data as { id: string; customer_id: string; conversation_state: string; current_step: string | null; state_payload: unknown; updated_at: string } | null;
+  return data as WhatsappConversationRecord | null;
 }
 
 async function storeInboundMessage(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseService,
   conversationId: string,
   incoming: { messageId: string; text: string | null; raw: unknown },
 ) : Promise<boolean> {
@@ -171,7 +172,7 @@ async function storeInboundMessage(
       direction: "inbound",
       message_type: "text",
       body: incoming.text,
-      payload: incoming.raw as Record<string, unknown>,
+      payload: toJson(incoming.raw),
       delivery_status: "received",
     },
   ).select("id").maybeSingle();
@@ -184,7 +185,7 @@ async function storeInboundMessage(
 }
 
 async function storeOutboundMessage(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseService,
   conversationId: string,
   messageId: string,
   text: string,
@@ -204,7 +205,7 @@ async function storeOutboundMessage(
 }
 
 async function buildProviderResponse(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseService,
   state: ConversationState,
   page: number,
   limit: number,
@@ -225,7 +226,7 @@ async function buildProviderResponse(
 }
 
 async function resolveReviewText(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseService,
   state: ConversationState,
   categorySlug: string | null,
 ) {
@@ -294,7 +295,7 @@ function providerRows(providers: Array<{ id: string; business_name: string; city
 }
 
 async function handleMainMenuSelection(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseService,
   customerId: string,
   conversation: ConversationState,
   incomingText: string,
@@ -355,7 +356,7 @@ async function handleMainMenuSelection(
 }
 
 async function routeMessage(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseService,
   customerId: string,
   displayName: string | null,
   state: ConversationState,
@@ -621,7 +622,7 @@ async function routeMessage(
         }),
         replyText: await resolveReviewText(supabase, {
           ...state,
-          requestId: request.id,
+          requestId: null,
           selectedProviderIds: selectedProviders,
           recommendationRequested: true,
         }, categorySlug),
@@ -860,7 +861,7 @@ serve(async (req) => {
     return json({ error: "Missing Supabase configuration" }, 500);
   }
 
-  let supabase: ReturnType<typeof createClient>;
+  let supabase: SupabaseService;
   try {
     supabase = createServiceClient();
   } catch {

@@ -1,19 +1,19 @@
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { ProviderSearchResult, ProviderSummary } from "../../types/provider.ts";
 import type { ServiceCategoryRecord } from "../../types/service.ts";
 import { BOT_CONFIG } from "../../config/bot-config.ts";
 import { paginateProviders, rankProviders, type ProviderSearchFilters } from "../provider-matching/index.ts";
 import { listWhatsappServices } from "../catalog/index.ts";
 import { safeMediaUrls } from "../../utils/security.ts";
+import type { SupabaseService } from "../supabase/client.ts";
 
 export async function listServiceCategories(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
 ): Promise<ServiceCategoryRecord[]> {
   return listWhatsappServices(supabase);
 }
 
 export async function searchProviders(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   filters: ProviderSearchFilters,
 ): Promise<{
   providers: ProviderSearchResult[];
@@ -98,7 +98,7 @@ export async function searchProviders(
 }
 
 export async function getProviderDetails(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   providerId: string,
 ): Promise<Record<string, unknown>> {
   const { data: provider, error } = await supabase

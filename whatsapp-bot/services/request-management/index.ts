@@ -1,6 +1,7 @@
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { WhatsappRequestRecord, WhatsappRequestType } from "../../types/request.ts";
 import { BOT_CONFIG } from "../../config/bot-config.ts";
+import type { SupabaseService } from "../supabase/client.ts";
+import { toJson } from "../../types/database.ts";
 
 export type CreateWhatsappRequestInput = {
   customerId: string;
@@ -23,7 +24,7 @@ export type CreateWhatsappRequestInput = {
 };
 
 export async function createWhatsappRequest(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   input: CreateWhatsappRequestInput,
 ): Promise<WhatsappRequestRecord> {
   const selectedProviderIds = Array.from(new Set(input.selectedProviderIds ?? []));
@@ -63,7 +64,7 @@ export async function createWhatsappRequest(
     selected_requirement_ids: input.selectedRequirementIds ?? [],
     selected_provider_ids: selectedProviderIds,
     recommendation_requested: Boolean(input.recommendationRequested),
-    service_answers: input.serviceAnswers ?? {},
+    service_answers: toJson(input.serviceAnswers ?? {}),
     notes: input.notes ?? null,
     source_whatsapp_message_id: input.sourceWhatsappMessageId ?? null,
   };
@@ -90,7 +91,7 @@ export async function createWhatsappRequest(
 }
 
 export async function addRequestProviders(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   requestId: string,
   providerIds: string[],
   recommendationRequested = false,
@@ -114,7 +115,7 @@ export async function addRequestProviders(
 }
 
 export async function listRequestsByCustomer(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   customerId: string,
 ): Promise<WhatsappRequestRecord[]> {
   const { data, error } = await supabase
