@@ -26,28 +26,7 @@ export async function searchProviders(
   const categories = await listServiceCategories(supabase);
   const serviceQuery = supabase
     .from("service_providers")
-    .select(
-      [
-        "id",
-        "business_name",
-        "city",
-        "secondary_city",
-        "service_cities",
-        "description",
-        "rating",
-        "total_reviews",
-        "is_verified",
-        "is_premium",
-        "base_price",
-        "category_id",
-        "service_type",
-        "subcategory",
-        "portfolio_images",
-        "logo_url",
-        "url_slug",
-        "availability_status",
-      ].join(","),
-    )
+    .select("id, business_name, city, secondary_city, service_cities, description, rating, total_reviews, is_verified, is_premium, base_price, category_id, service_type, subcategory, portfolio_images, logo_url, url_slug, availability_status")
     .eq("status", "approved");
 
   if (filters.categoryId) {
@@ -66,7 +45,27 @@ export async function searchProviders(
     throw new Error(`Failed to search providers: ${error.message}`);
   }
 
-  const ranked = rankProviders((data ?? []) as ProviderSummary[], filters, categories);
+  const providerRows: ProviderSummary[] = (data ?? []).map((provider) => ({
+    id: provider.id,
+    business_name: provider.business_name,
+    city: provider.city,
+    secondary_city: provider.secondary_city,
+    service_cities: provider.service_cities,
+    description: provider.description,
+    rating: provider.rating,
+    total_reviews: provider.total_reviews,
+    is_verified: provider.is_verified,
+    is_premium: provider.is_premium,
+    base_price: provider.base_price,
+    category_id: provider.category_id,
+    service_type: provider.service_type,
+    subcategory: provider.subcategory,
+    portfolio_images: provider.portfolio_images,
+    logo_url: provider.logo_url,
+    url_slug: provider.url_slug,
+    availability_status: provider.availability_status,
+  }));
+  const ranked = rankProviders(providerRows, filters, categories);
   const page = filters.page ?? 1;
   const limit = filters.limit ?? BOT_CONFIG.defaultPageSize;
   const paginated = paginateProviders(ranked, page, limit);
@@ -103,26 +102,7 @@ export async function getProviderDetails(
 ): Promise<Record<string, unknown>> {
   const { data: provider, error } = await supabase
     .from("service_providers")
-    .select(
-      [
-        "id",
-        "business_name",
-        "description",
-        "city",
-        "secondary_city",
-        "service_cities",
-        "rating",
-        "total_reviews",
-        "is_verified",
-        "is_premium",
-        "service_type",
-        "subcategory",
-        "category_id",
-        "portfolio_images",
-        "logo_url",
-        "url_slug",
-      ].join(","),
-    )
+    .select("id, business_name, description, city, secondary_city, service_cities, rating, total_reviews, is_verified, is_premium, service_type, subcategory, category_id, portfolio_images, logo_url, url_slug")
     .eq("id", providerId)
     .eq("status", "approved")
     .single();

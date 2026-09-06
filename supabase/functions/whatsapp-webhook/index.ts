@@ -171,7 +171,7 @@ async function storeInboundMessage(
       whatsapp_message_id: incoming.messageId,
       direction: "inbound",
       message_type: "text",
-      body: incoming.text,
+      body: incoming.text ?? null,
       payload: toJson(incoming.raw),
       delivery_status: "received",
     },
@@ -910,7 +910,7 @@ serve(async (req) => {
       customer.id,
       incoming.name ?? customerProfile?.full_name ?? null,
       currentState,
-      incoming.text,
+      incoming.text ?? null,
       incoming.buttonId ?? incoming.listId,
       incoming.messageId,
     );
