@@ -897,7 +897,7 @@ serve(async (req) => {
 
     const claimed = await storeInboundMessage(supabase, conversationRecord.id, {
       messageId: incoming.messageId,
-      text: incoming.text,
+      text: incoming.text ?? null,
       raw: incoming.raw,
     });
     if (!claimed) {
@@ -911,7 +911,7 @@ serve(async (req) => {
       incoming.name ?? customerProfile?.full_name ?? null,
       currentState,
       incoming.text ?? null,
-      incoming.buttonId ?? incoming.listId,
+      incoming.buttonId ?? incoming.listId ?? null,
       incoming.messageId,
     );
 
