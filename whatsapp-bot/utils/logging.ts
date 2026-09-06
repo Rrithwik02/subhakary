@@ -1,8 +1,17 @@
 type LogLevel = "info" | "warn" | "error" | "debug";
 
 function write(level: LogLevel, message: string, meta?: Record<string, unknown>) {
-  const payload = meta ? { message, ...meta } : { message };
+  const payload = meta ? { message, ...redact(meta) } : { message };
   console[level](`[whatsapp-bot] ${message}`, payload);
+}
+
+const SENSITIVE_KEY = /(authorization|access.?token|app.?secret|webhook.?secret|verify.?token|raw.?payload|response.?body)/i;
+
+function redact(meta: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(meta).map(([key, value]) => [
+    key,
+    SENSITIVE_KEY.test(key) ? "[REDACTED]" : value,
+  ]));
 }
 
 export const logger = {
@@ -19,4 +28,3 @@ export const logger = {
     write("debug", message, meta);
   },
 };
-

@@ -1,9 +1,41 @@
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import type { ServiceCategoryRecord, ServiceQuestionConfig, WhatsappServiceRequirementRecord } from "../../types/service.ts";
+import type { ServiceCategoryRecord, ServiceQuestionConfig, ServiceQuestionType, WhatsappServiceRequirementRecord } from "../../types/service.ts";
+import type { SupabaseService } from "../supabase/client.ts";
+import type { Json } from "../../types/database.ts";
 
-type CatalogQuestion = ServiceQuestionConfig & { service_slug: string };
+type CatalogQuestionRow = {
+  service_slug: string;
+  key: string;
+  label: string;
+  type: string;
+  required: boolean;
+  sort_order: number;
+  options: Json | null;
+};
 
-export async function listWhatsappServices(supabase: SupabaseClient): Promise<ServiceCategoryRecord[]> {
+function toQuestionType(value: string): ServiceQuestionType {
+  switch (value) {
+    case "text":
+    case "select":
+    case "number":
+    case "date":
+    case "multiselect":
+      return value;
+    default:
+      throw new Error(`Unsupported WhatsApp question type: ${value}`);
+  }
+}
+
+function toStringOptions(value: Json | null): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const options: string[] = [];
+  for (const option of value) {
+    if (typeof option !== "string") return undefined;
+    options.push(option);
+  }
+  return options;
+}
+
+export async function listWhatsappServices(supabase: SupabaseService): Promise<ServiceCategoryRecord[]> {
   const { data, error } = await supabase
     .from("whatsapp_services")
     .select("id, category_id, name, slug, description, icon, sort_order")
@@ -21,7 +53,7 @@ export async function listWhatsappServices(supabase: SupabaseClient): Promise<Se
 }
 
 export async function listWhatsappQuestions(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   serviceSlug: string | null | undefined,
 ): Promise<ServiceQuestionConfig[]> {
   const query = supabase
@@ -37,18 +69,18 @@ export async function listWhatsappQuestions(
     : { data: [], error: null };
   if (serviceResult.error) throw new Error(`Failed to load WhatsApp questions: ${serviceResult.error.message}`);
 
-  return [...(genericResult.data ?? []), ...(serviceResult.data ?? [])].map((item: CatalogQuestion) => ({
+  return [...(genericResult.data ?? []), ...(serviceResult.data ?? [])].map((item: CatalogQuestionRow) => ({
     key: item.key,
     label: item.label,
-    type: item.type,
+    type: toQuestionType(item.type),
     required: item.required,
     order: item.sort_order,
-    options: item.options ?? undefined,
+    options: toStringOptions(item.options),
   }));
 }
 
 export async function listWhatsappRequirements(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   serviceSlug: string,
 ): Promise<WhatsappServiceRequirementRecord[]> {
   const { data, error } = await supabase

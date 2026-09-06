@@ -2,6 +2,8 @@
 
 This deploys the bot to the project configured in `supabase/config.toml`.
 
+The Meta-provided test phone number is not a customer recipient. Use an actual WhatsApp number that Meta has authorized as a test recipient in WhatsApp > API Setup.
+
 ## 1. Supabase
 
 From the repository root:
@@ -33,7 +35,7 @@ Use Supabase Project Settings > API for the service-role key, and the Meta value
 ```powershell
 npx supabase secrets set `
   SUPABASE_URL="https://wgpfhqmhmtfjvyghbxbl.supabase.co" `
-  SUPABASE_SERVICE_ROLE_KEY="<service-role-key>" `
+  SUPABASE_SECRET_KEY="<supabase-secret-key>" `
   WHATSAPP_VERIFY_TOKEN="<long-random-verification-token>" `
   WHATSAPP_ACCESS_TOKEN="<meta-cloud-api-token>" `
   WHATSAPP_PHONE_NUMBER_ID="1315672724957946" `
@@ -41,7 +43,7 @@ npx supabase secrets set `
   WHATSAPP_APP_SECRET="<meta-app-secret>"
 ```
 
-Never expose `SUPABASE_SERVICE_ROLE_KEY`, `WHATSAPP_ACCESS_TOKEN`, or `WHATSAPP_APP_SECRET` in frontend code.
+Never expose `SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `WHATSAPP_ACCESS_TOKEN`, or `WHATSAPP_APP_SECRET` in frontend code.
 
 ## 3. Deploy functions
 

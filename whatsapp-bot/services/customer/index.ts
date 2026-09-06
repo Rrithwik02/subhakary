@@ -1,8 +1,8 @@
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { normalizePhone } from "../../utils/validation.ts";
+import type { SupabaseService } from "../supabase/client.ts";
 
 export async function findWhatsappCustomerByPhone(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   phone: string,
 ) {
   const normalizedPhone = normalizePhone(phone);
@@ -20,7 +20,7 @@ export async function findWhatsappCustomerByPhone(
 }
 
 export async function findOrCreateWhatsappCustomer(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   phone: string,
   displayName?: string | null,
   profileId?: string | null,
@@ -48,4 +48,3 @@ export async function findOrCreateWhatsappCustomer(
 
   return data;
 }
-

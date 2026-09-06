@@ -11,7 +11,7 @@
 
 - Use a dedicated WhatsApp business number for Subhakary
 - Keep `WHATSAPP_WEBHOOK_SECRET` private and only send it from internal bot calls
-- Keep `WHATSAPP_ACCESS_TOKEN` and `SUPABASE_SERVICE_ROLE_KEY` server-side only
+- Keep `WHATSAPP_ACCESS_TOKEN` and `SUPABASE_SECRET_KEY` server-side only
 
 ## Conversation design
 
@@ -29,4 +29,3 @@ Free text should be treated as a fallback, not the primary path.
 - Show roughly 5 providers at a time
 - Allow a maximum of 3 selected providers
 - Keep portfolio previews short and image-light
-

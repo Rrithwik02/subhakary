@@ -1,0 +1,41 @@
+name: WhatsApp Bot Checks
+
+on:
+  push:
+    paths:
+      - "whatsapp-bot/**"
+      - "supabase/functions/whatsapp-webhook/**"
+      - "supabase/functions/provider-search/**"
+      - "supabase/functions/provider-details/**"
+      - "supabase/functions/create-request/**"
+      - "supabase/functions/customer/**"
+      - "supabase/functions/my-requests/**"
+      - "supabase/functions/send-message/**"
+      - "supabase/migrations/**"
+      - ".github/workflows/whatsapp-bot.yml"
+  pull_request:
+    paths:
+      - "whatsapp-bot/**"
+      - "supabase/functions/**"
+      - "supabase/migrations/**"
+      - ".github/workflows/whatsapp-bot.yml"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Typecheck WhatsApp functions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for function in whatsapp-webhook provider-search provider-details create-request customer my-requests send-message; do
+            deno check "supabase/functions/$function/index.ts"
+          done
+      - name: Run WhatsApp security tests
+        run: deno test --allow-env whatsapp-bot/services/whatsapp/auth.test.ts whatsapp-bot/utils/security.test.ts

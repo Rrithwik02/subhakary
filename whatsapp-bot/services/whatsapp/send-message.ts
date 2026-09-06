@@ -1,3 +1,5 @@
+import { isApprovedMediaUrl } from "../../utils/security.ts";
+
 type WhatsAppSendPayload = {
   to: string;
   type?: "text" | "image" | "interactive";
@@ -31,7 +33,7 @@ export async function sendWhatsAppMessage(payload: {
   if (payload.interactive) {
     body.type = "interactive";
     body.interactive = payload.interactive;
-  } else if (payload.imageUrl) {
+  } else if (payload.imageUrl && isApprovedMediaUrl(payload.imageUrl)) {
     body.type = "image";
     body.image = { link: payload.imageUrl, caption: payload.caption };
   } else {
@@ -49,9 +51,18 @@ export async function sendWhatsAppMessage(payload: {
   });
 
   const responseText = await response.text();
+  let messageId: string | undefined;
+  if (response.ok) {
+    try {
+      messageId = JSON.parse(responseText)?.messages?.[0]?.id;
+    } catch {
+      messageId = undefined;
+    }
+  }
   return {
     ok: response.ok,
     status: response.status,
-    body: responseText,
+    messageId,
+    error: response.ok ? undefined : "WhatsApp API request failed",
   };
 }

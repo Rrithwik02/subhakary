@@ -1,6 +1,7 @@
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { WhatsappRequestRecord, WhatsappRequestType } from "../../types/request.ts";
 import { BOT_CONFIG } from "../../config/bot-config.ts";
+import type { SupabaseService } from "../supabase/client.ts";
+import { toJson } from "../../types/database.ts";
 
 export type CreateWhatsappRequestInput = {
   customerId: string;
@@ -19,12 +20,34 @@ export type CreateWhatsappRequestInput = {
   recommendationRequested?: boolean;
   serviceAnswers?: Record<string, unknown>;
   notes?: string | null;
+  sourceWhatsappMessageId?: string | null;
 };
 
 export async function createWhatsappRequest(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   input: CreateWhatsappRequestInput,
 ): Promise<WhatsappRequestRecord> {
+  const selectedProviderIds = Array.from(new Set(input.selectedProviderIds ?? []));
+  if (selectedProviderIds.length > BOT_CONFIG.maxSelectedProviders) {
+    throw new Error(`A maximum of ${BOT_CONFIG.maxSelectedProviders} providers may be selected`);
+  }
+
+  if (selectedProviderIds.length > 0) {
+    if (!input.serviceCategoryId) throw new Error("A service category is required when selecting providers");
+    const { data: providers, error: providerError } = await supabase
+      .from("service_providers")
+      .select("id, category_id, status")
+      .in("id", selectedProviderIds)
+      .eq("category_id", input.serviceCategoryId)
+      .eq("status", "approved");
+
+    if (providerError) throw new Error("Failed to validate selected providers");
+    const approvedIds = new Set((providers ?? []).map((provider) => provider.id));
+    if (approvedIds.size !== selectedProviderIds.length) {
+      throw new Error("One or more selected providers are not available for this service");
+    }
+  }
+
   const payload = {
     customer_id: input.customerId,
     request_type: input.requestType,
@@ -39,10 +62,11 @@ export async function createWhatsappRequest(
     guest_count: input.guestCount ?? null,
     budget_range: input.budgetRange ?? null,
     selected_requirement_ids: input.selectedRequirementIds ?? [],
-    selected_provider_ids: input.selectedProviderIds ?? [],
+    selected_provider_ids: selectedProviderIds,
     recommendation_requested: Boolean(input.recommendationRequested),
-    service_answers: input.serviceAnswers ?? {},
+    service_answers: toJson(input.serviceAnswers ?? {}),
     notes: input.notes ?? null,
+    source_whatsapp_message_id: input.sourceWhatsappMessageId ?? null,
   };
 
   const { data, error } = await supabase
@@ -52,6 +76,14 @@ export async function createWhatsappRequest(
     .single();
 
   if (error) {
+    if (input.sourceWhatsappMessageId) {
+      const { data: existing } = await supabase
+        .from("whatsapp_requests")
+        .select("*")
+        .eq("source_whatsapp_message_id", input.sourceWhatsappMessageId)
+        .maybeSingle();
+      if (existing) return existing as WhatsappRequestRecord;
+    }
     throw new Error(`Failed to create WhatsApp request: ${error.message}`);
   }
 
@@ -59,7 +91,7 @@ export async function createWhatsappRequest(
 }
 
 export async function addRequestProviders(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   requestId: string,
   providerIds: string[],
   recommendationRequested = false,
@@ -83,7 +115,7 @@ export async function addRequestProviders(
 }
 
 export async function listRequestsByCustomer(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   customerId: string,
 ): Promise<WhatsappRequestRecord[]> {
   const { data, error } = await supabase
@@ -98,4 +130,3 @@ export async function listRequestsByCustomer(
 
   return (data ?? []) as WhatsappRequestRecord[];
 }
-

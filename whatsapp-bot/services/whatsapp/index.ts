@@ -1,7 +1,15 @@
 import type { ConversationState } from "../../types/request.ts";
 import type { WhatsappIncomingMessage } from "../../types/whatsapp.ts";
 import { normalizePhone } from "../../utils/validation.ts";
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseService } from "../supabase/client.ts";
+import { toJson } from "../../types/database.ts";
+
+export type WhatsappConversationRecord = {
+  id: string;
+  customer_id: string;
+  state_payload: unknown;
+  updated_at: string;
+};
 
 export function extractIncomingMessage(envelope: unknown): WhatsappIncomingMessage[] {
   const payload = envelope as {
@@ -60,11 +68,11 @@ export function nextState(current: ConversationState, patch: Partial<Conversatio
 }
 
 export async function upsertWhatsappCustomer(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   phone: string,
   displayName?: string | null,
   profileId?: string | null,
-) {
+): Promise<{ id: string }> {
   const normalizedPhone = normalizePhone(phone);
   const { data, error } = await supabase
     .from("whatsapp_customers")
@@ -86,14 +94,14 @@ export async function upsertWhatsappCustomer(
     throw new Error(`Failed to upsert WhatsApp customer: ${error.message}`);
   }
 
-  return data as Record<string, unknown>;
+  return data;
 }
 
 export async function upsertWhatsappConversation(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   customerId: string,
   state: ConversationState,
-) {
+): Promise<WhatsappConversationRecord> {
   const { data, error } = await supabase
     .from("whatsapp_conversations")
     .upsert(
@@ -101,7 +109,7 @@ export async function upsertWhatsappConversation(
         customer_id: customerId,
         conversation_state: state.state,
         current_step: state.step ?? null,
-        state_payload: state,
+        state_payload: toJson(state),
         source: "whatsapp",
         last_inbound_at: new Date().toISOString(),
       },
@@ -114,11 +122,35 @@ export async function upsertWhatsappConversation(
     throw new Error(`Failed to upsert WhatsApp conversation: ${error.message}`);
   }
 
-  return data as Record<string, unknown>;
+  return data;
+}
+
+export async function updateWhatsappConversationIfUnchanged(
+  supabase: SupabaseService,
+  conversationId: string,
+  expectedUpdatedAt: string,
+  state: ConversationState,
+): Promise<WhatsappConversationRecord> {
+  const { data, error } = await supabase
+    .from("whatsapp_conversations")
+    .update({
+      conversation_state: state.state,
+      current_step: state.step ?? null,
+      state_payload: toJson(state),
+      last_inbound_at: new Date().toISOString(),
+    })
+    .eq("id", conversationId)
+    .eq("updated_at", expectedUpdatedAt)
+    .select("*")
+    .maybeSingle();
+
+  if (error) throw new Error("Failed to update WhatsApp conversation");
+  if (!data) throw new Error("Conversation changed while processing another WhatsApp event");
+  return data;
 }
 
 export async function appendWhatsappEvent(
-  supabase: SupabaseClient,
+  supabase: SupabaseService,
   payload: {
     customerId?: string | null;
     conversationId?: string | null;
@@ -132,7 +164,7 @@ export async function appendWhatsappEvent(
     conversation_id: payload.conversationId ?? null,
     request_id: payload.requestId ?? null,
     event_name: payload.eventName,
-    payload: payload.eventPayload ?? {},
+    payload: toJson(payload.eventPayload ?? {}),
     source: "whatsapp",
   });
 
@@ -140,4 +172,3 @@ export async function appendWhatsappEvent(
     throw new Error(`Failed to append WhatsApp event: ${error.message}`);
   }
 }
-

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireBotSecret } from "../../../whatsapp-bot/services/whatsapp/auth.ts";
+import { createServiceClient } from "../../../whatsapp-bot/services/supabase/client.ts";
 import { createWhatsappRequest, addRequestProviders } from "../../../whatsapp-bot/services/request-management/index.ts";
 import { findOrCreateWhatsappCustomer } from "../../../whatsapp-bot/services/customer/index.ts";
 
@@ -21,14 +21,12 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   if (!requireBotSecret(req)) return json({ error: "Unauthorized" }, 401);
 
-  const url = Deno.env.get("SUPABASE_URL");
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !key) return json({ error: "Missing Supabase configuration" }, 500);
-
-  const body = await req.json();
-  const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-
   try {
+    const body = await req.json();
+    const supabase = createServiceClient();
+    if (typeof body.sourceWhatsappMessageId !== "string" || !body.sourceWhatsappMessageId.trim()) {
+      return json({ error: "sourceWhatsappMessageId is required" }, 400);
+    }
     const customerId = body.customerId
       || (body.phone ? (await findOrCreateWhatsappCustomer(supabase, body.phone, body.displayName ?? null, body.profileId ?? null)).id : null);
 
@@ -53,6 +51,7 @@ serve(async (req) => {
       recommendationRequested: Boolean(body.recommendationRequested),
       serviceAnswers: body.serviceAnswers ?? {},
       notes: body.notes ?? null,
+      sourceWhatsappMessageId: body.sourceWhatsappMessageId,
     });
 
     await addRequestProviders(supabase, request.id, body.selectedProviderIds ?? [], Boolean(body.recommendationRequested));
@@ -61,4 +60,3 @@ serve(async (req) => {
     return json({ error: error instanceof Error ? error.message : "Request creation failed" }, 500);
   }
 });
-

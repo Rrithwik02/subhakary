@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireBotSecret } from "../../../whatsapp-bot/services/whatsapp/auth.ts";
+import { createServiceClient } from "../../../whatsapp-bot/services/supabase/client.ts";
 import { searchProviders } from "../../../whatsapp-bot/services/provider-search/index.ts";
 
 const corsHeaders = {
@@ -20,14 +20,9 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   if (!requireBotSecret(req)) return json({ error: "Unauthorized" }, 401);
 
-  const url = Deno.env.get("SUPABASE_URL");
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !key) return json({ error: "Missing Supabase configuration" }, 500);
-
-  const body = await req.json();
-  const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-
   try {
+    const body = await req.json();
+    const supabase = createServiceClient();
     const result = await searchProviders(supabase, {
       categoryId: body.categoryId ?? null,
       categorySlug: body.categorySlug ?? null,
@@ -44,4 +39,3 @@ serve(async (req) => {
     return json({ error: error instanceof Error ? error.message : "Search failed" }, 500);
   }
 });
-
