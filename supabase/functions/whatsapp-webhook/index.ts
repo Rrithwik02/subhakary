@@ -14,6 +14,8 @@ import { sendWhatsAppMessage } from "../../../whatsapp-bot/services/whatsapp/sen
 import { listWhatsappQuestions, listWhatsappRequirements } from "../../../whatsapp-bot/services/catalog/index.ts";
 import { appendWhatsappEvent, extractIncomingMessage, nextState, updateWhatsappConversationIfUnchanged, upsertWhatsappConversation, upsertWhatsappCustomer, type WhatsappConversationRecord } from "../../../whatsapp-bot/services/whatsapp/index.ts";
 import { verifyMetaWebhookSignature } from "../../../whatsapp-bot/services/whatsapp/auth.ts";
+import { logger } from "../../../whatsapp-bot/utils/logging.ts";
+import { parseAnswerDate, parseAnswerNumber, parseBudgetRange } from "../../../whatsapp-bot/utils/validation.ts";
 import type { ConversationState } from "../../../whatsapp-bot/types/request.ts";
 import type { ServiceCategoryRecord } from "../../../whatsapp-bot/types/service.ts";
 
@@ -140,11 +142,12 @@ function mergeUnique(values: string[], additions: string[]) {
 }
 
 async function getCustomerProfileByPhone(supabase: SupabaseService, phone: string) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("id, full_name, phone")
     .eq("phone", phone)
     .maybeSingle();
+  if (error) throw new Error(`Failed to look up customer profile: ${error.message}`);
   return data as { id: string; full_name: string | null; phone: string | null } | null;
 }
 
@@ -152,11 +155,15 @@ async function loadConversation(
   supabase: SupabaseService,
   customerId: string,
 ): Promise<WhatsappConversationRecord | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("whatsapp_conversations")
     .select("id, customer_id, conversation_state, current_step, state_payload, updated_at")
     .eq("customer_id", customerId)
     .maybeSingle();
+  // Important: on a real error we must NOT return null here — the caller
+  // treats a null conversation as "brand new customer" and resets state,
+  // which would silently wipe an existing user's in-progress conversation.
+  if (error) throw new Error(`Failed to load WhatsApp conversation: ${error.message}`);
   return data as WhatsappConversationRecord | null;
 }
 
@@ -189,8 +196,9 @@ async function storeOutboundMessage(
   conversationId: string,
   messageId: string,
   text: string,
+  delivered: boolean,
 ) {
-  await supabase.from("whatsapp_messages").upsert(
+  const { error } = await supabase.from("whatsapp_messages").upsert(
     {
       conversation_id: conversationId,
       whatsapp_message_id: messageId,
@@ -198,10 +206,14 @@ async function storeOutboundMessage(
       message_type: "text",
       body: text,
       payload: { text },
-      delivery_status: "sent",
+      delivery_status: delivered ? "sent" : "failed",
     },
     { onConflict: "whatsapp_message_id" },
   );
+
+  if (error) {
+    logger.error("Failed to record outbound WhatsApp message", { conversationId, messageId, error: error.message });
+  }
 }
 
 async function buildProviderResponse(
@@ -212,12 +224,18 @@ async function buildProviderResponse(
 ) {
   const categories = await listServiceCategories(supabase);
   const category = categories.find((item) => item.id === state.serviceCategoryId || item.slug === state.draft?.serviceCategorySlug) ?? null;
+  // budget_range is the only budget field ever collected from the user (free
+  // text, e.g. "under 50k"); parse it here so ranking actually uses it —
+  // previously this looked for budget_min/budget_max, which nothing wrote.
+  const parsedBudget = typeof state.draft?.budget_range === "string"
+    ? parseBudgetRange(state.draft.budget_range)
+    : { min: null, max: null };
   const searchResult = await searchProviders(supabase, {
     categoryId: state.serviceCategoryId ?? null,
     categorySlug: category?.slug ?? null,
     location: typeof state.draft?.location === "string" ? String(state.draft.location) : null,
-    budgetMax: typeof state.draft?.budget_max === "number" ? Number(state.draft.budget_max) : undefined,
-    budgetMin: typeof state.draft?.budget_min === "number" ? Number(state.draft.budget_min) : undefined,
+    budgetMax: parsedBudget.max ?? undefined,
+    budgetMin: parsedBudget.min ?? undefined,
     page,
     limit,
   });
@@ -485,9 +503,35 @@ async function routeMessage(
     if (answerMatch && currentQuestion.options?.[Number(answerMatch[1])]) {
       answer = currentQuestion.options[Number(answerMatch[1])];
     }
+
+    // "date" and "number" answers are typed straight into `date`/`integer`
+    // DB columns downstream (see createWhatsappRequest), so an unparseable
+    // free-text reply must be caught here and re-prompted rather than
+    // stored as-is and left to fail later with no user-visible response.
+    let draftValue: string | number = answer;
+    if (currentQuestion.type === "date") {
+      const parsedDate = parseAnswerDate(answer);
+      if (!parsedDate) {
+        return {
+          nextState: nextState(state, { state: "event_details", step: currentQuestion.key }),
+          replyText: MESSAGES.invalidDate,
+        };
+      }
+      draftValue = parsedDate;
+    } else if (currentQuestion.type === "number") {
+      const parsedNumber = parseAnswerNumber(answer);
+      if (parsedNumber === null) {
+        return {
+          nextState: nextState(state, { state: "event_details", step: currentQuestion.key }),
+          replyText: MESSAGES.invalidNumber,
+        };
+      }
+      draftValue = parsedNumber;
+    }
+
     const updatedDraft = {
       ...(state.draft ?? {}),
-      [currentQuestion.key]: answer,
+      [currentQuestion.key]: draftValue,
     };
     const currentIndex = sequence.findIndex((question) => question.key === currentQuestion.key);
     const nextQuestion = sequence[currentIndex + 1];
@@ -869,82 +913,130 @@ serve(async (req) => {
   }
 
   const outcomes: Array<{ messageId: string; status: string }> = [];
+  const MAX_CONVERSATION_UPDATE_ATTEMPTS = 3;
 
   for (const incoming of incomingMessages) {
-    const customerProfile = await getCustomerProfileByPhone(supabase, incoming.from);
-    const customer = await upsertWhatsappCustomer(
-      supabase,
-      incoming.from,
-      incoming.name ?? customerProfile?.full_name ?? null,
-      customerProfile?.id ?? null,
-    );
+    try {
+      const customerProfile = await getCustomerProfileByPhone(supabase, incoming.from);
+      const customer = await upsertWhatsappCustomer(
+        supabase,
+        incoming.from,
+        incoming.name ?? customerProfile?.full_name ?? null,
+        customerProfile?.id ?? null,
+      );
 
-    let conversationRecord = await loadConversation(supabase, customer.id);
-    const currentState = getConversationState(conversationRecord?.state_payload ?? null);
+      let conversationRecord = await loadConversation(supabase, customer.id);
 
-    if (!conversationRecord) {
+      if (!conversationRecord) {
+        await appendWhatsappEvent(supabase, {
+          customerId: customer.id,
+          eventName: "conversation_started",
+          eventPayload: { phone: incoming.from },
+        });
+        const initialState = nextState(getConversationState(null), { state: "welcome", step: "main_menu" });
+        conversationRecord = await upsertWhatsappConversation(supabase, customer.id, initialState);
+      }
+
+      const claimed = await storeInboundMessage(supabase, conversationRecord.id, {
+        messageId: incoming.messageId,
+        text: incoming.text ?? null,
+        raw: incoming.raw,
+      });
+      if (!claimed) {
+        outcomes.push({ messageId: incoming.messageId, status: "duplicate" });
+        continue;
+      }
+
+      // Route + persist with a bounded retry: if another concurrent delivery
+      // for the same customer updates the conversation first, the optimistic
+      // `updateWhatsappConversationIfUnchanged` throws. Reload and re-route
+      // against the latest state instead of failing the whole message.
+      let route: BotRoute | null = null;
+      let nextConversation: WhatsappConversationRecord = conversationRecord;
+      for (let attempt = 1; attempt <= MAX_CONVERSATION_UPDATE_ATTEMPTS; attempt++) {
+        const state = getConversationState(nextConversation.state_payload ?? null);
+        route = await routeMessage(
+          supabase,
+          customer.id,
+          incoming.name ?? customerProfile?.full_name ?? null,
+          state,
+          incoming.text ?? null,
+          incoming.buttonId ?? incoming.listId ?? null,
+          incoming.messageId,
+        );
+
+        try {
+          nextConversation = await updateWhatsappConversationIfUnchanged(
+            supabase,
+            nextConversation.id,
+            nextConversation.updated_at,
+            route.nextState,
+          );
+          break;
+        } catch (conflictError) {
+          if (attempt >= MAX_CONVERSATION_UPDATE_ATTEMPTS) throw conflictError;
+          logger.warn("Retrying WhatsApp conversation update after conflict", {
+            customerId: customer.id,
+            conversationId: nextConversation.id,
+            attempt,
+          });
+          const reloaded = await loadConversation(supabase, customer.id);
+          if (!reloaded) throw conflictError;
+          nextConversation = reloaded;
+        }
+      }
+      if (!route) throw new Error("Failed to route WhatsApp message after retries");
+
+      const outboundResult = await sendWhatsAppMessage({
+        to: incoming.from,
+        text: route.replyText,
+        interactive: route.replyInteractive,
+      });
+
+      if (!outboundResult.ok) {
+        logger.error("Failed to send WhatsApp message", {
+          to: incoming.from,
+          status: outboundResult.status,
+          error: outboundResult.error,
+        });
+      }
+
+      const outboundId = outboundResult.messageId ?? crypto.randomUUID();
+
+      await storeOutboundMessage(supabase, nextConversation.id, outboundId, route.replyText, outboundResult.ok);
       await appendWhatsappEvent(supabase, {
         customerId: customer.id,
-        eventName: "conversation_started",
-        eventPayload: { phone: incoming.from },
+        conversationId: nextConversation.id,
+        eventName: "message_routed",
+        eventPayload: {
+          from: incoming.from,
+          text: incoming.text,
+          selection: incoming.buttonId ?? incoming.listId,
+          state: route.nextState.state,
+          step: route.nextState.step,
+        },
       });
-    }
 
-    if (!conversationRecord) {
-      const initialState = nextState(currentState, { state: "welcome", step: "main_menu" });
-      conversationRecord = await upsertWhatsappConversation(supabase, customer.id, initialState);
-    }
-
-    const claimed = await storeInboundMessage(supabase, conversationRecord.id, {
-      messageId: incoming.messageId,
-      text: incoming.text ?? null,
-      raw: incoming.raw,
-    });
-    if (!claimed) {
-      outcomes.push({ messageId: incoming.messageId, status: "duplicate" });
-      continue;
-    }
-
-    const route = await routeMessage(
-      supabase,
-      customer.id,
-      incoming.name ?? customerProfile?.full_name ?? null,
-      currentState,
-      incoming.text ?? null,
-      incoming.buttonId ?? incoming.listId ?? null,
-      incoming.messageId,
-    );
-
-    const nextConversation = await updateWhatsappConversationIfUnchanged(
-      supabase,
-      conversationRecord.id,
-      conversationRecord.updated_at,
-      route.nextState,
-    );
-
-    const outboundResult = await sendWhatsAppMessage({
-      to: incoming.from,
-      text: route.replyText,
-      interactive: route.replyInteractive,
-    });
-
-    const outboundId = outboundResult.messageId ?? crypto.randomUUID();
-
-    await storeOutboundMessage(supabase, nextConversation.id, outboundId, route.replyText);
-    await appendWhatsappEvent(supabase, {
-      customerId: customer.id,
-      conversationId: nextConversation.id,
-      eventName: "message_routed",
-      eventPayload: {
+      outcomes.push({ messageId: incoming.messageId, status: outboundResult.ok ? "sent" : "send_failed" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error("Failed to process WhatsApp message", {
+        messageId: incoming.messageId,
         from: incoming.from,
-        text: incoming.text,
-        selection: incoming.buttonId ?? incoming.listId,
-        state: route.nextState.state,
-        step: route.nextState.step,
-      },
-    });
+        error: message,
+      });
 
-    outcomes.push({ messageId: incoming.messageId, status: outboundResult.ok ? "sent" : "queued" });
+      try {
+        await sendWhatsAppMessage({ to: incoming.from, text: MESSAGES.processingError });
+      } catch (sendError) {
+        logger.error("Failed to send fallback error message", {
+          to: incoming.from,
+          error: sendError instanceof Error ? sendError.message : String(sendError),
+        });
+      }
+
+      outcomes.push({ messageId: incoming.messageId, status: "error" });
+    }
   }
 
   return json({

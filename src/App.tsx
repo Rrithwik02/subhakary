@@ -79,12 +79,15 @@ const App = () => (
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/install" element={<Install />} />
               <Route path="/become-provider" element={<BecomeProvider />} />
+              <Route path="/signup" element={<Auth />} />
+
+              {/* Guests can browse and search approved providers without an account */}
+              <Route path="/providers" element={<Providers />} />
+              <Route path="/provider/:id" element={<ProviderProfile />} />
+              <Route path="/providers/:id" element={<ProviderProfile />} />
 
               {/* Authenticated Customer Routes */}
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/providers" element={<ProtectedRoute allowedRole="customer"><Providers /></ProtectedRoute>} />
-              <Route path="/provider/:id" element={<ProtectedRoute allowedRole="customer"><ProviderProfile /></ProtectedRoute>} />
-              <Route path="/providers/:id" element={<ProtectedRoute allowedRole="customer"><ProviderProfile /></ProtectedRoute>} />
               <Route path="/my-bookings" element={<ProtectedRoute allowedRole="customer"><MyBookings /></ProtectedRoute>} />
               <Route path="/booking/:bookingId" element={<ProtectedRoute allowedRole="customer"><BookingDetails /></ProtectedRoute>} />
               <Route path="/checkout/:paymentId" element={<ProtectedRoute allowedRole="customer"><Checkout /></ProtectedRoute>} />

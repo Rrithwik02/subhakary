@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -65,9 +65,6 @@ export type Database = {
           status: string | null
           subcategory: string | null
           updated_at: string | null
-          verification_status: string | null
-          verified_at: string | null
-          verified_by: string | null
         }
         Insert: {
           category_id?: string | null
@@ -84,9 +81,6 @@ export type Database = {
           status?: string | null
           subcategory?: string | null
           updated_at?: string | null
-          verification_status?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
         }
         Update: {
           category_id?: string | null
@@ -103,9 +97,6 @@ export type Database = {
           status?: string | null
           subcategory?: string | null
           updated_at?: string | null
-          verification_status?: string | null
-          verified_at?: string | null
-          verified_by?: string | null
         }
         Relationships: [
           {
@@ -185,6 +176,51 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_capacity_rules: {
+        Row: {
+          category_slug: string
+          created_at: string
+          id: string
+          max_bookings_per_day: number
+          provider_id: string | null
+          service_label: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_slug: string
+          created_at?: string
+          id?: string
+          max_bookings_per_day?: number
+          provider_id?: string | null
+          service_label?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_slug?: string
+          created_at?: string
+          id?: string
+          max_bookings_per_day?: number
+          provider_id?: string | null
+          service_label?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_capacity_rules_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_capacity_rules_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_completion_details: {
         Row: {
           additional_notes: string | null
@@ -255,18 +291,14 @@ export type Database = {
       }
       bookings: {
         Row: {
-          auto_complete_at: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           completion_confirmed_by_customer: boolean | null
           completion_confirmed_by_provider: boolean | null
-          completion_requested_at: string | null
           completion_status: string | null
           created_at: string
           end_date: string | null
           event_id: string | null
-          wedding_id: string | null
-          wedding_event_id: string | null
           id: string
           message: string | null
           payment_preference: string | null
@@ -284,20 +316,18 @@ export type Database = {
           total_days: number | null
           updated_at: string
           user_id: string
+          wedding_event_id: string | null
+          wedding_id: string | null
         }
         Insert: {
-          auto_complete_at?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completion_confirmed_by_customer?: boolean | null
           completion_confirmed_by_provider?: boolean | null
-          completion_requested_at?: string | null
           completion_status?: string | null
           created_at?: string
           end_date?: string | null
           event_id?: string | null
-          wedding_id?: string | null
-          wedding_event_id?: string | null
           id?: string
           message?: string | null
           payment_preference?: string | null
@@ -315,20 +345,18 @@ export type Database = {
           total_days?: number | null
           updated_at?: string
           user_id: string
+          wedding_event_id?: string | null
+          wedding_id?: string | null
         }
         Update: {
-          auto_complete_at?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completion_confirmed_by_customer?: boolean | null
           completion_confirmed_by_provider?: boolean | null
-          completion_requested_at?: string | null
           completion_status?: string | null
           created_at?: string
           end_date?: string | null
           event_id?: string | null
-          wedding_id?: string | null
-          wedding_event_id?: string | null
           id?: string
           message?: string | null
           payment_preference?: string | null
@@ -346,25 +374,13 @@ export type Database = {
           total_days?: number | null
           updated_at?: string
           user_id?: string
+          wedding_event_id?: string | null
+          wedding_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "bookings_event_id_fkey"
             columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "wedding_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_wedding_id_fkey"
-            columns: ["wedding_id"]
-            isOneToOne: false
-            referencedRelation: "weddings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_wedding_event_id_fkey"
-            columns: ["wedding_event_id"]
             isOneToOne: false
             referencedRelation: "wedding_events"
             referencedColumns: ["id"]
@@ -381,6 +397,20 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_wedding_event_id_fkey"
+            columns: ["wedding_event_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
             referencedColumns: ["id"]
           },
         ]
@@ -578,7 +608,6 @@ export type Database = {
         Row: {
           booking_id: string | null
           created_at: string | null
-          delivery_status: string | null
           id: string
           message: string
           read: boolean | null
@@ -588,7 +617,6 @@ export type Database = {
         Insert: {
           booking_id?: string | null
           created_at?: string | null
-          delivery_status?: string | null
           id?: string
           message: string
           read?: boolean | null
@@ -598,7 +626,6 @@ export type Database = {
         Update: {
           booking_id?: string | null
           created_at?: string | null
-          delivery_status?: string | null
           id?: string
           message?: string
           read?: boolean | null
@@ -927,6 +954,11 @@ export type Database = {
           payment_reminders: boolean | null
           promotional: boolean | null
           push_enabled: boolean | null
+          reminder_day_before: boolean
+          reminder_event_day: boolean
+          schedule_email_timing: string
+          schedule_reminders: boolean
+          schedule_summary_time: string
           sms_enabled: boolean | null
           updated_at: string
           user_id: string
@@ -940,6 +972,11 @@ export type Database = {
           payment_reminders?: boolean | null
           promotional?: boolean | null
           push_enabled?: boolean | null
+          reminder_day_before?: boolean
+          reminder_event_day?: boolean
+          schedule_email_timing?: string
+          schedule_reminders?: boolean
+          schedule_summary_time?: string
           sms_enabled?: boolean | null
           updated_at?: string
           user_id: string
@@ -953,6 +990,11 @@ export type Database = {
           payment_reminders?: boolean | null
           promotional?: boolean | null
           push_enabled?: boolean | null
+          reminder_day_before?: boolean
+          reminder_event_day?: boolean
+          schedule_email_timing?: string
+          schedule_reminders?: boolean
+          schedule_summary_time?: string
           sms_enabled?: boolean | null
           updated_at?: string
           user_id?: string
@@ -1246,6 +1288,162 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_calendar_integrations: {
+        Row: {
+          auto_sync: boolean
+          created_at: string
+          google_access_token_expires_at: string | null
+          google_account_email: string | null
+          google_account_name: string | null
+          google_calendar_id: string | null
+          google_calendar_name: string | null
+          google_calendar_timezone: string | null
+          google_connected_at: string | null
+          id: string
+          import_external: boolean
+          integration_name: string
+          last_error: string | null
+          last_exported_at: string | null
+          last_imported_at: string | null
+          last_synced_at: string | null
+          provider_id: string
+          sync_cursor: string | null
+          sync_scope: string
+          sync_status: string
+          updated_at: string
+        }
+        Insert: {
+          auto_sync?: boolean
+          created_at?: string
+          google_access_token_expires_at?: string | null
+          google_account_email?: string | null
+          google_account_name?: string | null
+          google_calendar_id?: string | null
+          google_calendar_name?: string | null
+          google_calendar_timezone?: string | null
+          google_connected_at?: string | null
+          id?: string
+          import_external?: boolean
+          integration_name?: string
+          last_error?: string | null
+          last_exported_at?: string | null
+          last_imported_at?: string | null
+          last_synced_at?: string | null
+          provider_id: string
+          sync_cursor?: string | null
+          sync_scope?: string
+          sync_status?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_sync?: boolean
+          created_at?: string
+          google_access_token_expires_at?: string | null
+          google_account_email?: string | null
+          google_account_name?: string | null
+          google_calendar_id?: string | null
+          google_calendar_name?: string | null
+          google_calendar_timezone?: string | null
+          google_connected_at?: string | null
+          id?: string
+          import_external?: boolean
+          integration_name?: string
+          last_error?: string | null
+          last_exported_at?: string | null
+          last_imported_at?: string | null
+          last_synced_at?: string | null
+          provider_id?: string
+          sync_cursor?: string | null
+          sync_scope?: string
+          sync_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_calendar_integrations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_calendar_integrations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_calendar_sync_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          google_event_id: string | null
+          id: string
+          job_key: string
+          last_error: string | null
+          next_attempt_at: string
+          operation: string
+          payload: Json
+          processed_at: string | null
+          provider_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          google_event_id?: string | null
+          id?: string
+          job_key: string
+          last_error?: string | null
+          next_attempt_at?: string
+          operation: string
+          payload?: Json
+          processed_at?: string | null
+          provider_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          google_event_id?: string | null
+          id?: string
+          job_key?: string
+          last_error?: string | null
+          next_attempt_at?: string
+          operation?: string
+          payload?: Json
+          processed_at?: string | null
+          provider_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_calendar_sync_jobs_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_calendar_sync_jobs_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_documents: {
         Row: {
           created_at: string
@@ -1304,11 +1502,178 @@ export type Database = {
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      provider_event_reminders: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          delivery_attempts: number
+          id: string
+          last_error: string | null
+          payload: Json
+          provider_event_id: string | null
+          provider_id: string
+          reminder_channel: string
+          reminder_type: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          delivery_attempts?: number
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          provider_event_id?: string | null
+          provider_id: string
+          reminder_channel: string
+          reminder_type: string
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          delivery_attempts?: number
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          provider_event_id?: string | null
+          provider_id?: string
+          reminder_channel?: string
+          reminder_type?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "provider_documents_service_category_id_fkey"
-            columns: ["service_category_id"]
+            foreignKeyName: "provider_event_reminders_booking_id_fkey"
+            columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "service_categories"
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_event_reminders_provider_event_id_fkey"
+            columns: ["provider_event_id"]
+            isOneToOne: false
+            referencedRelation: "provider_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_event_reminders_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_event_reminders_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_events: {
+        Row: {
+          all_day: boolean
+          booking_id: string | null
+          booking_status: string | null
+          created_at: string
+          end_date: string | null
+          end_time: string | null
+          event_date: string
+          event_type: string
+          external_source_id: string | null
+          external_source_payload: Json
+          id: string
+          last_synced_at: string | null
+          location: string | null
+          notes: string | null
+          provider_id: string
+          source: string
+          start_time: string | null
+          sync_error: string | null
+          sync_status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          all_day?: boolean
+          booking_id?: string | null
+          booking_status?: string | null
+          created_at?: string
+          end_date?: string | null
+          end_time?: string | null
+          event_date: string
+          event_type: string
+          external_source_id?: string | null
+          external_source_payload?: Json
+          id?: string
+          last_synced_at?: string | null
+          location?: string | null
+          notes?: string | null
+          provider_id: string
+          source?: string
+          start_time?: string | null
+          sync_error?: string | null
+          sync_status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          all_day?: boolean
+          booking_id?: string | null
+          booking_status?: string | null
+          created_at?: string
+          end_date?: string | null
+          end_time?: string | null
+          event_date?: string
+          event_type?: string
+          external_source_id?: string | null
+          external_source_payload?: Json
+          id?: string
+          last_synced_at?: string | null
+          location?: string | null
+          notes?: string | null
+          provider_id?: string
+          source?: string
+          start_time?: string | null
+          sync_error?: string | null
+          sync_status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_events_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_events_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
         ]
@@ -1374,6 +1739,63 @@ export type Database = {
             foreignKeyName: "provider_payment_details_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: true
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_time_slots: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          is_enabled: boolean
+          max_capacity: number
+          provider_id: string
+          slot_kind: string
+          slot_name: string
+          sort_order: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          is_enabled?: boolean
+          max_capacity?: number
+          provider_id: string
+          slot_kind: string
+          slot_name: string
+          sort_order?: number
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_enabled?: boolean
+          max_capacity?: number
+          provider_id?: string
+          slot_kind?: string
+          slot_name?: string
+          sort_order?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_time_slots_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_time_slots_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
@@ -1455,56 +1877,35 @@ export type Database = {
         Row: {
           booking_id: string
           comment: string | null
-          communication_rating: number | null
           created_at: string
           id: string
-          photos: string[] | null
           provider_id: string
-          punctuality_rating: number | null
           rating: number
           review_text: string | null
-          service_quality_rating: number | null
           status: string | null
           user_id: string
-          value_for_money_rating: number | null
-          wedding_budget_range: string | null
-          wedding_size: string | null
         }
         Insert: {
           booking_id: string
           comment?: string | null
-          communication_rating?: number | null
           created_at?: string
           id?: string
-          photos?: string[] | null
           provider_id: string
-          punctuality_rating?: number | null
           rating: number
           review_text?: string | null
-          service_quality_rating?: number | null
           status?: string | null
           user_id: string
-          value_for_money_rating?: number | null
-          wedding_budget_range?: string | null
-          wedding_size?: string | null
         }
         Update: {
           booking_id?: string
           comment?: string | null
-          communication_rating?: number | null
           created_at?: string
           id?: string
-          photos?: string[] | null
           provider_id?: string
-          punctuality_rating?: number | null
           rating?: number
           review_text?: string | null
-          service_quality_rating?: number | null
           status?: string | null
           user_id?: string
-          value_for_money_rating?: number | null
-          wedding_budget_range?: string | null
-          wedding_size?: string | null
         }
         Relationships: [
           {
@@ -1575,10 +1976,7 @@ export type Database = {
           discount_percentage: number | null
           discounted_price: number
           duration_days: number | null
-          exclusions: string[] | null
-          extra_charges: Json | null
           id: string
-          inclusions: string[] | null
           is_active: boolean | null
           max_guests: number | null
           min_advance_percentage: number | null
@@ -1595,10 +1993,7 @@ export type Database = {
           discount_percentage?: number | null
           discounted_price: number
           duration_days?: number | null
-          exclusions?: string[] | null
-          extra_charges?: Json | null
           id?: string
-          inclusions?: string[] | null
           is_active?: boolean | null
           max_guests?: number | null
           min_advance_percentage?: number | null
@@ -1615,10 +2010,7 @@ export type Database = {
           discount_percentage?: number | null
           discounted_price?: number
           duration_days?: number | null
-          exclusions?: string[] | null
-          extra_charges?: Json | null
           id?: string
-          inclusions?: string[] | null
           is_active?: boolean | null
           max_guests?: number | null
           min_advance_percentage?: number | null
@@ -1673,6 +2065,7 @@ export type Database = {
       }
       service_provider_availability: {
         Row: {
+          booking_id: string | null
           created_at: string | null
           day_of_week: number | null
           end_time: string
@@ -1680,11 +2073,13 @@ export type Database = {
           is_available: boolean | null
           is_blocked: boolean | null
           provider_id: string
+          source: string
           specific_date: string | null
           start_time: string
           updated_at: string | null
         }
         Insert: {
+          booking_id?: string | null
           created_at?: string | null
           day_of_week?: number | null
           end_time: string
@@ -1692,11 +2087,13 @@ export type Database = {
           is_available?: boolean | null
           is_blocked?: boolean | null
           provider_id: string
+          source?: string
           specific_date?: string | null
           start_time: string
           updated_at?: string | null
         }
         Update: {
+          booking_id?: string | null
           created_at?: string | null
           day_of_week?: number | null
           end_time?: string
@@ -1704,11 +2101,19 @@ export type Database = {
           is_available?: boolean | null
           is_blocked?: boolean | null
           provider_id?: string
+          source?: string
           specific_date?: string | null
           start_time?: string
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "service_provider_availability_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_provider_availability_provider_id_fkey"
             columns: ["provider_id"]
@@ -1748,9 +2153,11 @@ export type Database = {
           logo_url: string | null
           portfolio_images: string[] | null
           portfolio_link: string | null
+          portfolio_tags: Json | null
           pricing_info: string | null
           profile_id: string | null
           rating: number | null
+          real_wedding_stories: Json | null
           rejection_reason: string | null
           requires_advance_payment: boolean | null
           reviewed_at: string | null
@@ -1795,9 +2202,11 @@ export type Database = {
           logo_url?: string | null
           portfolio_images?: string[] | null
           portfolio_link?: string | null
+          portfolio_tags?: Json | null
           pricing_info?: string | null
           profile_id?: string | null
           rating?: number | null
+          real_wedding_stories?: Json | null
           rejection_reason?: string | null
           requires_advance_payment?: boolean | null
           reviewed_at?: string | null
@@ -1842,9 +2251,11 @@ export type Database = {
           logo_url?: string | null
           portfolio_images?: string[] | null
           portfolio_link?: string | null
+          portfolio_tags?: Json | null
           pricing_info?: string | null
           profile_id?: string | null
           rating?: number | null
+          real_wedding_stories?: Json | null
           rejection_reason?: string | null
           requires_advance_payment?: boolean | null
           reviewed_at?: string | null
@@ -2160,203 +2571,6 @@ export type Database = {
           },
         ]
       }
-      wedding_events: {
-        Row: {
-          city: string | null
-          created_at: string
-          event_date: string | null
-          id: string
-          is_primary: boolean
-          name: string
-          progress_percent: number
-          total_budget: number | null
-          updated_at: string
-          user_id: string
-          wedding_size: string | null
-          wedding_style: string | null
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string
-          event_date?: string | null
-          id?: string
-          is_primary?: boolean
-          name?: string
-          progress_percent?: number
-          total_budget?: number | null
-          updated_at?: string
-          user_id: string
-          wedding_size?: string | null
-          wedding_style?: string | null
-        }
-        Update: {
-          city?: string | null
-          created_at?: string
-          event_date?: string | null
-          id?: string
-          is_primary?: boolean
-          name?: string
-          progress_percent?: number
-          total_budget?: number | null
-          updated_at?: string
-          user_id?: string
-          wedding_size?: string | null
-          wedding_style?: string | null
-        }
-        Relationships: []
-      }
-      wedding_preferences: {
-        Row: {
-          budget_max: number | null
-          budget_min: number | null
-          created_at: string
-          event_date: string | null
-          guest_count: number | null
-          id: string
-          location: string | null
-          priorities: string[] | null
-          updated_at: string
-          user_id: string
-          wedding_size: string | null
-          wedding_style: string | null
-        }
-        Insert: {
-          budget_max?: number | null
-          budget_min?: number | null
-          created_at?: string
-          event_date?: string | null
-          guest_count?: number | null
-          id?: string
-          location?: string | null
-          priorities?: string[] | null
-          updated_at?: string
-          user_id: string
-          wedding_size?: string | null
-          wedding_style?: string | null
-        }
-        Update: {
-          budget_max?: number | null
-          budget_min?: number | null
-          created_at?: string
-          event_date?: string | null
-          guest_count?: number | null
-          id?: string
-          location?: string | null
-          priorities?: string[] | null
-          updated_at?: string
-          user_id?: string
-          wedding_size?: string | null
-          wedding_style?: string | null
-        }
-        Relationships: []
-      }
-      weddings: {
-        Row: {
-          bride_name: string
-          budget_range: string
-          city: string
-          cultural_preferences: string[]
-          created_at: string
-          groom_name: string
-          guest_count: number
-          id: string
-          is_estimated_date: boolean
-          location: string | null
-          notes: string | null
-          owner_user_id: string
-          status: string
-          title: string
-          total_budget: number
-          updated_at: string
-          wedding_date: string | null
-          wedding_type: string
-        }
-        Insert: {
-          bride_name: string
-          budget_range: string
-          city: string
-          cultural_preferences?: string[]
-          created_at?: string
-          groom_name: string
-          guest_count?: number
-          id?: string
-          is_estimated_date?: boolean
-          location?: string | null
-          notes?: string | null
-          owner_user_id: string
-          status?: string
-          title: string
-          total_budget?: number
-          updated_at?: string
-          wedding_date?: string | null
-          wedding_type: string
-        }
-        Update: {
-          bride_name?: string
-          budget_range?: string
-          city?: string
-          cultural_preferences?: string[]
-          created_at?: string
-          groom_name?: string
-          guest_count?: number
-          id?: string
-          is_estimated_date?: boolean
-          location?: string | null
-          notes?: string | null
-          owner_user_id?: string
-          status?: string
-          title?: string
-          total_budget?: number
-          updated_at?: string
-          wedding_date?: string | null
-          wedding_type?: string
-        }
-        Relationships: []
-      }
-      wedding_members: {
-        Row: {
-          created_at: string
-          display_name: string
-          email: string | null
-          id: string
-          permission_level: string
-          role: string
-          status: string
-          user_id: string | null
-          wedding_id: string
-        }
-        Insert: {
-          created_at?: string
-          display_name: string
-          email?: string | null
-          id?: string
-          permission_level?: string
-          role: string
-          status?: string
-          user_id?: string | null
-          wedding_id: string
-        }
-        Update: {
-          created_at?: string
-          display_name?: string
-          email?: string | null
-          id?: string
-          permission_level?: string
-          role?: string
-          status?: string
-          user_id?: string | null
-          wedding_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "wedding_members_wedding_id_fkey"
-            columns: ["wedding_id"]
-            isOneToOne: false
-            referencedRelation: "weddings"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       wedding_budget_items: {
         Row: {
           category_name: string
@@ -2441,51 +2655,55 @@ export type Database = {
             foreignKeyName: "wedding_event_vendor_requirements_wedding_event_id_fkey"
             columns: ["wedding_event_id"]
             isOneToOne: false
-          referencedRelation: "wedding_events"
-          referencedColumns: ["id"]
-          },
-        ]
-      }
-      wedding_manual_expenses: {
-        Row: {
-          amount: number
-          category_name: string
-          created_at: string
-          id: string
-          notes: string | null
-          receipt_url: string | null
-          spent_at: string
-          wedding_id: string
-        }
-        Insert: {
-          amount?: number
-          created_at?: string
-          category_name: string
-          id?: string
-          notes?: string | null
-          receipt_url?: string | null
-          spent_at?: string
-          wedding_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          category_name?: string
-          id?: string
-          notes?: string | null
-          receipt_url?: string | null
-          spent_at?: string
-          wedding_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "wedding_manual_expenses_wedding_id_fkey"
-            columns: ["wedding_id"]
-            isOneToOne: false
-            referencedRelation: "weddings"
+            referencedRelation: "wedding_events"
             referencedColumns: ["id"]
           },
         ]
+      }
+      wedding_events: {
+        Row: {
+          city: string | null
+          created_at: string
+          event_date: string | null
+          id: string
+          is_primary: boolean
+          name: string
+          progress_percent: number
+          total_budget: number | null
+          updated_at: string
+          user_id: string
+          wedding_size: string | null
+          wedding_style: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          is_primary?: boolean
+          name?: string
+          progress_percent?: number
+          total_budget?: number | null
+          updated_at?: string
+          user_id: string
+          wedding_size?: string | null
+          wedding_style?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          event_date?: string | null
+          id?: string
+          is_primary?: boolean
+          name?: string
+          progress_percent?: number
+          total_budget?: number | null
+          updated_at?: string
+          user_id?: string
+          wedding_size?: string | null
+          wedding_style?: string | null
+        }
+        Relationships: []
       }
       wedding_invitations: {
         Row: {
@@ -2530,6 +2748,136 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wedding_manual_expenses: {
+        Row: {
+          amount: number
+          category_name: string
+          created_at: string
+          id: string
+          notes: string | null
+          receipt_url: string | null
+          spent_at: string
+          wedding_id: string
+        }
+        Insert: {
+          amount?: number
+          category_name: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          receipt_url?: string | null
+          spent_at?: string
+          wedding_id: string
+        }
+        Update: {
+          amount?: number
+          category_name?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          receipt_url?: string | null
+          spent_at?: string
+          wedding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wedding_manual_expenses_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wedding_members: {
+        Row: {
+          created_at: string
+          display_name: string
+          email: string | null
+          id: string
+          permission_level: string
+          role: string
+          status: string
+          user_id: string | null
+          wedding_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          email?: string | null
+          id?: string
+          permission_level?: string
+          role: string
+          status?: string
+          user_id?: string | null
+          wedding_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          id?: string
+          permission_level?: string
+          role?: string
+          status?: string
+          user_id?: string | null
+          wedding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wedding_members_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wedding_preferences: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          event_date: string | null
+          guest_count: number | null
+          id: string
+          location: string | null
+          priorities: string[] | null
+          updated_at: string
+          user_id: string
+          wedding_size: string | null
+          wedding_style: string | null
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          event_date?: string | null
+          guest_count?: number | null
+          id?: string
+          location?: string | null
+          priorities?: string[] | null
+          updated_at?: string
+          user_id: string
+          wedding_size?: string | null
+          wedding_style?: string | null
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          event_date?: string | null
+          guest_count?: number | null
+          id?: string
+          location?: string | null
+          priorities?: string[] | null
+          updated_at?: string
+          user_id?: string
+          wedding_size?: string | null
+          wedding_style?: string | null
+        }
+        Relationships: []
       }
       wedding_tasks: {
         Row: {
@@ -2584,6 +2932,536 @@ export type Database = {
           },
         ]
       }
+      weddings: {
+        Row: {
+          bride_name: string
+          budget_range: string
+          city: string
+          created_at: string
+          cultural_preferences: string[]
+          groom_name: string
+          guest_count: number
+          id: string
+          is_estimated_date: boolean
+          location: string | null
+          notes: string | null
+          owner_user_id: string
+          status: string
+          title: string
+          total_budget: number
+          updated_at: string
+          wedding_date: string | null
+          wedding_type: string
+        }
+        Insert: {
+          bride_name: string
+          budget_range: string
+          city: string
+          created_at?: string
+          cultural_preferences?: string[]
+          groom_name: string
+          guest_count?: number
+          id?: string
+          is_estimated_date?: boolean
+          location?: string | null
+          notes?: string | null
+          owner_user_id: string
+          status?: string
+          title: string
+          total_budget?: number
+          updated_at?: string
+          wedding_date?: string | null
+          wedding_type: string
+        }
+        Update: {
+          bride_name?: string
+          budget_range?: string
+          city?: string
+          created_at?: string
+          cultural_preferences?: string[]
+          groom_name?: string
+          guest_count?: number
+          id?: string
+          is_estimated_date?: boolean
+          location?: string | null
+          notes?: string | null
+          owner_user_id?: string
+          status?: string
+          title?: string
+          total_budget?: number
+          updated_at?: string
+          wedding_date?: string | null
+          wedding_type?: string
+        }
+        Relationships: []
+      }
+      whatsapp_conversations: {
+        Row: {
+          conversation_state: string
+          created_at: string
+          current_step: string | null
+          customer_id: string
+          expires_at: string | null
+          id: string
+          last_inbound_at: string | null
+          last_outbound_at: string | null
+          source: string
+          state_payload: Json
+          updated_at: string
+        }
+        Insert: {
+          conversation_state?: string
+          created_at?: string
+          current_step?: string | null
+          customer_id: string
+          expires_at?: string | null
+          id?: string
+          last_inbound_at?: string | null
+          last_outbound_at?: string | null
+          source?: string
+          state_payload?: Json
+          updated_at?: string
+        }
+        Update: {
+          conversation_state?: string
+          created_at?: string
+          current_step?: string | null
+          customer_id?: string
+          expires_at?: string | null
+          id?: string
+          last_inbound_at?: string | null
+          last_outbound_at?: string | null
+          source?: string
+          state_payload?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_conversations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_customers: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          last_seen_at: string | null
+          normalized_phone: string
+          profile_id: string | null
+          source: string
+          updated_at: string
+          whatsapp_phone: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_seen_at?: string | null
+          normalized_phone: string
+          profile_id?: string | null
+          source?: string
+          updated_at?: string
+          whatsapp_phone: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_seen_at?: string | null
+          normalized_phone?: string
+          profile_id?: string | null
+          source?: string
+          updated_at?: string
+          whatsapp_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_customers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_events: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          customer_id: string | null
+          event_name: string
+          id: string
+          payload: Json
+          request_id: string | null
+          source: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          event_name: string
+          id?: string
+          payload?: Json
+          request_id?: string | null
+          source?: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          event_name?: string
+          id?: string
+          payload?: Json
+          request_id?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_events_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_messages: {
+        Row: {
+          body: string | null
+          conversation_id: string
+          created_at: string
+          delivery_status: string
+          direction: string
+          id: string
+          message_type: string
+          payload: Json
+          whatsapp_message_id: string
+        }
+        Insert: {
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          delivery_status?: string
+          direction: string
+          id?: string
+          message_type?: string
+          payload?: Json
+          whatsapp_message_id: string
+        }
+        Update: {
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          delivery_status?: string
+          direction?: string
+          id?: string
+          message_type?: string
+          payload?: Json
+          whatsapp_message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_request_providers: {
+        Row: {
+          created_at: string
+          is_recommended: boolean
+          provider_id: string
+          request_id: string
+          selection_rank: number
+        }
+        Insert: {
+          created_at?: string
+          is_recommended?: boolean
+          provider_id: string
+          request_id: string
+          selection_rank?: number
+        }
+        Update: {
+          created_at?: string
+          is_recommended?: boolean
+          provider_id?: string
+          request_id?: string
+          selection_rank?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_request_providers_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_request_providers_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_request_providers_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_requests: {
+        Row: {
+          budget_range: string | null
+          created_at: string
+          customer_id: string
+          event_date: string | null
+          event_type: string | null
+          guest_count: number | null
+          id: string
+          location_name: string | null
+          notes: string | null
+          recommendation_requested: boolean
+          request_code: string
+          request_type: string
+          selected_provider_ids: string[]
+          selected_requirement_ids: string[]
+          service_answers: Json
+          service_category_id: string | null
+          service_category_name: string | null
+          service_category_slug: string | null
+          source: string
+          source_whatsapp_message_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          budget_range?: string | null
+          created_at?: string
+          customer_id: string
+          event_date?: string | null
+          event_type?: string | null
+          guest_count?: number | null
+          id?: string
+          location_name?: string | null
+          notes?: string | null
+          recommendation_requested?: boolean
+          request_code: string
+          request_type: string
+          selected_provider_ids?: string[]
+          selected_requirement_ids?: string[]
+          service_answers?: Json
+          service_category_id?: string | null
+          service_category_name?: string | null
+          service_category_slug?: string | null
+          source?: string
+          source_whatsapp_message_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          budget_range?: string | null
+          created_at?: string
+          customer_id?: string
+          event_date?: string | null
+          event_type?: string | null
+          guest_count?: number | null
+          id?: string
+          location_name?: string | null
+          notes?: string | null
+          recommendation_requested?: boolean
+          request_code?: string
+          request_type?: string
+          selected_provider_ids?: string[]
+          selected_requirement_ids?: string[]
+          service_answers?: Json
+          service_category_id?: string | null
+          service_category_name?: string | null
+          service_category_slug?: string | null
+          source?: string
+          source_whatsapp_message_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_requests_service_category_id_fkey"
+            columns: ["service_category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_service_questions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          label: string
+          options: Json | null
+          required: boolean
+          service_slug: string
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          label: string
+          options?: Json | null
+          required?: boolean
+          service_slug: string
+          sort_order?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          label?: string
+          options?: Json | null
+          required?: boolean
+          service_slug?: string
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_service_questions_service_slug_fkey"
+            columns: ["service_slug"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_services"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      whatsapp_service_requirements: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          label: string
+          requirement_id: string
+          service_slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          requirement_id: string
+          service_slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          requirement_id?: string
+          service_slug?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_service_requirements_service_slug_fkey"
+            columns: ["service_slug"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_services"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      whatsapp_services: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_service_providers: {
@@ -2607,8 +3485,10 @@ export type Database = {
           logo_url: string | null
           portfolio_images: string[] | null
           portfolio_link: string | null
+          portfolio_tags: Json | null
           pricing_info: string | null
           rating: number | null
+          real_wedding_stories: Json | null
           requires_advance_payment: boolean | null
           secondary_city: string | null
           service_cities: string[] | null
@@ -2643,8 +3523,10 @@ export type Database = {
           logo_url?: string | null
           portfolio_images?: string[] | null
           portfolio_link?: string | null
+          portfolio_tags?: Json | null
           pricing_info?: string | null
           rating?: number | null
+          real_wedding_stories?: Json | null
           requires_advance_payment?: boolean | null
           secondary_city?: string | null
           service_cities?: string[] | null
@@ -2679,8 +3561,10 @@ export type Database = {
           logo_url?: string | null
           portfolio_images?: string[] | null
           portfolio_link?: string | null
+          portfolio_tags?: Json | null
           pricing_info?: string | null
           rating?: number | null
+          real_wedding_stories?: Json | null
           requires_advance_payment?: boolean | null
           secondary_city?: string | null
           service_cities?: string[] | null
@@ -2712,13 +3596,38 @@ export type Database = {
         Returns: boolean
       }
       can_access_otp: { Args: { p_user_id: string }; Returns: boolean }
+      can_access_wedding: { Args: { _wedding_id: string }; Returns: boolean }
+      can_manage_wedding: { Args: { _wedding_id: string }; Returns: boolean }
       claim_admin_invitation: { Args: { p_token: string }; Returns: boolean }
       cleanup_expired_admin_invitations: { Args: never; Returns: number }
+      count_provider_occupied_events: {
+        Args: {
+          p_end_date: string
+          p_provider_id: string
+          p_start_date: string
+        }
+        Returns: number
+      }
       decrypt_payment_field: { Args: { ciphertext: string }; Returns: string }
       encrypt_payment_field: { Args: { plaintext: string }; Returns: string }
       generate_provider_slug: {
         Args: { p_id: string; p_name: string }
         Returns: string
+      }
+      get_availability_summary: {
+        Args: { p_for_date?: string; p_provider_id: string }
+        Returns: {
+          blocked_source_count: number
+          booking_event_count: number
+          bookings_count: number
+          capacity_limit: number
+          for_date: string
+          is_blocked: boolean
+          is_fully_booked: boolean
+          manual_event_count: number
+          provider_id: string
+          remaining_capacity: number
+        }[]
       }
       get_booking_customer_chat_info: {
         Args: { booking_ids: string[] }
@@ -2756,6 +3665,10 @@ export type Database = {
           customer_profile_image: string
           customer_user_id: string
         }[]
+      }
+      get_provider_capacity_limit: {
+        Args: { p_provider_id: string }
+        Returns: number
       }
       get_provider_contact_info: {
         Args: { provider_uuid: string }
@@ -2826,6 +3739,67 @@ export type Database = {
         Returns: boolean
       }
       hash_admin_token: { Args: { raw_token: string }; Returns: string }
+      is_provider_owner: { Args: { p_provider_id: string }; Returns: boolean }
+      queue_provider_calendar_sync_job: {
+        Args: {
+          p_entity_id?: string
+          p_entity_type: string
+          p_google_event_id?: string
+          p_operation: string
+          p_payload?: Json
+          p_provider_id: string
+        }
+        Returns: undefined
+      }
+      queue_provider_event_reminders: {
+        Args: {
+          p_booking_id?: string
+          p_event_date?: string
+          p_event_title?: string
+          p_provider_event_id?: string
+          p_provider_id: string
+        }
+        Returns: undefined
+      }
+      validate_booking_request: {
+        Args: {
+          p_booking_id?: string
+          p_end_date?: string
+          p_provider_id: string
+          p_service_date: string
+          p_service_time?: string
+          p_start_date?: string
+          p_status?: string
+          p_time_slot?: string
+        }
+        Returns: {
+          bookings_count: number
+          capacity_limit: number
+          conflict_type: string
+          conflicting_id: string
+          message: string
+          valid: boolean
+        }[]
+      }
+      validate_provider_event_request: {
+        Args: {
+          p_all_day?: boolean
+          p_end_time?: string
+          p_event_date: string
+          p_event_type: string
+          p_provider_event_id?: string
+          p_provider_id: string
+          p_start_time?: string
+        }
+        Returns: {
+          bookings_count: number
+          capacity_limit: number
+          conflict_type: string
+          conflicting_id: string
+          message: string
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "provider" | "user"
@@ -2838,7 +3812,28 @@ export type Database = {
       provider_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
-      [_ in never]: never
+      provider_calendar_item: {
+        id: string | null
+        provider_id: string | null
+        title: string | null
+        event_type: string | null
+        event_date: string | null
+        start_time: string | null
+        end_time: string | null
+        all_day: boolean | null
+        notes: string | null
+        location: string | null
+        source: string | null
+        booking_id: string | null
+        booking_status: string | null
+        customer_name: string | null
+        customer_phone: string | null
+        is_blocked: boolean | null
+        capacity_limit: number | null
+        bookings_count: number | null
+        created_at: string | null
+        updated_at: string | null
+      }
     }
   }
 }
@@ -2851,12 +3846,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2880,11 +3875,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2905,11 +3900,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2930,11 +3925,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2947,11 +3942,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
