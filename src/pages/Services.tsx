@@ -137,11 +137,13 @@ const Services = () => {
         .select("id, name, slug");
       if (catsError) throw catsError;
 
-      // Fetch approved providers count grouped by category_id
+      // Use the public view so this works for guests and any signed-in
+      // customer (the raw service_providers table is RLS-restricted to
+      // each provider's own row and admins, so querying it here always
+      // returned an empty set and every category showed "0 Providers").
       const { data: providers, error: providersError } = await supabase
-        .from("service_providers")
-        .select("category_id")
-        .eq("status", "approved");
+        .from("public_service_providers")
+        .select("category_id");
       if (providersError) throw providersError;
 
       const counts: Record<string, number> = {};
@@ -160,10 +162,11 @@ const Services = () => {
     }
   });
 
-  const getProviderCountForCategory = (slug: string) => {
+  const getProviderCountForCategory = (slug: string, seoSlug?: string) => {
     const dbCat = dbCategories.find(
       (c) =>
         c.slug?.toLowerCase() === slug.toLowerCase() ||
+        c.slug?.toLowerCase() === seoSlug?.toLowerCase() ||
         c.name.toLowerCase().includes(slug.toLowerCase()) ||
         slug.toLowerCase().includes(c.slug?.toLowerCase() || "")
     );
@@ -270,7 +273,7 @@ const Services = () => {
 
                   {/* Content */}
                   <h3 className="font-display text-2xl font-semibold text-brown mb-3 group-hover:text-gold transition-colors">
-                    {service.name} ({getProviderCountForCategory(service.slug)} Providers)
+                    {service.name} ({getProviderCountForCategory(service.slug, service.seoSlug)} Providers)
                   </h3>
                   <p className="text-muted-foreground mb-6">
                     {service.description}

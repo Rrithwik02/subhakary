@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,8 @@ const signInSchema = z.object({
 });
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const location = useLocation();
+  const [isSignUp, setIsSignUp] = useState(() => location.pathname === "/signup");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -41,7 +42,9 @@ const Auth = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [signupSuccess, setSignupSuccess] = useState(false);
-  
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
+
   // 2FA state
   const [show2FAStep, setShow2FAStep] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -103,6 +106,69 @@ const Auth = () => {
       handleRoleRedirect();
     }
   }, [user, navigate, show2FAStep, signupSuccess]);
+
+  const getSignUpErrorMessage = (error: any): { title: string; description: string } => {
+    const code = error?.code || error?.error_code || "";
+    const msg = (error?.message || "").toLowerCase();
+    if (code === "user_already_exists" || msg.includes("already registered") || msg.includes("already been registered")) {
+      return {
+        title: "Account exists",
+        description: "This email is already registered. Please sign in instead, or reset your password if you forgot it.",
+      };
+    }
+    return {
+      title: "Sign up failed",
+      description: error?.message || "Something went wrong. Please try again.",
+    };
+  };
+
+  const getSignInErrorMessage = (error: any): { title: string; description: string; unconfirmed: boolean } => {
+    const code = error?.code || error?.error_code || "";
+    const msg = (error?.message || "").toLowerCase();
+    if (code === "email_not_confirmed" || msg.includes("email not confirmed")) {
+      return {
+        title: "Confirm your email to sign in",
+        description: "We sent a confirmation link to your inbox when you signed up. Please check your inbox and spam folder, then click it before signing in.",
+        unconfirmed: true,
+      };
+    }
+    if (msg.includes("rate limit") || code === "over_request_rate_limit") {
+      return {
+        title: "Too many attempts",
+        description: "Please wait a minute and try again.",
+        unconfirmed: false,
+      };
+    }
+    return {
+      title: "Sign in failed",
+      description: "Incorrect email or password. If this account was created with Google, use Continue with Google or reset the password first.",
+      unconfirmed: false,
+    };
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!formData.email) return;
+    setResendingConfirmation(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: formData.email,
+      });
+      if (error) throw error;
+      toast({
+        title: "Confirmation email sent",
+        description: "Please check your inbox (and spam folder) for the link.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Couldn't resend email",
+        description: error.message || "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setResendingConfirmation(false);
+    }
+  };
 
   const validateForm = () => {
     try {
@@ -209,8 +275,9 @@ const Auth = () => {
     e.preventDefault();
     
     if (!validateForm()) return;
-    
+
     setLoading(true);
+    setNeedsEmailConfirmation(false);
 
     try {
       if (isSignUp) {
@@ -218,40 +285,23 @@ const Auth = () => {
         const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
           suppressAuthRedirectRef.current = false;
-          if (error.message.includes("already registered")) {
-            toast({
-              title: "Account exists",
-              description: "This email is already registered. Please sign in instead.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Sign up failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
+          const { title, description } = getSignUpErrorMessage(error);
+          toast({ title, description, variant: "destructive" });
         } else {
           trackSignup('email');
           await signOut();
           setSignupSuccess(true);
-          toast({
-            title: "Account created successfully",
-            description: "You can now return to the login page and sign in.",
-          });
         }
       } else {
         // Check if 2FA is enabled for this user
         const has2FA = await checkIf2FAEnabled(formData.email);
-        
+
         // Sign in first
         const { error } = await signIn(formData.email, formData.password);
         if (error) {
-          toast({
-            title: "Sign in failed",
-            description: "Invalid email or password. If this account was created with Google, use Continue with Google or reset the password first.",
-            variant: "destructive",
-          });
+          const { title, description, unconfirmed } = getSignInErrorMessage(error);
+          setNeedsEmailConfirmation(unconfirmed);
+          toast({ title, description, variant: "destructive" });
           return;
         }
 
@@ -387,15 +437,24 @@ const Auth = () => {
             </div>
             <div className="space-y-2">
               <h1 className="font-display text-2xl font-semibold text-foreground">
-                Account created successfully
+                Confirm your email
               </h1>
               <p className="text-muted-foreground">
-                Your Subhakary account is ready. Return to login to continue.
+                We've sent a confirmation link to <span className="font-medium text-foreground">{formData.email}</span>.
+                Please check your inbox (and spam folder) and click the link before signing in.
               </p>
             </div>
             <Button variant="gold" className="w-full rounded-full" onClick={handleBackToLogin}>
               Back to Login
             </Button>
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={resendingConfirmation}
+              className="text-sm text-primary hover:underline font-medium"
+            >
+              {resendingConfirmation ? "Sending..." : "Didn't get the email? Resend"}
+            </button>
           </div>
         </motion.div>
       </div>
@@ -545,6 +604,20 @@ const Auth = () => {
             )}
           </div>
 
+          {needsEmailConfirmation && !isSignUp && (
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 space-y-2">
+              <p>Your account exists but its email isn't confirmed yet.</p>
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={resendingConfirmation}
+                className="font-medium underline"
+              >
+                {resendingConfirmation ? "Sending..." : "Resend confirmation email"}
+              </button>
+            </div>
+          )}
+
           <Button
             type="submit"
             variant="gold"
@@ -613,6 +686,7 @@ const Auth = () => {
               onClick={() => {
                 suppressAuthRedirectRef.current = false;
                 setSignupSuccess(false);
+                setNeedsEmailConfirmation(false);
                 setIsSignUp(!isSignUp);
                 setErrors({});
               }}

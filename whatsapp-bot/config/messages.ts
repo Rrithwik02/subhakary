@@ -17,5 +17,11 @@ export const MESSAGES = {
   cancel: "No problem. Your request was cancelled.",
   help:
     "You can browse services, view your requests, ask for a recommendation, or talk to our team. Use the buttons to continue.",
+  processingError:
+    "Sorry, something went wrong on our end while handling that. Please try again in a moment, or type 'help' to talk to our team.",
+  invalidDate:
+    "Sorry, I couldn't understand that date. Please share it like 25-12-2026 or \"25 December 2026\".",
+  invalidNumber:
+    "Sorry, that doesn't look like a number. Please reply with digits only, e.g. 150.",
 } as const;
 

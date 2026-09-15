@@ -162,6 +162,7 @@ const WeddingOnboarding = () => {
     setSubmitting(true);
     try {
       const weddingPayload = {
+        owner_user_id: user.id,
         bride_name: formData.brideName.trim(),
         groom_name: formData.groomName.trim(),
         title: createWeddingTitle(formData.brideName, formData.groomName),
@@ -177,30 +178,14 @@ const WeddingOnboarding = () => {
         notes: formData.notes.trim() || null,
       };
 
-      const { error: weddingError } = await supabase
-        .from("weddings" as any)
-        .insert(weddingPayload as any);
-
-      if (weddingError) throw weddingError;
-
-      const { data: wedding, error: weddingLookupError } = await supabase
-        .from("weddings" as any)
+      const { data: wedding, error: weddingError } = await supabase
+        .from("weddings")
+        .insert(weddingPayload)
         .select("id")
-        .eq("bride_name", weddingPayload.bride_name)
-        .eq("groom_name", weddingPayload.groom_name)
-        .eq("title", weddingPayload.title)
-        .eq("budget_range", weddingPayload.budget_range)
-        .eq("city", weddingPayload.city)
-        .eq("guest_count", weddingPayload.guest_count)
-        .eq("wedding_type", weddingPayload.wedding_type)
-        .eq("is_estimated_date", weddingPayload.is_estimated_date)
-        .eq("owner_user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
         .single();
 
-      if (weddingLookupError || !wedding) {
-        throw weddingLookupError || new Error("Wedding created, but could not resolve its dashboard record.");
+      if (weddingError || !wedding) {
+        throw weddingError || new Error("Could not create your wedding dashboard. Please try again.");
       }
 
       await supabase.from("wedding_members" as any).insert({
@@ -309,9 +294,13 @@ const WeddingOnboarding = () => {
       });
       navigate(`/wedding/${wedding.id}`);
     } catch (error: any) {
+      const rawMessage: string = error?.message || "";
+      const isInternalDbError = /row-level security|violates|constraint|policy/i.test(rawMessage);
       toast({
         title: "Could not create wedding dashboard",
-        description: error.message || "Please try again in a moment.",
+        description: isInternalDbError
+          ? "Something went wrong on our end while setting up your dashboard. Please try again, or contact support if it keeps happening."
+          : rawMessage || "Please try again in a moment.",
         variant: "destructive",
       });
     } finally {

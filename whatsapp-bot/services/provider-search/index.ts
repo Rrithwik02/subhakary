@@ -33,9 +33,10 @@ export async function searchProviders(
     serviceQuery.eq("category_id", filters.categoryId);
   }
 
-  if (filters.location) {
+  const sanitizedLocation = filters.location?.replace(/[,()%{}"\\]/g, "").trim();
+  if (sanitizedLocation) {
     serviceQuery.or(
-      `city.ilike.%${filters.location}%,secondary_city.ilike.%${filters.location}%,service_cities.cs.{${filters.location}}`,
+      `city.ilike.%${sanitizedLocation}%,secondary_city.ilike.%${sanitizedLocation}%,service_cities.cs.{${sanitizedLocation}}`,
     );
   }
 
