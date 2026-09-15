@@ -5,6 +5,25 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Fail loudly and visibly instead of an uncaught "supabaseUrl is required"
+// that leaves a blank white screen with nothing but a console error. This
+// happens whenever a deployment's build environment is missing the two
+// VITE_SUPABASE_* variables (e.g. a Vercel Preview environment that hasn't
+// been given the same env vars as Production).
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  const message =
+    "Subhakary can't start: this deployment is missing the VITE_SUPABASE_URL / " +
+    "VITE_SUPABASE_PUBLISHABLE_KEY environment variables. Set them for this " +
+    "environment (Production and Preview) and redeploy.";
+  if (typeof document !== "undefined") {
+    document.body.innerHTML = `<div style="font-family:system-ui,sans-serif;max-width:28rem;margin:15vh auto;padding:1.5rem;text-align:center;color:#5b2e12;">
+      <h1 style="font-size:1.25rem;margin-bottom:0.5rem;">Configuration error</h1>
+      <p style="color:#8a6a52;line-height:1.5;">${message}</p>
+    </div>`;
+  }
+  throw new Error(message);
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
