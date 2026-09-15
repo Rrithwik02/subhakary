@@ -49,6 +49,11 @@ export async function createWhatsappRequest(
   }
 
   const payload = {
+    // request_code is NOT NULL with no column default, but
+    // trg_generate_whatsapp_request_code (BEFORE INSERT) fills it in
+    // whenever it's null/empty — "" is the documented sentinel for
+    // "generate one", which also satisfies the generated Insert type.
+    request_code: "",
     customer_id: input.customerId,
     request_type: input.requestType,
     status: input.status ?? "NEW",
