@@ -94,7 +94,9 @@ export function parseAnswerNumber(input: string): number | null {
  */
 export function parseBudgetRange(input: string): { min: number | null; max: number | null } {
   const normalized = input.toLowerCase().replace(/,/g, "");
-  const tokens = [...normalized.matchAll(/(\d+(?:\.\d+)?)\s*(lakh|lakhs|l|k)?/g)]
+  // The trailing (?![a-z]) stops "l"/"k" from matching inside an unrelated
+  // word right after a number (e.g. "1 later" should not read as 1 lakh).
+  const tokens = [...normalized.matchAll(/(\d+(?:\.\d+)?)\s*(lakh|lakhs|l|k)?(?![a-z])/g)]
     .filter((match) => match[1] !== undefined)
     .map((match) => {
       const value = Number(match[1]);
