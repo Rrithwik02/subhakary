@@ -38,4 +38,4 @@ jobs:
             deno check "supabase/functions/$function/index.ts"
           done
       - name: Run WhatsApp security tests
-        run: deno test --allow-env whatsapp-bot/services/whatsapp/auth.test.ts whatsapp-bot/utils/security.test.ts
+        run: deno test --allow-env whatsapp-bot/services/whatsapp/auth.test.ts whatsapp-bot/utils/security.test.ts whatsapp-bot/utils/validation.test.ts
