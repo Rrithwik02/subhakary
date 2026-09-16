@@ -66,6 +66,8 @@ export type Database = {
           subcategory: string | null
           updated_at: string | null
           verification_status: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           category_id?: string | null
@@ -83,6 +85,8 @@ export type Database = {
           subcategory?: string | null
           updated_at?: string | null
           verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           category_id?: string | null
@@ -100,6 +104,8 @@ export type Database = {
           subcategory?: string | null
           updated_at?: string | null
           verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -294,10 +300,12 @@ export type Database = {
       }
       bookings: {
         Row: {
+          auto_complete_at: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           completion_confirmed_by_customer: boolean | null
           completion_confirmed_by_provider: boolean | null
+          completion_requested_at: string | null
           completion_status: string | null
           created_at: string
           end_date: string | null
@@ -323,10 +331,12 @@ export type Database = {
           wedding_id: string | null
         }
         Insert: {
+          auto_complete_at?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completion_confirmed_by_customer?: boolean | null
           completion_confirmed_by_provider?: boolean | null
+          completion_requested_at?: string | null
           completion_status?: string | null
           created_at?: string
           end_date?: string | null
@@ -352,10 +362,12 @@ export type Database = {
           wedding_id?: string | null
         }
         Update: {
+          auto_complete_at?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completion_confirmed_by_customer?: boolean | null
           completion_confirmed_by_provider?: boolean | null
+          completion_requested_at?: string | null
           completion_status?: string | null
           created_at?: string
           end_date?: string | null
@@ -1883,35 +1895,56 @@ export type Database = {
         Row: {
           booking_id: string
           comment: string | null
+          communication_rating: number | null
           created_at: string
           id: string
+          photos: string[] | null
           provider_id: string
+          punctuality_rating: number | null
           rating: number
           review_text: string | null
+          service_quality_rating: number | null
           status: string | null
           user_id: string
+          value_for_money_rating: number | null
+          wedding_budget_range: string | null
+          wedding_size: string | null
         }
         Insert: {
           booking_id: string
           comment?: string | null
+          communication_rating?: number | null
           created_at?: string
           id?: string
+          photos?: string[] | null
           provider_id: string
+          punctuality_rating?: number | null
           rating: number
           review_text?: string | null
+          service_quality_rating?: number | null
           status?: string | null
           user_id: string
+          value_for_money_rating?: number | null
+          wedding_budget_range?: string | null
+          wedding_size?: string | null
         }
         Update: {
           booking_id?: string
           comment?: string | null
+          communication_rating?: number | null
           created_at?: string
           id?: string
+          photos?: string[] | null
           provider_id?: string
+          punctuality_rating?: number | null
           rating?: number
           review_text?: string | null
+          service_quality_rating?: number | null
           status?: string | null
           user_id?: string
+          value_for_money_rating?: number | null
+          wedding_budget_range?: string | null
+          wedding_size?: string | null
         }
         Relationships: [
           {
@@ -1982,7 +2015,10 @@ export type Database = {
           discount_percentage: number | null
           discounted_price: number
           duration_days: number | null
+          exclusions: string[] | null
+          extra_charges: Json | null
           id: string
+          inclusions: string[] | null
           is_active: boolean | null
           max_guests: number | null
           min_advance_percentage: number | null
@@ -1999,7 +2035,10 @@ export type Database = {
           discount_percentage?: number | null
           discounted_price: number
           duration_days?: number | null
+          exclusions?: string[] | null
+          extra_charges?: Json | null
           id?: string
+          inclusions?: string[] | null
           is_active?: boolean | null
           max_guests?: number | null
           min_advance_percentage?: number | null
@@ -2016,7 +2055,10 @@ export type Database = {
           discount_percentage?: number | null
           discounted_price?: number
           duration_days?: number | null
+          exclusions?: string[] | null
+          extra_charges?: Json | null
           id?: string
+          inclusions?: string[] | null
           is_active?: boolean | null
           max_guests?: number | null
           min_advance_percentage?: number | null
