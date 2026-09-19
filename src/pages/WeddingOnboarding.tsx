@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CalendarDays, IndianRupee, MapPin, Sparkles, Users } from "lucide-react";
@@ -104,8 +104,8 @@ const WeddingOnboarding = () => {
     );
   };
 
-  const createBudgetItems = (eventIdsByType: Record<string, string>) => {
-    const totals = new Map<string, { name: string; amount: number; eventIds: string[] }>();
+  const createBudgetItems = () => {
+    const totals = new Map<string, { name: string; amount: number; eventTypes: string[] }>();
 
     selectedEvents.forEach((eventType) => {
       const template = getEventTemplate(eventType);
@@ -120,12 +120,12 @@ const WeddingOnboarding = () => {
         const existing = totals.get(category.slug);
         if (existing) {
           existing.amount += allocation;
-          existing.eventIds.push(eventIdsByType[eventType]);
+          existing.eventTypes.push(eventType);
         } else {
           totals.set(category.slug, {
             name: category.name,
             amount: allocation,
-            eventIds: [eventIdsByType[eventType]],
+            eventTypes: [eventType],
           });
         }
       });
@@ -135,9 +135,11 @@ const WeddingOnboarding = () => {
       category_slug: slug,
       category_name: value.name,
       planned_amount: value.amount,
-      wedding_event_id: value.eventIds[0] ?? null,
+      eventType: value.eventTypes[0] ?? null,
     }));
   };
+
+  const creationKeyRef = useRef<string | null>(null);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -161,44 +163,37 @@ const WeddingOnboarding = () => {
 
     setSubmitting(true);
     try {
+      const storageKey = `wedding-os-creation-key:${user.id}`;
+      const creationKey = creationKeyRef.current
+        ?? window.sessionStorage.getItem(storageKey)
+        ?? crypto.randomUUID();
+      creationKeyRef.current = creationKey;
+      window.sessionStorage.setItem(storageKey, creationKey);
+
       const weddingPayload = {
-        owner_user_id: user.id,
-        bride_name: formData.brideName.trim(),
-        groom_name: formData.groomName.trim(),
+        brideName: formData.brideName.trim(),
+        groomName: formData.groomName.trim(),
         title: createWeddingTitle(formData.brideName, formData.groomName),
-        wedding_date: formData.weddingDate || null,
-        is_estimated_date: formData.isEstimatedDate,
-        budget_range: formData.budgetRange,
-        total_budget: totalBudget,
+        weddingDate: formData.weddingDate || "",
+        isEstimatedDate: formData.isEstimatedDate,
+        budgetRange: formData.budgetRange,
+        totalBudget,
         city: formData.city.trim(),
-        location: formData.location.trim() || null,
-        guest_count: Number(formData.guestCount) || 0,
-        wedding_type: formData.weddingType,
-        cultural_preferences: selectedPreferences,
-        notes: formData.notes.trim() || null,
+        location: formData.location.trim(),
+        guestCount: Number(formData.guestCount) || 0,
+        weddingType: formData.weddingType,
+        culturalPreferences: selectedPreferences,
+        notes: formData.notes.trim(),
       };
 
-      const { data: wedding, error: weddingError } = await supabase
-        .from("weddings")
-        .insert(weddingPayload)
-        .select("id")
-        .single();
-
-      if (weddingError || !wedding) {
-        throw weddingError || new Error("Could not create your wedding dashboard. Please try again.");
-      }
-
-      await supabase.from("wedding_members" as any).insert({
-        wedding_id: wedding.id,
-        user_id: user.id,
-        display_name: "Owner",
-        email: user.email ?? null,
-        role: "owner",
-        permission_level: "approve",
-        status: "active",
-      } as any);
-
       const weddingDate = formData.weddingDate ? new Date(formData.weddingDate) : null;
+      const dueDateBeforeWedding = (days: number) => {
+        if (!weddingDate) return "";
+        const dueDate = new Date(weddingDate);
+        dueDate.setDate(dueDate.getDate() - days);
+        return dueDate.toISOString().slice(0, 10);
+      };
+
       const eventsPayload = selectedEvents.map((eventType, index) => {
         const template = getEventTemplate(eventType);
         const eventDate = weddingDate ? new Date(weddingDate) : null;
@@ -207,57 +202,24 @@ const WeddingOnboarding = () => {
         }
 
         return {
-          wedding_id: wedding.id,
-          event_type: eventType,
+          eventType,
           title: template.label,
-          event_date: eventDate ? eventDate.toISOString().slice(0, 10) : null,
+          eventDate: eventDate ? eventDate.toISOString().slice(0, 10) : "",
           city: formData.city.trim(),
-          guest_count: eventType === "wedding" || eventType === "reception" ? Number(formData.guestCount) || 0 : Math.round((Number(formData.guestCount) || 0) * 0.55),
-          budget_allocated: Math.round((totalBudget * template.budgetPercent) / 100),
-          sort_order: index,
+          guestCount: eventType === "wedding" || eventType === "reception" ? Number(formData.guestCount) || 0 : Math.round((Number(formData.guestCount) || 0) * 0.55),
+          budgetAllocated: Math.round((totalBudget * template.budgetPercent) / 100),
+          sortOrder: index,
+          requirements: template.defaultCategories.map((category) => ({
+            categorySlug: category.slug,
+            categoryName: category.name,
+            requiredCount: category.requiredCount,
+          })),
+          tasks: template.defaultTasks.map((task, taskIndex) => ({
+            title: task,
+            priority: taskIndex === 0 ? "high" : "medium",
+            dueDate: dueDateBeforeWedding(Math.max(14 - taskIndex * 2, 3)),
+          })),
         };
-      });
-
-      const { data: createdEvents, error: eventsError } = await supabase
-        .from("wedding_events" as any)
-        .insert(eventsPayload as any)
-        .select();
-
-      if (eventsError) throw eventsError;
-
-      const eventIdsByType = Object.fromEntries(
-        (createdEvents || []).map((event: any) => [event.event_type, event.id])
-      ) as Record<string, string>;
-
-      const requirementsPayload = selectedEvents.flatMap((eventType) => {
-        const template = getEventTemplate(eventType);
-        const eventId = eventIdsByType[eventType];
-        return template.defaultCategories.map((category) => ({
-          wedding_event_id: eventId,
-          category_slug: category.slug,
-          category_name: category.name,
-          required_count: category.requiredCount,
-        }));
-      });
-
-      if (requirementsPayload.length > 0) {
-        const { error: requirementsError } = await supabase
-          .from("wedding_event_vendor_requirements" as any)
-          .insert(requirementsPayload as any);
-
-        if (requirementsError) throw requirementsError;
-      }
-
-      const tasksPayload = selectedEvents.flatMap((eventType) => {
-        const template = getEventTemplate(eventType);
-        const eventId = eventIdsByType[eventType];
-        return template.defaultTasks.map((task, index) => ({
-          wedding_id: wedding.id,
-          wedding_event_id: eventId,
-          title: task,
-          priority: index === 0 ? "high" : "medium",
-          due_date: weddingDate ? new Date(weddingDate.getTime() - (1000 * 60 * 60 * 24 * Math.max(14 - index * 2, 3))).toISOString().slice(0, 10) : null,
-        }));
       });
 
       const commonTasks = [
@@ -265,42 +227,53 @@ const WeddingOnboarding = () => {
         "Invite relatives",
         "Confirm catering menu",
       ].map((task, index) => ({
-        wedding_id: wedding.id,
         title: task,
         priority: index === 0 ? "high" : "medium",
-        due_date: weddingDate ? new Date(weddingDate.getTime() - (1000 * 60 * 60 * 24 * (30 - index * 7))).toISOString().slice(0, 10) : null,
+        dueDate: dueDateBeforeWedding(30 - index * 7),
       }));
 
-      const { error: tasksError } = await supabase
-        .from("wedding_tasks" as any)
-        .insert([...tasksPayload, ...commonTasks] as any);
-
-      if (tasksError) throw tasksError;
-
-      const budgetItemsPayload = createBudgetItems(eventIdsByType).map((item) => ({
-        wedding_id: wedding.id,
-        ...item,
+      const budgetItemsPayload = createBudgetItems().map((item) => ({
+        categorySlug: item.category_slug,
+        categoryName: item.category_name,
+        plannedAmount: item.planned_amount,
+        eventType: item.eventType,
       }));
 
-      const { error: budgetError } = await supabase
-        .from("wedding_budget_items" as any)
-        .insert(budgetItemsPayload as any);
+      const { data: weddingId, error } = await (supabase as any).rpc("create_wedding_workspace", {
+        p_wedding: weddingPayload,
+        p_events: eventsPayload,
+        p_common_tasks: commonTasks,
+        p_budget_items: budgetItemsPayload,
+        p_creation_key: creationKey,
+      });
 
-      if (budgetError) throw budgetError;
+      if (error || !weddingId) throw error || new Error("Wedding workspace creation did not return an id.");
+
+      window.sessionStorage.removeItem(storageKey);
+      creationKeyRef.current = null;
 
       toast({
         title: "Wedding OS ready",
         description: `Your planning dashboard is live with a starting budget of ${formatCurrency(totalBudget)}.`,
       });
-      navigate(`/wedding/${wedding.id}`);
+      navigate(`/wedding/${weddingId}`);
     } catch (error: any) {
       const rawMessage: string = error?.message || "";
-      const isInternalDbError = /row-level security|violates|constraint|policy/i.test(rawMessage);
+      console.error("Wedding OS creation failed", {
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        message: rawMessage,
+      });
+      const isAuthError = /jwt|auth|signed in|session/i.test(rawMessage);
+      const isNetworkError = /network|fetch|timed out|failed to fetch/i.test(rawMessage);
       toast({
         title: "Could not create wedding dashboard",
-        description: isInternalDbError
-          ? "Something went wrong on our end while setting up your dashboard. Please try again, or contact support if it keeps happening."
-          : rawMessage || "Please try again in a moment.",
+        description: isAuthError
+          ? "Your session has expired. Please sign in again and retry."
+          : isNetworkError
+            ? "We could not reach the server. Check your connection and retry."
+            : "We could not finish setting up your dashboard. Please retry; we will safely resume an already-created dashboard if one exists.",
         variant: "destructive",
       });
     } finally {
