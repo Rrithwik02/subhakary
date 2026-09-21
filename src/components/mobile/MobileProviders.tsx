@@ -134,6 +134,10 @@ export const MobileProviders = () => {
     return result;
   }, [providers, searchQuery, selectedCategory, selectedState, selectedCity, sortBy]);
 
+  const displayedProviders = searchParams.get("limit") === "20"
+    ? filteredProviders.slice(0, 20)
+    : filteredProviders;
+
   const handleStateChange = (value: string) => {
     setSelectedState(value);
     setSelectedCity("all");
@@ -300,7 +304,7 @@ export const MobileProviders = () => {
               Top Rated Specialists
             </h2>
             <span className="text-xs text-muted-foreground">
-              {filteredProviders.length} found
+              {displayedProviders.length} found
             </span>
           </div>
 
@@ -310,7 +314,7 @@ export const MobileProviders = () => {
               Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-48 rounded-2xl" />
               ))
-            ) : filteredProviders.length === 0 ? (
+            ) : displayedProviders.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">No providers found</p>
                 <Button variant="outline" className="mt-4" onClick={clearFilters}>
@@ -319,7 +323,7 @@ export const MobileProviders = () => {
               </div>
             ) : (
               <AnimatePresence>
-                {filteredProviders.map((provider, index) => (
+                {displayedProviders.map((provider, index) => (
                   <motion.div
                     key={provider.id}
                     initial={{ opacity: 0, y: 20 }}

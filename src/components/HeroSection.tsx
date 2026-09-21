@@ -1,247 +1,58 @@
-import { motion } from "framer-motion";
-import { Calendar, Users, LayoutDashboard, IndianRupee, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Camera, Flower2, Heart, Search, Sparkles, UserRoundCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
-import heroWedding from "@/assets/hero-wedding.jpg";
-import heroPuja from "@/assets/hero-puja.jpg";
-import heroCelebration from "@/assets/hero-celebration.jpg";
+import heroImage from "@/assets/interactive-wedding-hero.png";
 
-const heroSlides = [
-  {
-    image: heroWedding,
-    title: "Sacred Ceremonies &",
-    highlight: "Traditional",
-    subtitle: "Indian Services",
-    description: "Connect with experienced pandits, catering services, photographers, and decorators - all reviewed and vetted by families like yours."
-  },
-  {
-    image: heroPuja,
-    title: "Celebrate Your",
-    highlight: "Special",
-    subtitle: "Moments",
-    description: "From intimate home pujas to grand wedding celebrations, find professionals who understand your regional traditions and rituals."
-  },
-  {
-    image: heroCelebration,
-    title: "Your Event",
-    highlight: "Planning OS",
-    subtitle: "Simplified",
-    description: "Budget tracking, guest RSVPs, and checklist management - everything you need to organize your auspicious events in one place."
-  }
+type Hotspot = {
+  id: string;
+  label: string;
+  search: string;
+  description: string;
+  icon: typeof Camera;
+  area: string;
+  pin: string;
+};
+
+const hotspots: Hotspot[] = [
+  { id: "photographer", label: "Find photographers", search: "wedding photographers", description: "Capture every ceremony and celebration.", icon: Camera, area: "left-[1%] top-[50%] h-[43%] w-[25%]", pin: "left-[16%] top-[49%]" },
+  { id: "decorator", label: "Find decoration artists", search: "wedding decoration artists", description: "Discover mandap, floral and stage decoration.", icon: Flower2, area: "left-[22%] top-[18%] h-[35%] w-[55%]", pin: "left-[49%] top-[18%]" },
+  { id: "groom", label: "Find beauticians", search: "bridal and groom beauticians", description: "Explore makeup and grooming artists.", icon: Heart, area: "left-[36%] top-[50%] h-[36%] w-[15%]", pin: "left-[42%] top-[48%]" },
+  { id: "bride", label: "Find beauticians", search: "bridal and groom beauticians", description: "Explore makeup and grooming artists.", icon: Heart, area: "left-[50%] top-[50%] h-[36%] w-[16%]", pin: "left-[58%] top-[48%]" },
+  { id: "poojari", label: "Find poojaris", search: "poojaris for wedding rituals", description: "Search experienced priests for your rituals.", icon: UserRoundCheck, area: "left-[66%] top-[55%] h-[37%] w-[27%]", pin: "left-[77%] top-[51%]" },
 ];
 
 export const HeroSection = () => {
   const navigate = useNavigate();
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true },
-    [Autoplay({ delay: 6000, stopOnInteraction: false })]
-  );
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelect();
-    emblaApi.on("select", onSelect);
-    return () => {
-      emblaApi.off("select", onSelect);
-    };
-  }, [emblaApi, onSelect]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const active = hotspots.find((spot) => spot.id === activeId);
+  const browseService = (service: string) => navigate(`/providers?service=${encodeURIComponent(service)}`);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-cream text-brown-dark pt-28 pb-16">
-      {/* Background radial gradient overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent opacity-60 z-0 pointer-events-none" />
-
-      {/* Main Grid Content */}
-      <div className="relative z-10 container mx-auto px-4 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Left Column: Heading, Slides & Call-to-Action Buttons */}
-          <div className="lg:col-span-6 flex flex-col justify-center space-y-6">
-            
-            {/* Title & Carousel Text */}
-            <div className="space-y-4">
-              <motion.h1
-                key={selectedIndex}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="font-display text-4xl sm:text-5xl md:text-6xl font-semibold leading-tight text-brown-dark"
-              >
-                {heroSlides[selectedIndex].title}{" "}
-                <span className="text-gold">{heroSlides[selectedIndex].highlight}</span>
-                <br />
-                {heroSlides[selectedIndex].subtitle}
-              </motion.h1>
-
-              <motion.p
-                key={`desc-${selectedIndex}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="font-body text-base sm:text-lg text-brown/70 max-w-xl leading-relaxed"
-              >
-                {heroSlides[selectedIndex].description}
-              </motion.p>
-            </div>
-
-            {/* Carousel indicators */}
-            <div className="flex gap-2 py-1">
-              {heroSlides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => emblaApi && emblaApi.scrollTo(index)}
-                  className={`h-1.5 transition-all duration-300 rounded-full ${
-                    selectedIndex === index ? "w-6 bg-gold" : "w-2 bg-brown/20"
-                  }`}
-                  aria-label={`Slide ${index + 1}`}
-                />
-              ))}
-            </div>
-
-            {/* CTA Action Buttons */}
-            <div className="flex flex-wrap gap-4 pt-4">
-              <Button
-                variant="gold"
-                size="lg"
-                className="rounded-full px-8 py-6 font-semibold text-brown-dark hover:scale-105 transition-transform cursor-pointer shadow-lg"
-                onClick={() => navigate("/auth?redirect=/providers")}
-              >
-                Book a Service Provider
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="rounded-full px-8 py-6 font-semibold text-brown-dark border-brown/30 hover:bg-brown/5 hover:scale-105 transition-transform cursor-pointer"
-                onClick={() => navigate("/become-provider")}
-              >
-                Register as a Provider
-              </Button>
-            </div>
-
+    <section className="relative overflow-hidden bg-cream pt-28 pb-16 text-brown-dark">
+      <div className="absolute inset-0 -z-0 bg-[radial-gradient(ellipse_at_top,_rgba(212,175,55,.16),_transparent_58%)]" />
+      <div className="container relative z-10 mx-auto max-w-7xl px-4">
+        <div className="grid items-center gap-10 lg:grid-cols-[.95fr_1.05fr]">
+          <div className="max-w-xl">
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-gold/35 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-brown"><Sparkles className="h-3.5 w-3.5 text-gold" />Subhakary celebrations</span>
+            <h1 className="font-display text-4xl font-semibold leading-tight sm:text-5xl md:text-6xl">Sacred Ceremonies &amp; <span className="text-gold">Traditional</span><br />Indian Services</h1>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-brown/70 sm:text-lg">Connect with experienced pandits, catering services, photographers, and decorators — all reviewed and vetted by families like yours.</p>
+            <div className="mt-7 flex flex-wrap gap-3"><button type="button" onClick={() => navigate("/providers")} className="rounded-xl bg-brown px-6 py-3 text-sm font-semibold text-cream shadow-lg transition hover:bg-brown-dark">Book a Service Provider</button><button type="button" onClick={() => navigate("/planning-os")} className="rounded-xl border border-brown/15 bg-white px-6 py-3 text-sm font-semibold text-brown shadow-sm transition hover:bg-cream">Explore Planning OS</button></div>
           </div>
 
-          {/* Right Column: Wedding Planning Quiz Mockup (1st Image Product Representation) */}
-          <div className="lg:col-span-6 relative w-full h-[480px] flex items-center justify-center">
-            {/* Outer Browser Frame */}
-            <div className="w-full max-w-[520px] bg-white border border-brown/15 rounded-3xl shadow-xl overflow-hidden flex flex-col h-[440px] relative z-10 transition-transform hover:scale-[1.01] duration-300">
-              {/* Browser Title Bar */}
-              <div className="bg-cream/45 px-4 py-3 flex items-center justify-between border-b border-brown/10">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#E6A085]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#EAD8A7]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#A2D3C2]" />
-                </div>
-                <div className="bg-white border border-brown/10 px-6 py-0.5 rounded-md text-[9px] text-brown/50 font-mono w-44 text-center truncate">
-                  subhakary.com/quiz
-                </div>
-                <div className="w-10" />
-              </div>
-
-              {/* Quiz UI Mockup Content Area */}
-              <div className="flex-1 flex overflow-hidden text-brown-dark text-[11px] bg-[#FCFBF9] p-4 gap-4">
-                {/* Left Side: Form Mockup */}
-                <div className="flex-grow space-y-3 overflow-y-auto pr-1">
-                  <h3 className="font-display text-sm font-bold text-brown-dark border-b border-brown/10 pb-1">
-                    Wedding Planning Quiz
-                  </h3>
-
-                  {/* Input Rows */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-0.5">
-                      <span className="text-[9px] font-semibold text-brown/60">Bride Name</span>
-                      <div className="bg-white border border-brown/15 px-2 py-1.5 rounded-lg text-brown-dark font-medium">Priya</div>
-                    </div>
-                    <div className="space-y-0.5">
-                      <span className="text-[9px] font-semibold text-brown/60">Groom Name</span>
-                      <div className="bg-white border border-brown/15 px-2 py-1.5 rounded-lg text-brown-dark font-medium">Rohan</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-0.5">
-                      <span className="text-[9px] font-semibold text-brown/60">Wedding Date</span>
-                      <div className="bg-white border border-brown/15 px-2 py-1.5 rounded-lg text-brown-dark font-medium flex justify-between items-center">
-                        <span>28-11-2026</span>
-                        <Calendar className="w-3.5 h-3.5 text-gold" />
-                      </div>
-                    </div>
-                    <div className="space-y-0.5">
-                      <span className="text-[9px] font-semibold text-brown/60">Number of Guests</span>
-                      <div className="bg-white border border-brown/15 px-2 py-1.5 rounded-lg text-brown-dark font-medium">300</div>
-                    </div>
-                  </div>
-
-                  {/* Events Checklist Cards */}
-                  <div className="space-y-1.5 pt-1">
-                    <span className="text-[9px] font-semibold text-brown/60 block">Events Required</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white border border-gold p-2 rounded-xl flex items-center justify-between shadow-sm">
-                        <div>
-                          <p className="font-bold text-[10px] text-brown-dark">Engagement</p>
-                          <p className="text-[8px] text-brown/50">10% default allocation</p>
-                        </div>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-gold fill-gold/10" />
-                      </div>
-                      <div className="bg-white border border-gold p-2 rounded-xl flex items-center justify-between shadow-sm">
-                        <div>
-                          <p className="font-bold text-[10px] text-brown-dark">Wedding</p>
-                          <p className="text-[8px] text-brown/50">40% default allocation</p>
-                        </div>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-gold fill-gold/10" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Side: "What you will get" Mockup Card */}
-                <div className="w-48 bg-white border border-brown/15 rounded-2xl p-3 flex flex-col justify-between shadow-sm flex-shrink-0">
-                  <div className="space-y-3">
-                    <h4 className="font-display text-[11px] font-bold text-brown-dark pb-1 border-b border-brown/10">
-                      What you will get
-                    </h4>
-
-                    {/* Stat box */}
-                    <div className="bg-cream/40 p-2.5 rounded-xl border border-gold/25 space-y-0.5">
-                      <span className="text-[8px] text-brown/60 block">Projected total budget</span>
-                      <span className="font-bold text-brown-dark text-[13px]">₹12,00,000</span>
-                    </div>
-
-                    {/* Bullet lists */}
-                    <ul className="space-y-1.5 text-[9px] text-brown/70 leading-normal">
-                      <li className="flex items-start gap-1">
-                        <span className="text-gold font-bold">•</span>
-                        <span>Budget buckets generated automatically</span>
-                      </li>
-                      <li className="flex items-start gap-1">
-                        <span className="text-gold font-bold">•</span>
-                        <span>Timeline & event workspaces</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-cream/20 p-2 rounded-xl border border-dashed border-gold/30">
-                    <p className="text-[8px] font-bold text-brown/50 uppercase tracking-wide block mb-1">Starter tasks</p>
-                    <div className="space-y-0.5 text-[8px] text-brown/80 font-medium">
-                      <p>✓ Finalize photographer</p>
-                      <p>✓ Book puja items</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div className="relative overflow-hidden rounded-[2rem] border-4 border-gold/25 bg-white shadow-[0_20px_60px_rgba(59,33,26,.16)]">
+          <img src={heroImage} alt="Indian wedding ceremony with a photographer, couple and poojari" className="block h-auto w-full select-none" />
+          {hotspots.map((spot) => {
+            const isActive = activeId === spot.id;
+            return <button key={spot.id} type="button" aria-label={spot.label} className={`group absolute ${spot.area} cursor-pointer rounded-2xl focus:outline-none focus-visible:ring-4 focus-visible:ring-gold/60`} onMouseEnter={() => setActiveId(spot.id)} onMouseLeave={() => setActiveId(null)} onFocus={() => setActiveId(spot.id)} onBlur={() => setActiveId(null)} onClick={() => browseService(spot.id === "photographer" ? "photography" : spot.id === "decorator" ? "decoration" : spot.id === "bride" || spot.id === "groom" ? "makeup" : "poojari")}><span className={`absolute inset-0 rounded-2xl transition ${isActive ? "bg-gold/20 ring-2 ring-gold ring-offset-2" : "bg-transparent"}`} /></button>;
+          })}
+          {hotspots.map((spot) => {
+            const Icon = spot.icon;
+            return <div key={`${spot.id}-pin`} className={`pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 ${spot.pin}`}><span className={`absolute inset-0 rounded-full bg-gold/70 ${activeId === spot.id ? "animate-ping" : ""}`} /><span className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-gold bg-brown text-gold shadow-lg"><Icon className="h-4 w-4" /></span></div>;
+          })}
+          <AnimatePresence>{active && <motion.button type="button" initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} onMouseEnter={() => setActiveId(active.id)} onMouseLeave={() => setActiveId(null)} onClick={() => browseService(active.id === "photographer" ? "photography" : active.id === "decorator" ? "decoration" : active.id === "bride" || active.id === "groom" ? "makeup" : "poojari")} className="absolute bottom-5 left-1/2 z-20 flex w-[min(92%,340px)] -translate-x-1/2 items-center gap-3 rounded-2xl border border-gold/60 bg-brown p-4 text-left text-cream shadow-2xl"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold"><Search className="h-4 w-4" /></span><span><strong className="block text-sm text-gold">{active.label}</strong><span className="block pt-0.5 text-xs text-cream/80">{active.description}</span></span></motion.button>}</AnimatePresence>
+          <div className="pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-gold/35 bg-brown/90 px-4 py-2 text-xs font-medium text-cream shadow-lg backdrop-blur">Hover or tap a person or the mandap to explore services</div>
+        </div>
         </div>
       </div>
     </section>
