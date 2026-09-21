@@ -12,7 +12,7 @@ import { useMobileLayout } from "@/hooks/useMobileLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthenticatedHome } from "@/components/AuthenticatedHome";
 import { WeddingOSPreviewSection } from "@/components/WeddingOSPreviewSection";
-import { CeremonyInspiration } from "@/components/CeremonyInspiration";
+import { FeaturedProviders } from "@/components/FeaturedProviders";
 import { VendorPartnershipPortal } from "@/components/VendorPartnershipPortal";
 import { SEOHead } from "@/components/SEOHead";
 
@@ -86,8 +86,8 @@ const Index = () => {
         <Navbar />
         <HeroSection />
         <WeddingOSPreviewSection />
-        <CeremonyInspiration />
         <ServicesSection />
+        <FeaturedProviders />
         <VendorPartnershipPortal />
         <AboutSection />
         <BookingFlowSection />

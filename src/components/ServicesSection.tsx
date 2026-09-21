@@ -1,84 +1,82 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { 
-  Sparkles, 
-  Camera, 
-  Brush, 
-  Hand, 
-  Drum, 
-  Flower2, 
-  UtensilsCrossed, 
-  Building2, 
-  CalendarCheck,
-  Video
-} from "lucide-react";
+import poojariImage from "@/assets/service-illustrations/poojari.png";
+import photographyImage from "@/assets/service-illustrations/photography.png";
+import videographyImage from "@/assets/service-illustrations/videography.png";
+import makeupImage from "@/assets/service-illustrations/makeup.png";
+import mehandiImage from "@/assets/service-illustrations/mehandi.png";
+import mangalaVadyamImage from "@/assets/service-illustrations/mangala-vadyam.png";
+import decorationImage from "@/assets/service-illustrations/decoration.png";
+import cateringImage from "@/assets/service-illustrations/catering.png";
+import venuesImage from "@/assets/service-illustrations/venues.png";
+import eventManagementImage from "@/assets/service-illustrations/event-management.png";
 
 const services = [
   {
-    icon: Sparkles,
+    image: poojariImage,
     name: "Poojari / Priest",
     description: "Experienced pandits for all ceremonies",
     color: "from-amber-500 to-orange-600",
     filter: "poojari",
   },
   {
-    icon: Camera,
+    image: photographyImage,
     name: "Photography",
     description: "Capture every precious moment",
     color: "from-rose-500 to-pink-600",
     filter: "photography",
   },
   {
-    icon: Video,
+    image: videographyImage,
     name: "Videography",
     description: "Professional video coverage",
     color: "from-fuchsia-500 to-pink-600",
     filter: "videography",
   },
   {
-    icon: Brush,
+    image: makeupImage,
     name: "Makeup Artist",
     description: "Bridal & groom makeup services",
     color: "from-purple-500 to-violet-600",
     filter: "makeup",
   },
   {
-    icon: Hand,
+    image: mehandiImage,
     name: "Mehandi",
     description: "Traditional & modern designs",
     color: "from-emerald-500 to-green-600",
     filter: "mehandi",
   },
   {
-    icon: Drum,
+    image: mangalaVadyamImage,
     name: "Mangala Vadyam",
     description: "Auspicious traditional music",
     color: "from-yellow-500 to-amber-600",
     filter: "mangala-vadyam",
   },
   {
-    icon: Flower2,
+    image: decorationImage,
     name: "Decoration",
     description: "Stunning venue transformations",
     color: "from-sky-500 to-blue-600",
     filter: "decoration",
   },
   {
-    icon: UtensilsCrossed,
+    image: cateringImage,
     name: "Catering",
     description: "Delicious traditional cuisines",
     color: "from-red-500 to-rose-600",
     filter: "catering",
   },
   {
-    icon: Building2,
+    image: venuesImage,
     name: "Function Halls",
     description: "Perfect venues for your events",
     color: "from-teal-500 to-cyan-600",
     filter: "function-halls",
   },
   {
-    icon: CalendarCheck,
+    image: eventManagementImage,
     name: "Event Managers",
     description: "End-to-end event planning",
     color: "from-indigo-500 to-purple-600",
@@ -168,11 +166,8 @@ export const ServicesSection = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
               <div className="relative z-10">
-                {/* Icon */}
-                <div
-                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300`}
-                >
-                  <service.icon className="w-6 h-6 sm:w-7 sm:h-7 text-cream" />
+                <div className="mb-3 h-12 w-12 overflow-hidden rounded-xl border border-gold/15 bg-cream shadow-sm transition-transform duration-300 group-hover:scale-105 sm:mb-4 sm:h-14 sm:w-14 sm:rounded-2xl">
+                  <img src={service.image} alt="" className="h-full w-full object-cover" />
                 </div>
 
                 {/* Content */}

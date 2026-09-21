@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.png", "robots.txt", "sitemap.xml"],
       manifest: false, // Use existing manifest.json
       workbox: {
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
