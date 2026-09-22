@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { SEOHead, generateServiceSchema, generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
+import { SEOHead, generateServiceSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 import { getServiceFromSlug, getCityFromSlug, topCitiesSEO, createCitySlug } from "@/data/seoData";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,23 +24,25 @@ const ServiceLocation = () => {
   const cityData = topCitiesSEO.find(c => createCitySlug(c.name) === city);
   const stateName = cityData?.state || "";
 
-  // Fetch providers for this service and city
+  // Fetch providers for this service and city. Joins on category_id via
+  // service_categories.slug rather than the service_providers.service_type
+  // column, which is never populated by the provider-registration flow.
   const { data: providers, isLoading } = useQuery({
-    queryKey: ["providers", serviceData?.filter, cityName],
+    queryKey: ["providers", serviceData?.categorySlug, cityName],
     queryFn: async () => {
       if (!serviceData) return [];
-      
-      const query = supabase
-        .from("service_providers")
-        .select("*")
-        .eq("status", "approved")
-        .eq("service_type", serviceData.filter);
-      
-      // Filter by city - check primary city and service_cities array
-      const { data } = await query;
-      
+
+      // Anonymous visitors (including crawlers) can't read service_providers
+      // directly — RLS restricts that table to logged-in users. The
+      // public_service_providers view is the approved, public-safe read path
+      // (same pattern as src/pages/Providers.tsx).
+      const { data } = await supabase
+        .from("public_service_providers")
+        .select("*, service_categories!inner(slug)")
+        .eq("service_categories.slug", serviceData.categorySlug);
+
       if (!data) return [];
-      
+
       return data.filter(provider =>
         locationMatches(provider.city, cityName) ||
         locationMatches(provider.secondary_city, cityName) ||
@@ -107,9 +109,9 @@ const ServiceLocation = () => {
         description={pageDescription}
         keywords={pageKeywords}
         canonicalUrl={canonicalUrl}
+        noindex={!isLoading && (!providers || providers.length === 0)}
         jsonLd={[
           generateServiceSchema(serviceData.pluralName, serviceData.description, cityName, stateName),
-          generateLocalBusinessSchema(serviceData.pluralName, cityName, stateName),
           generateBreadcrumbSchema(breadcrumbs)
         ]}
       />

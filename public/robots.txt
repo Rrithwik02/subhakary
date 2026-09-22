@@ -1,36 +1,47 @@
 # Subhakary Robots.txt
-# https://subhakary.com
-
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-User-agent: LinkedInBot
-Allow: /
-
-User-agent: WhatsApp
-Allow: /
+# https://www.subhakary.com
+#
+# One rule set for all crawlers. Previously Googlebot/Bingbot had their own
+# groups containing only "Allow: /", which under the robots.txt spec meant
+# they did NOT inherit the Disallow rules meant for private/admin pages
+# (a bot matches its most specific group only, never falls back to "*").
+# That let Googlebot crawl /admin, /profile, /chat, etc. Consolidated below
+# so every crawler — including AI crawlers, which are not singled out or
+# blocked — gets the same rules.
+#
+# AI/answer-engine crawlers covered by the wildcard rule (none are blocked):
+#   GPTBot, OAI-SearchBot, ChatGPT-User   -> OpenAI (training / live search / user-invoked fetch)
+#   ClaudeBot, Claude-User, anthropic-ai  -> Anthropic
+#   PerplexityBot, Perplexity-User        -> Perplexity answer engine
+#   Google-Extended                       -> Gemini/AI features training corpus (separate from Googlebot)
+#   CCBot                                 -> Common Crawl (used as training data by many LLMs)
+# Crawl-delay is omitted: Googlebot ignores it entirely, and it isn't needed
+# for a site this size on modern infrastructure.
 
 User-agent: *
 Allow: /
-
-# Sitemap location
-Sitemap: https://subhakary.com/sitemap.xml
-
-# Disallow admin and private pages
 Disallow: /admin
 Disallow: /provider-dashboard
+Disallow: /provider-settings
+Disallow: /dashboard
 Disallow: /my-bookings
-Disallow: /profile
-Disallow: /chat
 Disallow: /booking/
+Disallow: /checkout/
+Disallow: /payment-history
+Disallow: /profile
+Disallow: /favorites
+Disallow: /compare
+Disallow: /chat
+Disallow: /inquiry/
+Disallow: /notifications
+Disallow: /wedding/
+Disallow: /wedding-dashboard
+Disallow: /plan-wedding
+Disallow: /journey
+Disallow: /auth
+Disallow: /signup
+Disallow: /reset-password
+Disallow: /search
+
+# Sitemap location
+Sitemap: https://www.subhakary.com/sitemap.xml

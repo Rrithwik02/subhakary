@@ -9,6 +9,11 @@ export interface ServiceSEO {
   regionalKeywords: string[];
   description: string;
   filter: string;
+  /** service_categories.slug in Supabase — the URL slug above doesn't always
+   * match the DB category slug (e.g. "photographer" vs DB "photography"),
+   * so provider queries must join on this field, not on the free-text
+   * service_providers.service_type column (which is never populated). */
+  categorySlug: string;
 }
 
 // Helper to get all keywords for a service
@@ -55,7 +60,8 @@ export const servicesSEO: ServiceSEO[] = [
       "marathi pandit", "gujarati priest", "hindi pandit"
     ],
     description: "Book experienced poojaris and pandits for Hindu ceremonies, weddings, griha pravesh, satyanarayan puja, and all traditional rituals",
-    filter: "priest"
+    filter: "priest",
+    categorySlug: "poojari"
   },
   {
     slug: "photographer",
@@ -86,7 +92,8 @@ export const servicesSEO: ServiceSEO[] = [
       "maharashtrian wedding photography", "bengali wedding photographer"
     ],
     description: "Find professional photographers for weddings, pre-wedding shoots, events, and ceremonies with stunning portfolios",
-    filter: "photography"
+    filter: "photography",
+    categorySlug: "photography"
   },
   {
     slug: "videographer",
@@ -114,7 +121,8 @@ export const servicesSEO: ServiceSEO[] = [
       "punjabi wedding video", "gujarati wedding videography"
     ],
     description: "Find professional videographers for wedding cinematography, event coverage, and ceremony documentation",
-    filter: "videography"
+    filter: "videography",
+    categorySlug: "videography"
   },
   {
     slug: "makeup-artist",
@@ -143,7 +151,8 @@ export const servicesSEO: ServiceSEO[] = [
       "sabyasachi bride makeup", "traditional bridal makeup"
     ],
     description: "Book skilled makeup artists for bridal makeup, party makeup, HD makeup, and airbrush makeup services",
-    filter: "makeup"
+    filter: "makeup",
+    categorySlug: "makeup"
   },
   {
     slug: "mehandi-artist",
@@ -172,7 +181,8 @@ export const servicesSEO: ServiceSEO[] = [
       "pakistani mehndi design", "moroccan henna"
     ],
     description: "Hire talented mehandi artists for bridal mehandi, Arabic designs, traditional patterns, and event henna services",
-    filter: "mehandi"
+    filter: "mehandi",
+    categorySlug: "mehandi"
   },
   {
     slug: "mangala-vadyam",
@@ -201,7 +211,8 @@ export const servicesSEO: ServiceSEO[] = [
       "rajasthani band", "punjabi dhol wala"
     ],
     description: "Book authentic mangala vadyam and nadaswaram artists for weddings and auspicious ceremonies",
-    filter: "music"
+    filter: "music",
+    categorySlug: "mangala-vadyam"
   },
   {
     slug: "decoration",
@@ -232,7 +243,8 @@ export const servicesSEO: ServiceSEO[] = [
       "bengali wedding decoration", "marathi wedding mandap"
     ],
     description: "Find creative decorators for wedding mandaps, stage decoration, flower arrangements, and event theming",
-    filter: "decoration"
+    filter: "decoration",
+    categorySlug: "decoration"
   },
   {
     slug: "catering",
@@ -261,7 +273,8 @@ export const servicesSEO: ServiceSEO[] = [
       "hyderabadi biryani catering", "chettinad catering"
     ],
     description: "Book trusted caterers offering multi-cuisine menus, live counters, and customized catering packages",
-    filter: "catering"
+    filter: "catering",
+    categorySlug: "catering"
   },
   {
     slug: "function-halls",
@@ -291,7 +304,8 @@ export const servicesSEO: ServiceSEO[] = [
       "temple wedding hall", "community hall wedding"
     ],
     description: "Discover function halls and banquet venues for weddings, receptions, and grand celebrations",
-    filter: "venue"
+    filter: "venue",
+    categorySlug: "function-halls"
   },
   {
     slug: "event-managers",
@@ -323,7 +337,8 @@ export const servicesSEO: ServiceSEO[] = [
       "traditional wedding coordinator", "modern wedding planner"
     ],
     description: "Hire professional event managers and wedding planners for seamless ceremony coordination",
-    filter: "event-planning"
+    filter: "event-planning",
+    categorySlug: "event-managers"
   }
 ];
 

@@ -116,57 +116,33 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Popular Cities for SEO */}
+        {/* Cities with active provider coverage today. Deliberately not a
+            city grid for every market we'd eventually like to serve — that
+            was linking to service+city combinations with zero providers,
+            which is misleading to visitors and search engines alike. As
+            coverage expands, add the new real combinations here (and they'll
+            also start appearing in the sitemap automatically). */}
         <div className="mt-12 pt-8 border-t border-cream/10">
           <h4 className="font-display text-lg font-semibold text-cream mb-4">
-            Popular Cities
+            Browse by City
           </h4>
-          <div className="flex flex-wrap gap-2 mb-8">
-            {[
-              { city: "Hyderabad", slug: "hyderabad" },
-              { city: "Bangalore", slug: "bengaluru" },
-              { city: "Chennai", slug: "chennai" },
-              { city: "Mumbai", slug: "mumbai" },
-              { city: "Delhi", slug: "new-delhi" },
-              { city: "Pune", slug: "pune" },
-              { city: "Vijayawada", slug: "vijayawada" },
-              { city: "Kolkata", slug: "kolkata" },
-            ].map((item) => (
-              <Link
-                key={item.slug}
-                to={`/services/poojari/${item.slug}`}
-                className="text-xs text-cream/60 hover:text-gold transition-colors"
-              >
-                {item.city}
-              </Link>
-            ))}
-          </div>
-          
-          {/* Quick Service Links by City */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-cream/50 mb-8">
             <div>
               <p className="font-medium text-cream/70 mb-2">Hyderabad</p>
               <Link to="/services/poojari/hyderabad" className="block hover:text-gold">Poojari in Hyderabad</Link>
               <Link to="/services/photographer/hyderabad" className="block hover:text-gold">Photographer in Hyderabad</Link>
-              <Link to="/services/catering/hyderabad" className="block hover:text-gold">Catering in Hyderabad</Link>
             </div>
             <div>
-              <p className="font-medium text-cream/70 mb-2">Bangalore</p>
-              <Link to="/services/poojari/bengaluru" className="block hover:text-gold">Poojari in Bangalore</Link>
-              <Link to="/services/photographer/bengaluru" className="block hover:text-gold">Photographer in Bangalore</Link>
-              <Link to="/services/catering/bengaluru" className="block hover:text-gold">Catering in Bangalore</Link>
+              <p className="font-medium text-cream/70 mb-2">Visakhapatnam</p>
+              <Link to="/services/poojari/visakhapatnam" className="block hover:text-gold">Poojari in Visakhapatnam</Link>
+              <Link to="/services/photographer/visakhapatnam" className="block hover:text-gold">Photographer in Visakhapatnam</Link>
+              <Link to="/services/makeup-artist/visakhapatnam" className="block hover:text-gold">Makeup Artist in Visakhapatnam</Link>
             </div>
             <div>
-              <p className="font-medium text-cream/70 mb-2">Chennai</p>
-              <Link to="/services/poojari/chennai" className="block hover:text-gold">Poojari in Chennai</Link>
-              <Link to="/services/photographer/chennai" className="block hover:text-gold">Photographer in Chennai</Link>
-              <Link to="/services/catering/chennai" className="block hover:text-gold">Catering in Chennai</Link>
-            </div>
-            <div>
-              <p className="font-medium text-cream/70 mb-2">Mumbai</p>
-              <Link to="/services/poojari/mumbai" className="block hover:text-gold">Poojari in Mumbai</Link>
-              <Link to="/services/photographer/mumbai" className="block hover:text-gold">Photographer in Mumbai</Link>
-              <Link to="/services/catering/mumbai" className="block hover:text-gold">Catering in Mumbai</Link>
+              <p className="font-medium text-cream/70 mb-2">All Cities</p>
+              <Link to="/services/poojari" className="block hover:text-gold">Poojari Services</Link>
+              <Link to="/services/catering" className="block hover:text-gold">Catering Services</Link>
+              <Link to="/services" className="block hover:text-gold">Browse All Services</Link>
             </div>
           </div>
         </div>
