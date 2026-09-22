@@ -175,7 +175,7 @@ const DesktopProviders = () => {
           youtube_url,
           website_url,
           url_slug,
-          category:service_categories(name, icon)
+          category:service_categories(name, icon, slug)
         `)
         .eq("status", "approved")
         .order("rating", { ascending: false });
@@ -224,7 +224,9 @@ const DesktopProviders = () => {
         (p) =>
           p.business_name.toLowerCase().includes(query) ||
           p.description?.toLowerCase().includes(query) ||
-          p.city?.toLowerCase().includes(query)
+          p.city?.toLowerCase().includes(query) ||
+          p.category?.name?.toLowerCase().includes(query) ||
+          p.category?.slug?.toLowerCase().includes(query)
       );
     }
 
@@ -317,6 +319,10 @@ const DesktopProviders = () => {
 
     return result;
   }, [providers, searchQuery, selectedCategory, selectedSubcategory, selectedState, selectedCity, selectedArea, sortBy, minPrice, maxPrice]);
+
+  const displayedProviders = searchParams.get("limit") === "20"
+    ? filteredProviders.slice(0, 20)
+    : filteredProviders;
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -703,7 +709,7 @@ const DesktopProviders = () => {
         <div className="container max-w-6xl mx-auto">
           <div className="flex items-center justify-center md:justify-between mb-4 md:mb-6">
             <p className="text-muted-foreground text-sm md:text-base">
-              {filteredProviders.length} provider{filteredProviders.length !== 1 ? "s" : ""} found
+              {displayedProviders.length} provider{displayedProviders.length !== 1 ? "s" : ""} found
             </p>
           </div>
 
@@ -719,7 +725,7 @@ const DesktopProviders = () => {
                 </Card>
               ))}
             </div>
-          ) : filteredProviders.length === 0 ? (
+          ) : displayedProviders.length === 0 ? (
             <div className="text-center py-12 md:py-16">
               <Filter className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-display text-lg md:text-xl font-semibold mb-2">No providers found</h3>
@@ -732,7 +738,7 @@ const DesktopProviders = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {filteredProviders.map((provider, index) => (
+              {displayedProviders.map((provider, index) => (
                 <motion.div
                   key={provider.id}
                   initial={{ opacity: 0, y: 20 }}

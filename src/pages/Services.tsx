@@ -1,32 +1,27 @@
 import { motion } from "framer-motion";
-import { 
-  BookOpen, 
-  Camera, 
-  Palette, 
-  Flower2, 
-  Music, 
-  PartyPopper, 
-  UtensilsCrossed, 
-  Building2, 
-  Users,
-  Video,
-  ArrowLeft,
-  ArrowRight
-} from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { NewsletterForm } from "@/components/NewsletterForm";
+import { BackToHome } from "@/components/BackToHome";
 import { SEOHead } from "@/components/SEOHead";
 import { servicesSEO, getAllKeywords } from "@/data/seoData";
+import poojariImage from "@/assets/service-illustrations/poojari.png";
+import photographyImage from "@/assets/service-illustrations/photography.png";
+import videographyImage from "@/assets/service-illustrations/videography.png";
+import makeupImage from "@/assets/service-illustrations/makeup.png";
+import mehandiImage from "@/assets/service-illustrations/mehandi.png";
+import mangalaVadyamImage from "@/assets/service-illustrations/mangala-vadyam.png";
+import decorationImage from "@/assets/service-illustrations/decoration.png";
+import cateringImage from "@/assets/service-illustrations/catering.png";
+import venuesImage from "@/assets/service-illustrations/venues.png";
+import eventManagementImage from "@/assets/service-illustrations/event-management.png";
 
 const services = [
   {
-    icon: BookOpen,
+    image: poojariImage,
     name: "Poojari / Priest Services",
     slug: "poojari",
     seoSlug: "poojari",
@@ -35,7 +30,7 @@ const services = [
     color: "from-amber-500 to-orange-600",
   },
   {
-    icon: Camera,
+    image: photographyImage,
     name: "Photography",
     slug: "photography",
     seoSlug: "photographer",
@@ -44,7 +39,7 @@ const services = [
     color: "from-rose-500 to-pink-600",
   },
   {
-    icon: Video,
+    image: videographyImage,
     name: "Videography",
     slug: "videography",
     seoSlug: "videographer",
@@ -53,7 +48,7 @@ const services = [
     color: "from-violet-500 to-purple-600",
   },
   {
-    icon: Palette,
+    image: makeupImage,
     name: "Makeup Artists",
     slug: "makeup",
     seoSlug: "makeup-artist",
@@ -62,7 +57,7 @@ const services = [
     color: "from-purple-500 to-violet-600",
   },
   {
-    icon: Flower2,
+    image: mehandiImage,
     name: "Mehandi Artists",
     slug: "mehandi",
     seoSlug: "mehandi-artist",
@@ -71,7 +66,7 @@ const services = [
     color: "from-emerald-500 to-green-600",
   },
   {
-    icon: Music,
+    image: mangalaVadyamImage,
     name: "Mangala Vadyam",
     slug: "mangala-vadyam",
     seoSlug: "mangala-vadyam",
@@ -80,7 +75,7 @@ const services = [
     color: "from-yellow-500 to-amber-600",
   },
   {
-    icon: PartyPopper,
+    image: decorationImage,
     name: "Decoration Services",
     slug: "decoration",
     seoSlug: "decoration",
@@ -89,7 +84,7 @@ const services = [
     color: "from-sky-500 to-blue-600",
   },
   {
-    icon: UtensilsCrossed,
+    image: cateringImage,
     name: "Catering Services",
     slug: "catering",
     seoSlug: "catering",
@@ -98,7 +93,7 @@ const services = [
     color: "from-red-500 to-rose-600",
   },
   {
-    icon: Building2,
+    image: venuesImage,
     name: "Function Halls & Venues",
     slug: "venues",
     seoSlug: "function-halls",
@@ -107,7 +102,7 @@ const services = [
     color: "from-teal-500 to-cyan-600",
   },
   {
-    icon: Users,
+    image: eventManagementImage,
     name: "Event Managers",
     slug: "event-management",
     seoSlug: "event-managers",
@@ -124,71 +119,10 @@ const getAllServicesKeywords = (): string => {
 
 const Services = () => {
   const pageKeywords = getAllServicesKeywords();
-  const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch categories with real provider counts from database
-  const { data: dbCategories = [] } = useQuery({
-    queryKey: ["service-categories-with-counts"],
-    queryFn: async () => {
-      // Fetch categories
-      const { data: cats, error: catsError } = await supabase
-        .from("service_categories")
-        .select("id, name, slug");
-      if (catsError) throw catsError;
-
-      // Use the public view so this works for guests and any signed-in
-      // customer (the raw service_providers table is RLS-restricted to
-      // each provider's own row and admins, so querying it here always
-      // returned an empty set and every category showed "0 Providers").
-      const { data: providers, error: providersError } = await supabase
-        .from("public_service_providers")
-        .select("category_id");
-      if (providersError) throw providersError;
-
-      const counts: Record<string, number> = {};
-      const safeProviders = providers || [];
-      safeProviders.forEach((p) => {
-        if (p.category_id) {
-          counts[p.category_id] = (counts[p.category_id] || 0) + 1;
-        }
-      });
-
-      const safeCats = cats || [];
-      return safeCats.map((cat) => ({
-        ...cat,
-        providerCount: counts[cat.id] || 0,
-      }));
-    }
-  });
-
-  const getProviderCountForCategory = (slug: string, seoSlug?: string) => {
-    const dbCat = dbCategories.find(
-      (c) =>
-        c.slug?.toLowerCase() === slug.toLowerCase() ||
-        c.slug?.toLowerCase() === seoSlug?.toLowerCase() ||
-        c.name.toLowerCase().includes(slug.toLowerCase()) ||
-        slug.toLowerCase().includes(c.slug?.toLowerCase() || "")
-    );
-    return dbCat?.providerCount ?? 0;
-  };
-
   const handleCategoryClick = (categorySlug: string) => {
-    const targetUrl = `/providers?category=${categorySlug}`;
-    if (!user) {
-      navigate(`/auth?redirect=${encodeURIComponent(targetUrl)}`);
-    } else {
-      navigate(targetUrl);
-    }
-  };
-
-  const handleBrowseAllClick = () => {
-    const targetUrl = "/providers";
-    if (!user) {
-      navigate(`/auth?redirect=${encodeURIComponent(targetUrl)}`);
-    } else {
-      navigate(targetUrl);
-    }
+    navigate(`/providers?service=${encodeURIComponent(categorySlug)}`);
   };
 
   return (
@@ -222,12 +156,7 @@ const Services = () => {
         {/* Hero Section */}
         <section className="pt-32 pb-16 bg-gradient-to-b from-cream to-background">
           <div className="container mx-auto px-4">
-            <Link to="/">
-              <Button variant="ghost" className="mb-6 text-brown hover:text-gold">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
+            <BackToHome />
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -264,16 +193,13 @@ const Services = () => {
                   className="group bg-card rounded-2xl p-8 border border-border hover:border-gold/30 transition-all duration-300 hover:shadow-lg cursor-pointer"
                   onClick={() => handleCategoryClick(service.slug)}
                 >
-                  {/* Icon */}
-                  <div
-                    className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <service.icon className="w-8 h-8 text-cream" />
+                  <div className="mb-6 h-20 w-20 overflow-hidden rounded-2xl border border-gold/15 bg-cream shadow-sm transition-transform duration-300 group-hover:scale-105">
+                    <img src={service.image} alt="" className="h-full w-full object-cover" />
                   </div>
 
                   {/* Content */}
                   <h3 className="font-display text-2xl font-semibold text-brown mb-3 group-hover:text-gold transition-colors">
-                    {service.name} ({getProviderCountForCategory(service.slug, service.seoSlug)} Providers)
+                    {service.name}
                   </h3>
                   <p className="text-muted-foreground mb-6">
                     {service.description}
@@ -300,39 +226,12 @@ const Services = () => {
                       handleCategoryClick(service.slug);
                     }}
                   >
-                    Find Providers
+                    Explore Service
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </motion.div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16 bg-cream">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-brown rounded-3xl p-10 md:p-16 text-center"
-            >
-              <h2 className="font-display text-3xl md:text-4xl text-cream mb-4">
-                Ready to Find Your Perfect Provider?
-              </h2>
-              <p className="text-cream/80 mb-8 max-w-2xl mx-auto">
-                Browse our verified service providers and book with confidence. 
-                Every provider is vetted for quality and reliability.
-              </p>
-              <Button 
-                className="bg-gold hover:bg-gold/90 text-brown px-8 py-6 rounded-full text-lg cursor-pointer animate-pulse"
-                onClick={handleBrowseAllClick}
-              >
-                Browse All Providers
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </motion.div>
           </div>
         </section>
 

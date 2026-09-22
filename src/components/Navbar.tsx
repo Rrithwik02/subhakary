@@ -191,7 +191,7 @@ export const Navbar = () => {
           {user ? <>
               <div className="flex items-center gap-1.5 xl:gap-2">
                 <Link to="/notifications" className="relative">
-                  <Button variant="ghost" size="icon" title="Notifications" className="h-9 w-9">
+                  <Button variant="ghost" size="icon" title="Notifications" className="h-9 w-9 text-brown-dark hover:text-brown">
                     <Bell className="h-4 w-4" />
                     {unreadCount > 0 && (
                       <Badge 
@@ -204,17 +204,17 @@ export const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/chat">
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-brown-dark hover:text-brown">
                     <MessageSquare className="h-4 w-4" />
                   </Button>
                 </Link>
                 <Link to="/favorites">
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-brown-dark hover:text-brown">
                     <Heart className="h-4 w-4" />
                   </Button>
                 </Link>
                 <Link to="/profile">
-                  <Button variant="ghost" size="icon" className="h-9 w-9" title="Profile">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-brown-dark hover:text-brown" title="Profile">
                     <Avatar className="h-6 w-6">
                       <AvatarImage src={userProfile?.avatar_url || undefined} />
                       <AvatarFallback className="text-[10px] bg-primary/10">
@@ -256,12 +256,12 @@ export const Navbar = () => {
               </div>
             </> : <>
               <Link to="/auth">
-                <Button variant="ghost" size="sm" className="font-medium text-xs xl:text-sm h-9">
+                <Button variant="ghost" size="sm" className="font-medium text-xs xl:text-sm h-9 text-brown-dark hover:text-brown">
                   Sign In
                 </Button>
               </Link>
               <Link to="/auth">
-                <Button variant="gold" size="sm" className="font-medium rounded-full px-4 text-xs xl:text-sm h-9">
+                <Button variant="brown" size="sm" className="font-medium px-4 text-xs xl:text-sm h-9">
                   Join Us
                 </Button>
               </Link>
@@ -303,7 +303,7 @@ export const Navbar = () => {
                 {user ? <>
                     <div className="flex items-center gap-2 pb-2">
                       <Link to="/notifications" onClick={() => setIsOpen(false)} className="relative">
-                        <Button variant="ghost" size="icon" title="Notifications">
+                        <Button variant="ghost" size="icon" title="Notifications" className="text-brown-dark hover:text-brown">
                           <Bell className="h-5 w-5" />
                           {unreadCount > 0 && (
                             <Badge 
@@ -316,18 +316,18 @@ export const Navbar = () => {
                         </Button>
                       </Link>
                       <Link to="/chat" onClick={() => setIsOpen(false)}>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="text-brown-dark hover:text-brown">
                           <MessageSquare className="h-5 w-5" />
                         </Button>
                       </Link>
                       <Link to="/favorites" onClick={() => setIsOpen(false)}>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="text-brown-dark hover:text-brown">
                           <Heart className="h-5 w-5" />
                         </Button>
                       </Link>
                     </div>
                     <Link to="/profile" className="w-full" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+                      <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-brown-dark hover:text-brown">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={userProfile?.avatar_url || undefined} />
                           <AvatarFallback className="text-xs bg-primary/10">
@@ -347,7 +347,7 @@ export const Navbar = () => {
                       </Link>
                     ) : (
                       <Link to="/become-provider" className="w-full" onClick={() => setIsOpen(false)}>
-                        <Button variant="ghost" size="sm" className="w-full justify-start">
+                        <Button variant="ghost" size="sm" className="w-full justify-start text-brown-dark hover:text-brown">
                           Become Provider
                         </Button>
                       </Link>
@@ -368,12 +368,12 @@ export const Navbar = () => {
                     </Button>
                   </> : <>
                     <Link to="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" size="sm" className="w-full">
+                      <Button variant="ghost" size="sm" className="w-full text-brown-dark hover:text-brown">
                         Sign In
                       </Button>
                     </Link>
                     <Link to="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
-                      <Button variant="gold" size="sm" className="w-full">
+                      <Button variant="brown" size="sm" className="w-full">
                         Join Us
                       </Button>
                     </Link>

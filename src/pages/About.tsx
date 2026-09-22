@@ -1,10 +1,9 @@
 import { motion } from "framer-motion";
-import { Users, Heart, Compass, Target, ArrowLeft, Award, Shield, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Users, Heart, Compass, Target, Award, Shield, Clock } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
 import { NewsletterForm } from "@/components/NewsletterForm";
+import { BackToHome } from "@/components/BackToHome";
 
 const values = [
   {
@@ -57,12 +56,7 @@ const About = () => {
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-b from-cream to-background">
         <div className="container mx-auto px-4">
-          <Link to="/">
-            <Button variant="ghost" className="mb-6 text-brown hover:text-gold">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
+          <BackToHome />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -46,7 +46,7 @@ export const VendorPartnershipPortal = () => {
             <div className="flex flex-wrap gap-4 pt-4">
               <Button
                 variant="gold"
-                className="px-8 py-6 rounded-full text-base font-semibold text-brown cursor-pointer hover:scale-[1.02] transition-transform"
+                className="px-8 py-6 rounded-full text-base font-semibold cursor-pointer hover:scale-[1.02] transition-transform"
                 onClick={() => navigate("/become-provider")}
               >
                 Register as a Provider

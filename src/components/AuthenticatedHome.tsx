@@ -162,7 +162,7 @@ export const AuthenticatedHome = () => {
 
               <Button
                 variant="gold"
-                className="w-full h-12 rounded-xl gap-2 mt-2 font-semibold text-brown-dark cursor-pointer"
+                className="w-full h-12 rounded-xl gap-2 mt-2 font-semibold cursor-pointer"
                 onClick={handleSearch}
               >
                 <Search className="w-5 h-5" />
@@ -218,10 +218,10 @@ export const AuthenticatedHome = () => {
               <Button
                 variant="gold"
                 size="icon"
-                className="w-12 h-12 rounded-full flex-shrink-0 ml-2 cursor-pointer shadow-lg hover:scale-105 transition-transform text-brown-dark"
+                className="w-12 h-12 rounded-full flex-shrink-0 ml-2 cursor-pointer shadow-lg hover:scale-105 transition-transform"
                 onClick={handleSearch}
               >
-                <Search className="w-5 h-5 text-brown-dark" />
+                <Search className="w-5 h-5" />
               </Button>
             </div>
           </motion.div>

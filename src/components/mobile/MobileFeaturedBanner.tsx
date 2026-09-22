@@ -9,7 +9,7 @@ export const MobileFeaturedBanner = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-gold-dark p-5"
+        className="relative overflow-hidden rounded-2xl bg-gold p-5"
         onClick={() => navigate("/providers")}
       >
         {/* Decorative elements */}
