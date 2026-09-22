@@ -1,9 +1,27 @@
+// Generates public/sitemap.xml.
+//
+// IMPORTANT: /services/:service/:city pages are only included here when at
+// least one *approved* provider actually serves that service+city combo in
+// the database. Previously this script cross-multiplied every service by
+// every city (10 x 39 = 390 URLs) regardless of real coverage, indexing
+// hundreds of "Best X in Y" pages that had zero providers and would show an
+// empty state — exactly the thin-content pattern search engines and AI
+// answer engines penalize. /services/:service (one page per service,
+// aggregating all cities) stays indexed unconditionally since it's always a
+// legitimate, useful page regardless of current city-level density.
 import fs from "node:fs";
 import path from "node:path";
+import { createClient } from "@supabase/supabase-js";
 
-const siteUrl = "https://subhakary.com";
+try {
+  process.loadEnvFile(".env.local");
+} catch {
+  // .env.local is optional locally (e.g. CI supplies real env vars directly)
+}
+
+const siteUrl = "https://www.subhakary.com";
 const outputPath = path.resolve("public", "sitemap.xml");
-const today = "2026-09-04";
+const today = new Date().toISOString().slice(0, 10);
 
 const staticPages = [
   { path: "/", changefreq: "daily", priority: "1.0" },
@@ -18,17 +36,18 @@ const staticPages = [
   { path: "/install", changefreq: "monthly", priority: "0.6" },
 ];
 
+// slug -> service_categories.slug (see src/data/seoData.ts `categorySlug`)
 const services = [
-  "poojari",
-  "photographer",
-  "videographer",
-  "makeup-artist",
-  "mehandi-artist",
-  "mangala-vadyam",
-  "decoration",
-  "catering",
-  "function-halls",
-  "event-managers",
+  { slug: "poojari", categorySlug: "poojari" },
+  { slug: "photographer", categorySlug: "photography" },
+  { slug: "videographer", categorySlug: "videography" },
+  { slug: "makeup-artist", categorySlug: "makeup" },
+  { slug: "mehandi-artist", categorySlug: "mehandi" },
+  { slug: "mangala-vadyam", categorySlug: "mangala-vadyam" },
+  { slug: "decoration", categorySlug: "decoration" },
+  { slug: "catering", categorySlug: "catering" },
+  { slug: "function-halls", categorySlug: "function-halls" },
+  { slug: "event-managers", categorySlug: "event-managers" },
 ];
 
 const blogPosts = [
@@ -41,50 +60,52 @@ const blogPosts = [
   "celebrate-indian-festivals-in-style",
 ];
 
-const cities = [
-  { name: "Hyderabad", priority: 1 },
-  { name: "Bengaluru", priority: 1 },
-  { name: "Chennai", priority: 1 },
-  { name: "Mumbai", priority: 1 },
-  { name: "New Delhi", priority: 1 },
-  { name: "Kolkata", priority: 1 },
-  { name: "Pune", priority: 1 },
-  { name: "Ahmedabad", priority: 1 },
-  { name: "Vijayawada", priority: 2 },
-  { name: "Visakhapatnam", priority: 2 },
-  { name: "Jaipur", priority: 2 },
-  { name: "Lucknow", priority: 2 },
-  { name: "Kochi", priority: 2 },
-  { name: "Coimbatore", priority: 2 },
-  { name: "Indore", priority: 2 },
-  { name: "Nagpur", priority: 2 },
-  { name: "Surat", priority: 2 },
-  { name: "Vadodara", priority: 2 },
-  { name: "Patna", priority: 2 },
-  { name: "Bhopal", priority: 2 },
-  { name: "Warangal", priority: 3 },
-  { name: "Guntur", priority: 3 },
-  { name: "Tirupati", priority: 3 },
-  { name: "Nellore", priority: 3 },
-  { name: "Rajahmundry", priority: 3 },
-  { name: "Madurai", priority: 3 },
-  { name: "Mysore", priority: 3 },
-  { name: "Mangalore", priority: 3 },
-  { name: "Thiruvananthapuram", priority: 3 },
-  { name: "Nashik", priority: 3 },
-  { name: "Kanpur", priority: 3 },
-  { name: "Varanasi", priority: 3 },
-  { name: "Agra", priority: 3 },
-  { name: "Amritsar", priority: 3 },
-  { name: "Ludhiana", priority: 3 },
-  { name: "Ranchi", priority: 3 },
-  { name: "Bhubaneswar", priority: 3 },
-  { name: "Guwahati", priority: 3 },
-  { name: "Chandigarh", priority: 3 },
-  { name: "Dehradun", priority: 3 },
-];
-
 const slugify = (value) => value.toLowerCase().replace(/\s+/g, "-");
+
+async function getRealServiceCityCombos() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn(
+      "VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY not set — skipping " +
+      "service+city sitemap URLs (only static + per-service pages will be emitted)."
+    );
+    return [];
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  // public_service_providers is the anonymous-safe view (already pre-filtered
+  // to approved providers) — the base service_providers table is RLS-locked
+  // to logged-in users, so a raw anon-key query against it returns nothing.
+  const { data, error } = await supabase
+    .from("public_service_providers")
+    .select("city, secondary_city, service_cities, service_categories!inner(slug)");
+
+  if (error) {
+    console.warn("Could not fetch providers for sitemap — falling back to static pages only:", error.message);
+    return [];
+  }
+
+  const combos = new Set();
+  for (const row of data ?? []) {
+    const categorySlug = row.service_categories?.slug;
+    const service = services.find((s) => s.categorySlug === categorySlug);
+    if (!service) continue;
+
+    const cities = [row.city, row.secondary_city, ...(row.service_cities ?? [])].filter(Boolean);
+    for (const city of cities) {
+      combos.add(`${service.slug}|${city}`);
+    }
+  }
+
+  return Array.from(combos).map((key) => {
+    const [service, city] = key.split("|");
+    return { service, city };
+  });
+}
+
+const realCombos = await getRealServiceCityCombos();
 
 const urls = [
   ...staticPages.map((page) => ({
@@ -94,7 +115,7 @@ const urls = [
     lastmod: today,
   })),
   ...services.map((service) => ({
-    loc: `${siteUrl}/services/${service}`,
+    loc: `${siteUrl}/services/${service.slug}`,
     changefreq: "weekly",
     priority: "0.9",
     lastmod: today,
@@ -105,14 +126,12 @@ const urls = [
     priority: "0.8",
     lastmod: today,
   })),
-  ...services.flatMap((service) =>
-    cities.map((city) => ({
-      loc: `${siteUrl}/services/${service}/${slugify(city.name)}`,
-      changefreq: "weekly",
-      priority: city.priority === 1 ? "0.8" : "0.7",
-      lastmod: today,
-    })),
-  ),
+  ...realCombos.map(({ service, city }) => ({
+    loc: `${siteUrl}/services/${service}/${slugify(city)}`,
+    changefreq: "weekly",
+    priority: "0.75",
+    lastmod: today,
+  })),
 ];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -131,4 +150,4 @@ ${urls
 `;
 
 fs.writeFileSync(outputPath, xml, "utf8");
-console.log(`Wrote ${urls.length} URLs to ${outputPath}`);
+console.log(`Wrote ${urls.length} URLs to ${outputPath} (${realCombos.length} real service+city pages).`);

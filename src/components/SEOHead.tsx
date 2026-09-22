@@ -8,6 +8,11 @@ interface SEOHeadProps {
   ogImage?: string;
   ogType?: string;
   jsonLd?: object | object[];
+  /** Set true for pages that are currently thin (e.g. a service+city
+   * combination with no real approved providers yet) so search engines
+   * don't index empty/near-empty pages. The page stays reachable and
+   * functional — it just isn't offered for indexing until it has content. */
+  noindex?: boolean;
 }
 
 export const SEOHead = ({
@@ -17,7 +22,8 @@ export const SEOHead = ({
   canonicalUrl,
   ogImage,
   ogType = "website",
-  jsonLd
+  jsonLd,
+  noindex = false
 }: SEOHeadProps) => {
   const resolvedOgImage = ogImage || `${window.location.origin}/subhakary-og-image.png`;
 
@@ -40,6 +46,7 @@ export const SEOHead = ({
     // Primary meta tags
     updateMeta("description", description);
     if (keywords) updateMeta("keywords", keywords);
+    updateMeta("robots", noindex ? "noindex, follow" : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
 
     // Open Graph
     updateMeta("og:title", title, true);
@@ -92,7 +99,7 @@ export const SEOHead = ({
       const dynamicScripts = document.querySelectorAll('script[data-seo-jsonld]');
       dynamicScripts.forEach(script => script.remove());
     };
-  }, [title, description, keywords, canonicalUrl, resolvedOgImage, ogType, jsonLd]);
+  }, [title, description, keywords, canonicalUrl, resolvedOgImage, ogType, jsonLd, noindex]);
 
   return null;
 };
@@ -128,42 +135,19 @@ export const generateServiceSchema = (
     "provider": {
       "@type": "Organization",
       "name": "Subhakary",
-      "url": "https://subhakary.com"
+      "url": "https://www.subhakary.com"
     },
     "areaServed": areaServed,
     "serviceType": serviceName
   };
 };
 
-// Helper to generate LocalBusiness schema for city pages
-export const generateLocalBusinessSchema = (
-  serviceName: string,
-  cityName: string,
-  stateName: string
-) => {
-  return {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": `Subhakary - ${serviceName} in ${cityName}`,
-    "description": `Find and book verified ${serviceName.toLowerCase()} services in ${cityName}, ${stateName}. Trusted professionals for weddings and events.`,
-    "url": `https://subhakary.com/services/${serviceName.toLowerCase().replace(/\s+/g, "-")}/${cityName.toLowerCase().replace(/\s+/g, "-")}`,
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": cityName,
-      "addressRegion": stateName,
-      "addressCountry": "IN"
-    },
-    "areaServed": {
-      "@type": "City",
-      "name": cityName
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "reviewCount": "100"
-    }
-  };
-};
+// Note: a LocalBusiness-per-city-page schema (previously generated here) was
+// removed. Subhakary is a marketplace, not a business with a physical branch
+// in every city, and the schema fabricated a 4.8-rating/100-review
+// aggregateRating with no real review data behind it. The Service schema
+// above (with areaServed) accurately represents "we offer this service in
+// this city" without those two problems.
 
 // Helper to generate BreadcrumbList schema
 export const generateBreadcrumbSchema = (

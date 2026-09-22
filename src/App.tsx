@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,45 +11,51 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CompareBar } from "@/components/CompareBar";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { RouteLoadingFallback } from "@/components/RouteLoadingFallback";
 
+// Index stays eager: it's the highest-traffic, most crawled page and should
+// render with no extra request/JS-parse waterfall for LCP. Everything else
+// is code-split so the homepage (and every other single route) doesn't ship
+// the admin dashboard, checkout, chat, and Wedding OS in its own bundle.
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import BecomeProvider from "./pages/BecomeProvider";
-import Providers from "./pages/Providers";
-import ProviderProfile from "./pages/ProviderProfile";
-import MyBookings from "./pages/MyBookings";
-import BookingDetails from "./pages/BookingDetails";
-import ProviderDashboard from "./pages/ProviderDashboard";
-import ProviderSettings from "./pages/ProviderSettings";
-import AdminDashboard from "./pages/AdminDashboard";
-import Profile from "./pages/Profile";
-import Favorites from "./pages/Favorites";
-import Chat from "./pages/Chat";
-import InquiryChat from "./pages/InquiryChat";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Services from "./pages/Services";
-import ServiceCategory from "./pages/ServiceCategory";
-import ServiceLocation from "./pages/ServiceLocation";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import NotFound from "./pages/NotFound";
-import WeddingOnboarding from "./pages/WeddingOnboarding";
-import WeddingDashboard from "./pages/WeddingDashboard";
-import WeddingEventWorkspace from "./pages/WeddingEventWorkspace";
-import WeddingJoin from "./pages/WeddingJoin";
-import Notifications from "./pages/Notifications";
-import Compare from "./pages/Compare";
-import Install from "./pages/Install";
-import Checkout from "./pages/Checkout";
-import PaymentHistory from "./pages/PaymentHistory";
-import ResetPassword from "./pages/ResetPassword";
-import SearchResults from "./pages/SearchResults";
-import PlanWedding from "./pages/PlanWedding";
-import Journey from "./pages/Journey";
-import SaaSLanding from "./pages/SaaSLanding";
+
+const Auth = lazy(() => import("./pages/Auth"));
+const BecomeProvider = lazy(() => import("./pages/BecomeProvider"));
+const Providers = lazy(() => import("./pages/Providers"));
+const ProviderProfile = lazy(() => import("./pages/ProviderProfile"));
+const MyBookings = lazy(() => import("./pages/MyBookings"));
+const BookingDetails = lazy(() => import("./pages/BookingDetails"));
+const ProviderDashboard = lazy(() => import("./pages/ProviderDashboard"));
+const ProviderSettings = lazy(() => import("./pages/ProviderSettings"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const Chat = lazy(() => import("./pages/Chat"));
+const InquiryChat = lazy(() => import("./pages/InquiryChat"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Services = lazy(() => import("./pages/Services"));
+const ServiceCategory = lazy(() => import("./pages/ServiceCategory"));
+const ServiceLocation = lazy(() => import("./pages/ServiceLocation"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const WeddingOnboarding = lazy(() => import("./pages/WeddingOnboarding"));
+const WeddingDashboard = lazy(() => import("./pages/WeddingDashboard"));
+const WeddingEventWorkspace = lazy(() => import("./pages/WeddingEventWorkspace"));
+const WeddingJoin = lazy(() => import("./pages/WeddingJoin"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Compare = lazy(() => import("./pages/Compare"));
+const Install = lazy(() => import("./pages/Install"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const PaymentHistory = lazy(() => import("./pages/PaymentHistory"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const SearchResults = lazy(() => import("./pages/SearchResults"));
+const PlanWedding = lazy(() => import("./pages/PlanWedding"));
+const Journey = lazy(() => import("./pages/Journey"));
+const SaaSLanding = lazy(() => import("./pages/SaaSLanding"));
 
 const queryClient = new QueryClient();
 
@@ -61,6 +68,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
+            <Suspense fallback={<RouteLoadingFallback />}>
             <Routes>
               {/* Public Marketing Website / Guest Routes */}
               <Route path="/" element={<Index />} />
@@ -118,6 +126,7 @@ const App = () => (
               {/* Fallback */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
             <CompareBar />
             <PWAInstallPrompt />
           </BrowserRouter>

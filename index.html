@@ -8,23 +8,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
     <!-- Google Search Console Verification -->
-    <!-- Replace YOUR_VERIFICATION_CODE with your actual Google Search Console verification code -->
     <meta name="google-site-verification" content="Ffv1f7eo4fJDNZ-AiBYyFBY1jH_htD7KqLeZSpqZ3pg" />
-    
-    <!-- Google Analytics 4 -->
-    <!-- Replace G-XXXXXXXXXX with your actual GA4 Measurement ID -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXXXXX', {
-        page_title: document.title,
-        page_location: window.location.href,
-        send_page_view: true
-      });
-    </script>
-    
+
+    <!-- Google Analytics 4 is loaded conditionally from src/main.tsx, only when
+         VITE_GA_MEASUREMENT_ID is configured, to avoid shipping a dead tracker. -->
+
     <!-- Primary SEO Meta Tags -->
     <title>Subhakary – Wedding Planning & Verified Event Services</title>
     <meta name="description" content="Book verified photographers, poojaris, caterers, decorators, makeup artists, function halls, and other traditional event services with Subhakary." />
@@ -33,19 +21,19 @@
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow" />
     
-    <!-- Geographic SEO -->
+    <!-- Geographic SEO: country-level only. No geo.position/ICBM lat-long — that
+         would imply a single physical location, which is inaccurate for a
+         nationwide marketplace with no fixed business address. -->
     <meta name="geo.region" content="IN" />
     <meta name="geo.placename" content="India" />
-    <meta name="geo.position" content="20.5937;78.9629" />
-    <meta name="ICBM" content="20.5937, 78.9629" />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://subhakary.com" />
+    <meta property="og:url" content="https://www.subhakary.com" />
     <meta property="og:title" content="Subhakary – Wedding Planning & Verified Event Services" />
     <meta property="og:description" content="Book verified photographers, poojaris, caterers, decorators, makeup artists, function halls, and other traditional event services with Subhakary." />
-    <meta property="og:image" content="https://subhakary.com/subhakary-og-image.png" />
-    <meta property="og:image:secure_url" content="https://subhakary.com/subhakary-og-image.png" />
+    <meta property="og:image" content="https://www.subhakary.com/subhakary-og-image.png" />
+    <meta property="og:image:secure_url" content="https://www.subhakary.com/subhakary-og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -55,14 +43,14 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://subhakary.com" />
+    <meta name="twitter:url" content="https://www.subhakary.com" />
     <meta name="twitter:title" content="Subhakary – Wedding Planning & Verified Event Services" />
     <meta name="twitter:description" content="Book verified photographers, poojaris, caterers, decorators, makeup artists, function halls, and other traditional event services with Subhakary." />
-    <meta name="twitter:image" content="https://subhakary.com/subhakary-og-image.png" />
+    <meta name="twitter:image" content="https://www.subhakary.com/subhakary-og-image.png" />
     <meta name="twitter:image:alt" content="Subhakary preview image" />
     <meta name="twitter:site" content="@Subhakary" />
     
-    <link rel="canonical" href="https://subhakary.com" />
+    <link rel="canonical" href="https://www.subhakary.com" />
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="apple-touch-icon" href="/pwa-icon-192.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/pwa-icon-192.png" />
@@ -83,28 +71,26 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://www.googletagmanager.com" />
-    <link rel="preconnect" href="https://www.google-analytics.com" />
-    
-    <!-- JSON-LD Structured Data for Local Business & Services -->
+
+    <!-- Fonts loaded as a real <link> (discovered immediately by the browser's
+         preload scanner) instead of a CSS @import, which is render-blocking and
+         only discovered after index.css itself downloads. -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lato:wght@300;400;500;600;700&display=swap"
+    />
+
+    <!-- JSON-LD Structured Data: Organization (Subhakary is a nationwide marketplace,
+         not a single physical LocalBusiness, so no fabricated address/geo/rating here) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
+      "@type": "Organization",
       "name": "Subhakary",
       "description": "Book verified photographers, poojaris, caterers, decorators, makeup artists, function halls, and other traditional event services with Subhakary.",
-      "url": "https://subhakary.com",
-      "logo": "https://subhakary.com/favicon.png",
-      "image": "https://subhakary.com/subhakary-og-image.png",
-      "address": {
-        "@type": "PostalAddress",
-        "addressCountry": "IN"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": "20.5937",
-        "longitude": "78.9629"
-      },
+      "url": "https://www.subhakary.com",
+      "logo": "https://www.subhakary.com/favicon.png",
+      "image": "https://www.subhakary.com/subhakary-og-image.png",
       "areaServed": {
         "@type": "Country",
         "name": "India"
@@ -167,18 +153,12 @@
           }
         ]
       },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "reviewCount": "500"
-      },
-      "sameAs": [
-        "https://www.facebook.com/subhakary",
-        "https://www.instagram.com/subhakary",
-        "https://twitter.com/subhakary"
-      ]
     }
     </script>
+    <!-- No aggregateRating or sameAs here: there is no verified review-aggregation
+         source wired up yet, and the @subhakary handles on Instagram/Facebook/X
+         belong to unrelated private individuals, not this business. Add sameAs
+         once Subhakary's real, verified social profiles exist. -->
     
     <!-- FAQ Structured Data for common searches -->
     <script type="application/ld+json">
@@ -236,45 +216,20 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "Subhakary",
-      "url": "https://subhakary.com",
+      "url": "https://www.subhakary.com",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
           "@type": "EntryPoint",
-          "urlTemplate": "https://subhakary.com/providers?service={search_term_string}"
+          "urlTemplate": "https://www.subhakary.com/providers?service={search_term_string}"
         },
         "query-input": "required name=search_term_string"
       }
     }
     </script>
-    
-    <!-- BreadcrumbList for better navigation in search results -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Home",
-          "item": "https://subhakary.com/"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Services",
-          "item": "https://subhakary.com/services"
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "name": "Find Providers",
-          "item": "https://subhakary.com/providers"
-        }
-      ]
-    }
-    </script>
+    <!-- Per-page BreadcrumbList schema is generated dynamically per route
+         (see src/components/SEOHead.tsx) rather than hardcoded here, since a
+         single sitewide breadcrumb would misrepresent every other page. -->
   </head>
 
   <body>
