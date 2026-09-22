@@ -29,18 +29,18 @@ export const HeroSection = () => {
   const browseService = (service: string) => navigate(`/providers?service=${encodeURIComponent(service)}`);
 
   return (
-    <section className="relative overflow-hidden bg-cream pt-28 pb-16 text-brown-dark">
+    <section className="relative overflow-hidden bg-cream pb-12 pt-28 text-brown-dark sm:pb-16 lg:pt-32">
       <div className="absolute inset-0 -z-0 bg-[radial-gradient(ellipse_at_top,_rgba(212,175,55,.16),_transparent_58%)]" />
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
-        <div className="grid items-center gap-10 lg:grid-cols-[.95fr_1.05fr]">
-          <div className="max-w-xl">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-gold/35 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-brown"><Sparkles className="h-3.5 w-3.5 text-gold" />Subhakary celebrations</span>
-            <h1 className="font-display text-4xl font-semibold leading-tight sm:text-5xl md:text-6xl">Sacred Ceremonies &amp; <span className="text-gold">Traditional</span><br />Indian Services</h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-brown/70 sm:text-lg">Connect with experienced pandits, catering services, photographers, and decorators — all reviewed and vetted by families like yours.</p>
-            <div className="mt-7 flex flex-wrap gap-3"><button type="button" onClick={() => navigate("/providers")} className="rounded-xl bg-brown px-6 py-3 text-sm font-semibold text-cream shadow-lg transition hover:bg-brown-dark">Book a Service Provider</button><button type="button" onClick={() => navigate("/planning-os")} className="rounded-xl border border-brown/15 bg-white px-6 py-3 text-sm font-semibold text-brown shadow-sm transition hover:bg-cream">Explore Planning OS</button></div>
+        <div className="grid items-center gap-8 lg:grid-cols-[.95fr_1.05fr] lg:gap-10">
+          <div className="max-w-xl text-center lg:text-left">
+            <span className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-gold/35 bg-white/70 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-brown sm:mb-5 sm:px-4 sm:text-xs"><Sparkles className="h-3.5 w-3.5 shrink-0 text-gold" /><span className="truncate">Subhakary celebrations</span></span>
+            <h1 className="font-display text-[2.35rem] font-semibold leading-[1.04] sm:text-5xl md:text-6xl">Sacred Ceremonies &amp; <span className="text-gold">Traditional</span><br className="hidden sm:block" /> Indian Services</h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-brown/70 sm:mt-5 sm:text-lg lg:mx-0">Connect with experienced pandits, catering services, photographers, and decorators — all reviewed and vetted by families like yours.</p>
+            <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap sm:justify-center lg:justify-start"><button type="button" onClick={() => navigate("/providers")} className="rounded-xl bg-brown px-6 py-3 text-sm font-semibold text-cream shadow-lg transition hover:bg-brown-dark">Book a Service Provider</button><button type="button" onClick={() => navigate("/planning-os")} className="rounded-xl border border-brown/15 bg-white px-6 py-3 text-sm font-semibold text-brown shadow-sm transition hover:bg-cream">Explore Planning OS</button></div>
           </div>
 
-        <div className="relative overflow-hidden rounded-[2rem] border-4 border-gold/25 bg-white shadow-[0_20px_60px_rgba(59,33,26,.16)]">
+        <div className="relative mx-auto w-full max-w-[620px] overflow-hidden rounded-2xl border-2 border-gold/25 bg-white shadow-[0_16px_45px_rgba(59,33,26,.14)] sm:rounded-[2rem] sm:border-4 lg:max-w-none">
           <img src={heroImage} alt="Indian wedding ceremony with a photographer, couple and poojari" className="block h-auto w-full select-none" />
           {hotspots.map((spot) => {
             const isActive = activeId === spot.id;
@@ -48,10 +48,10 @@ export const HeroSection = () => {
           })}
           {hotspots.map((spot) => {
             const Icon = spot.icon;
-            return <div key={`${spot.id}-pin`} className={`pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 ${spot.pin}`}><span className={`absolute inset-0 rounded-full bg-gold/70 ${activeId === spot.id ? "animate-ping" : ""}`} /><span className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-gold bg-brown text-gold shadow-lg"><Icon className="h-4 w-4" /></span></div>;
+            return <div key={`${spot.id}-pin`} className={`pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 ${spot.pin}`}><span className={`absolute inset-0 rounded-full bg-gold/70 ${activeId === spot.id ? "animate-ping" : ""}`} /><span className="relative flex h-7 w-7 items-center justify-center rounded-full border-2 border-gold bg-brown text-gold shadow-lg sm:h-9 sm:w-9"><Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span></div>;
           })}
-          <AnimatePresence>{active && <motion.button type="button" initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} onMouseEnter={() => setActiveId(active.id)} onMouseLeave={() => setActiveId(null)} onClick={() => browseService(active.id === "photographer" ? "photography" : active.id === "decorator" ? "decoration" : active.id === "bride" || active.id === "groom" ? "makeup" : "poojari")} className="absolute bottom-5 left-1/2 z-20 flex w-[min(92%,340px)] -translate-x-1/2 items-center gap-3 rounded-2xl border border-gold/60 bg-brown p-4 text-left text-cream shadow-2xl"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold"><Search className="h-4 w-4" /></span><span><strong className="block text-sm text-gold">{active.label}</strong><span className="block pt-0.5 text-xs text-cream/80">{active.description}</span></span></motion.button>}</AnimatePresence>
-          <div className="pointer-events-none absolute left-1/2 top-4 z-20 -translate-x-1/2 whitespace-nowrap rounded-full border border-gold/35 bg-brown/90 px-4 py-2 text-xs font-medium text-cream shadow-lg backdrop-blur">Hover or tap a person or the mandap to explore services</div>
+          <AnimatePresence>{active && <motion.button type="button" initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} onMouseEnter={() => setActiveId(active.id)} onMouseLeave={() => setActiveId(null)} onClick={() => browseService(active.id === "photographer" ? "photography" : active.id === "decorator" ? "decoration" : active.id === "bride" || active.id === "groom" ? "makeup" : "poojari")} className="absolute bottom-3 left-1/2 z-20 flex w-[min(92%,320px)] -translate-x-1/2 items-center gap-2 rounded-xl border border-gold/60 bg-brown p-3 text-left text-cream shadow-2xl sm:bottom-5 sm:gap-3 sm:rounded-2xl sm:p-4"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold sm:h-9 sm:w-9"><Search className="h-4 w-4" /></span><span><strong className="block text-xs text-gold sm:text-sm">{active.label}</strong><span className="block pt-0.5 text-[11px] text-cream/80 sm:text-xs">{active.description}</span></span></motion.button>}</AnimatePresence>
+          <div className="pointer-events-none absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-gold/35 bg-brown/90 px-4 py-2 text-xs font-medium text-cream shadow-lg backdrop-blur sm:block">Hover or tap a person or the mandap to explore services</div>
         </div>
         </div>
       </div>

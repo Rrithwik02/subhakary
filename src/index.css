@@ -16,9 +16,9 @@
     --popover: 40 30% 98%;
     --popover-foreground: 25 30% 12%;
 
-    /* Primary - Golden Yellow */
-    --primary: 43 72% 55%;
-    --primary-foreground: 25 30% 10%;
+    /* Primary - Gold (brand primary, #B89020) */
+    --primary: 44 70% 42%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary - Brick Brown */
     --secondary: 20 45% 35%;
@@ -27,7 +27,7 @@
     --muted: 35 20% 92%;
     --muted-foreground: 25 15% 45%;
 
-    --accent: 43 60% 48%;
+    --accent: 44 55% 46%;
     --accent-foreground: 25 30% 10%;
 
     --destructive: 0 72% 51%;
@@ -35,38 +35,40 @@
 
     --border: 35 25% 88%;
     --input: 35 25% 88%;
-    --ring: 43 72% 55%;
+    --ring: 44 70% 42%;
 
     --radius: 0.75rem;
 
     /* Custom brand tokens */
-    --gold: 43 72% 55%;
-    --gold-light: 43 65% 70%;
-    --gold-dark: 43 75% 42%;
+    /* Primary brand color: Gold #B89020 (highlights, badges, icons, accents, selected states) */
+    --gold: 44 70% 42%;
+    --gold-light: 43 72% 55%;
+    --gold-dark: 44 72% 33%;
+    /* Secondary brand color: Brown (supporting elements, backgrounds, primary buttons) */
     --brown: 20 45% 35%;
     --brown-light: 20 35% 50%;
     --brown-dark: 20 50% 22%;
     --cream: 40 40% 96%;
     --saffron: 30 85% 55%;
-    
+
     /* Gradients */
-    --gradient-gold: linear-gradient(135deg, hsl(43 72% 55%), hsl(35 70% 50%));
+    --gradient-gold: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--gold-dark)));
     --gradient-hero-overlay: linear-gradient(to bottom, hsla(25 30% 10% / 0.4), hsla(25 30% 10% / 0.7));
-    
+
     /* Shadows */
-    --shadow-gold: 0 4px 20px -4px hsl(43 72% 55% / 0.35);
+    --shadow-gold: 0 4px 20px -4px hsl(44 70% 42% / 0.35);
     --shadow-elevated: 0 10px 40px -10px hsl(25 30% 10% / 0.2);
     --shadow-glass: 0 8px 32px hsl(25 30% 10% / 0.12);
 
     /* Sidebar */
     --sidebar-background: 40 30% 98%;
     --sidebar-foreground: 25 30% 12%;
-    --sidebar-primary: 43 72% 55%;
+    --sidebar-primary: 44 70% 42%;
     --sidebar-primary-foreground: 25 30% 10%;
     --sidebar-accent: 35 20% 92%;
     --sidebar-accent-foreground: 25 30% 12%;
     --sidebar-border: 35 25% 88%;
-    --sidebar-ring: 43 72% 55%;
+    --sidebar-ring: 44 70% 42%;
   }
 
   .dark {
@@ -154,22 +156,16 @@
 
   .glass-nav {
     @apply backdrop-blur-2xl border border-gold/30;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    background: linear-gradient(
-      135deg,
-      hsl(var(--gold) / 0.97) 0%,
-      hsl(var(--gold-dark) / 0.95) 100%
-    );
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    background-color: hsl(var(--gold));
+    background-image: none;
   }
 
-  .glass-nav a,
-  .glass-nav button {
+  .glass-nav a {
     @apply text-brown-dark;
   }
 
-  .glass-nav a:hover,
-  .glass-nav button:hover {
+  .glass-nav a:hover {
     @apply text-brown;
   }
 
@@ -178,8 +174,10 @@
     box-shadow: var(--shadow-elevated);
   }
 
+  /* Solid gold fill (name kept for backwards compatibility; no gradient) */
   .gradient-gold {
-    background: var(--gradient-gold);
+    background-color: hsl(var(--gold));
+    background-image: none;
   }
 
   .text-gradient-gold {

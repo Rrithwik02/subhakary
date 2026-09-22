@@ -825,9 +825,9 @@ const DesktopAdminDashboard = () => {
               <Button
                 size="sm"
                 variant={provider.is_premium ? "outline" : "default"}
-                className={provider.is_premium 
-                  ? "border-amber-500/50 text-amber-600 hover:bg-amber-50" 
-                  : "bg-gradient-to-r from-amber-500 to-yellow-400 text-white hover:from-amber-600 hover:to-yellow-500"}
+                className={provider.is_premium
+                  ? "border-amber-500/50 text-amber-600 hover:bg-amber-50"
+                  : "bg-gold text-white hover:bg-gold-dark"}
                 onClick={() => handleTogglePremium(provider.id, provider.is_premium)}
                 disabled={isProcessing}
               >
